@@ -32,6 +32,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.petcare.petcare.Controller.MainController
 import com.petcare.petcare.Models.MainModels
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_maps.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -113,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         val loginFaceVisivel = findViewById<Button>(R.id.layInicial_btnSignWithFace)
         loginFaceVisivel.setOnClickListener {
             if (MainController.isNetworkAvailable(this)) {
-                layinicialOut()
+                //layinicialOut()
                 ChamaDialog()
                 loginButton.performClick()
             } else {
@@ -236,10 +237,15 @@ class MainActivity : AppCompatActivity() {
             layNovoUser.visibility = View.GONE
             //MainModels.sendEmailVerification(this)   vai sair daqui para parar de reenviar toda entrada nova. Vai mandar apenas quando acabar o cadastor e quando o user clicar no botão
 
+            /*
             val btnEmailVerifyCheck = findViewById<Button>(R.id.verifyEmailButtonCheck) //botao que o user aperta quando ja vericou o email
             btnEmailVerifyCheck.setOnClickListener {
                 emailVerificationCheckMeth()
             }
+             */
+
+           // LoginWithEmail() //seta os cliques
+            VerificacaoDeEmail()  //novos cliques de verificação agora ficam aqui
 
         } else if (result.equals("email_verificado")){
             val email = MainModels.getUserMail()
@@ -307,9 +313,11 @@ class MainActivity : AppCompatActivity() {
             telaLoginMail.visibility = View.GONE
             val telaLoginMailNew = findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
             telaLoginMailNew.visibility = View.GONE
+
             val telainicial = findViewById<ConstraintLayout>(R.id.layInicial)
-            telainicial.visibility = View.VISIBLE
-            layinicialVoltaAoInicio()
+            //telainicial.visibility = View.VISIBLE
+            //layinicialVoltaAoInicio()
+            trocaTela(telaLoginMail, telainicial)
             EncerraDialog()
 
         }
@@ -365,12 +373,10 @@ class MainActivity : AppCompatActivity() {
                         retornoUpdateUi(retorno)
 
                         val layLoginWithMail_VerificationMail = findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                        layLoginWithMail_VerificationMail.visibility=View.VISIBLE
-                        laygenericoInLeftToCenter(layLoginWithMail_VerificationMail)
+
                         emailVerificationCheckMeth()
-                        val layNovoUser= findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-                        layNovoUser.visibility = View.GONE
-                        laygenericoOutCenterToLeft(layNovoUser)
+                        VerificacaoDeEmail()
+                        trocaTela(findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser), layLoginWithMail_VerificationMail)
 
                         MainModels.sendEmailVerification(this)
                         MainModels.createNewUser()
@@ -392,7 +398,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun signIn() {
 
-        layinicialOut()
+        //layinicialOut()
 
         val fieldEmail = findViewById<EditText>(R.id.fieldEmail)
         val fieldPassword = findViewById<EditText>(R.id.fieldPassword)
@@ -591,10 +597,6 @@ class MainActivity : AppCompatActivity() {
 
     // [START auth_with_facebook]
     private fun handleFacebookAccessToken(token: AccessToken) {
-        //Log.d("testeHandleFacebook", "handleFacebookAccessToken:$token")
-        // [START_EXCLUDE silent]
-        //showProgressDialog()
-        // [END_EXCLUDE]
 
         val credential = FacebookAuthProvider.getCredential(token.token)
         auth.signInWithCredential(credential)
@@ -618,7 +620,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(baseContext, "A autenticação falhou.",
                         Toast.LENGTH_SHORT).show()
                     retornoUpdateUi("nao")
-                    layinicialVoltaAoInicio()
+                    trocaTela(findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser), findViewById<ConstraintLayout>(R.id.layInicial))
                 }
 
                 // [START_EXCLUDE]
@@ -632,16 +634,17 @@ class MainActivity : AppCompatActivity() {
 
         val layLoginMail = findViewById<ConstraintLayout>(R.id.layLoginWithEmail)  //pagina inicial
         val layNovoUser= findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)  //pagina inicial
-        layinicialOut()
-        laygenericoInRightToCenter(layLoginMail)
+
+        trocaTela(findViewById<ConstraintLayout>(R.id.layInicial), layLoginMail)
 
 
         val btnNovoUser = findViewById<TextView>(R.id.tvNovoUser)
         btnNovoUser.setOnClickListener {
-            layLoginMail.visibility = View.GONE
-            layNovoUser.visibility = View.VISIBLE
-            laygenericoOutCenterToLeft(layLoginMail)
-            laygenericoInRightToCenter(layNovoUser)
+            //layLoginMail.visibility = View.GONE
+            //layNovoUser.visibility = View.VISIBLE
+            //laygenericoOutCenterToLeft(layLoginMail)
+            //laygenericoInRightToCenter(layNovoUser)
+            trocaTela(layLoginMail, layNovoUser)
 
             val fieldEmail_newUser: EditText =findViewById(R.id.fieldEmail_newUser)
             fieldEmail_newUser.addTextChangedListener(object : TextWatcher {
@@ -741,10 +744,13 @@ class MainActivity : AppCompatActivity() {
 
             val btnVoltar: Button = findViewById(R.id.createWithEmail_btnCancel)
             btnVoltar.setOnClickListener {
+                /*
                 layLoginMail.visibility = View.VISIBLE
                 layNovoUser.visibility = View.GONE
                 laygenericoInLeftToCenter(layLoginMail)
                 laygenericoOutCenterToRight(layNovoUser)
+                 */
+                trocaTela(layNovoUser, layLoginMail)
 
                 btnVoltar.setOnClickListener { null }
                 fieldEmail_newUser.addTextChangedListener(null)
@@ -768,8 +774,9 @@ class MainActivity : AppCompatActivity() {
             hideKeyboard()
             //layLoginMail.visibility = View.GONE
             //layInicial.visibility = View.VISIBLE
-            layinicialVoltaAoInicio()
-            laygenericoOutCenterToRight(layLoginMail)
+           // layinicialVoltaAoInicio()
+           // laygenericoOutCenterToRight(layLoginMail)
+            trocaTela(findViewById<ConstraintLayout>(R.id.layInicial), layLoginMail)
 
         }
 
@@ -793,6 +800,25 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        val novaSenha = findViewById<TextView>(R.id.tvPerdeuSenha)
+        novaSenha.setOnClickListener {
+
+            val emailField = findViewById<EditText>(R.id.fieldEmail)
+            if (emailField.text.toString().isEmpty()){
+                emailField.requestFocus()
+                emailField.setError("Informe o e-mail para enviar o reset da senha.")
+            } else if (!emailField.text.toString().contains("@")){
+                emailField.requestFocus()
+                emailField.setError("Informe um e-mail válido")
+            } else {
+                openPopUp("ATENÇÃO", "Você deseja receber uma nova senha por e-mail?", true, "Sim, quero", "Não", "confirmaNovaSenha")
+            }
+        }
+
+    }
+
+    fun VerificacaoDeEmail(){
+
         val emailVerifyCheck = findViewById<Button>(R.id.verifyEmailButtonCheck) //botao que o user aperta quando ja vericou o email
         val verifyEmailButton = findViewById<Button>(R.id.verifyEmailButton) //botão para reenviar
         val verifyHelp = findViewById<Button>(R.id.verification_btnHelp)
@@ -803,10 +829,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         verifyVoltar.setOnClickListener {
+            /*
             laygenericoOutCenterToRight(layLoginWithMail_VerificationMail)
             val layinicial: ConstraintLayout = findViewById(R.id.layInicial)
             layinicial.visibility = View.VISIBLE
             layinicialVoltaAoInicio()
+             */
+            trocaTela(layLoginWithMail_VerificationMail, findViewById(R.id.layInicial))
         }
 
         verifyEmailButton.setOnClickListener {
@@ -829,22 +858,6 @@ class MainActivity : AppCompatActivity() {
                     retornoUpdateUi(retorno)
 
                 }
-            }
-        }
-
-
-        val novaSenha = findViewById<TextView>(R.id.tvPerdeuSenha)
-        novaSenha.setOnClickListener {
-
-            val emailField = findViewById<EditText>(R.id.fieldEmail)
-            if (emailField.text.toString().isEmpty()){
-                emailField.requestFocus()
-                emailField.setError("Informe o e-mail para enviar o reset da senha.")
-            } else if (!emailField.text.toString().contains("@")){
-                emailField.requestFocus()
-                emailField.setError("Informe um e-mail válido")
-            } else {
-                openPopUp("ATENÇÃO", "Você deseja receber uma nova senha por e-mail?", true, "Sim, quero", "Não", "confirmaNovaSenha")
             }
         }
 
@@ -913,62 +926,6 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
-    }
-
-    fun layinicialOut(){
-        val telainicial: ConstraintLayout = findViewById(R.id.layInicial)
-        val layoutin = AnimationUtils.loadAnimation(this, R.anim.layout_slideout)
-        telainicial.startAnimation(layoutin)
-
-        val btnLoginSemLogin: Button = findViewById(R.id.btnLoginDepois)
-        val btnFace: Button = findViewById(R.id.layInicial_btnSignWithFace)
-        val btnMail: Button = findViewById(R.id.layInicial_btnSignWithEmail)
-        btnFace.isEnabled = false
-        btnMail.isEnabled = false
-        btnLoginSemLogin.isEnabled = false
-    }
-
-    fun layinicialVoltaAoInicio(){
-        val telainicial: ConstraintLayout = findViewById(R.id.layInicial)
-        val layoutin = AnimationUtils.loadAnimation(this, R.anim.layout_cameback)
-        telainicial.startAnimation(layoutin)
-
-        val btnLoginSemLogin: Button = findViewById(R.id.btnLoginDepois)
-        val btnFace: Button = findViewById(R.id.layInicial_btnSignWithFace)
-        val btnMail: Button = findViewById(R.id.layInicial_btnSignWithEmail)
-        btnFace.isEnabled = true
-        btnMail.isEnabled = true
-        btnLoginSemLogin.isEnabled = true
-    }
-
-    fun laygenericoOutCenterToLeft (layout:ConstraintLayout){
-
-        val layoutMove = AnimationUtils.loadAnimation(this, R.anim.layout_slideout)
-        layout.startAnimation(layoutMove)
-
-    }
-
-
-    fun laygenericoInRightToCenter (layout:ConstraintLayout){
-
-        val layoutMove = AnimationUtils.loadAnimation(this, R.anim.layout_slidein)
-        layout.visibility = View.VISIBLE
-        layout.startAnimation(layoutMove)
-
-    }
-
-    fun laygenericoInLeftToCenter (layout:ConstraintLayout){
-
-        val layoutMove = AnimationUtils.loadAnimation(this, R.anim.layout_slidein_left_to_center)
-        layout.startAnimation(layoutMove)
-
-    }
-
-    fun laygenericoOutCenterToRight (layout:ConstraintLayout){
-
-        val layoutMove = AnimationUtils.loadAnimation(this, R.anim.layout_slideout_centro_to_right)
-        layout.startAnimation(layoutMove)
 
     }
 
