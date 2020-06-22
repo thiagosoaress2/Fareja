@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#a2d5f2</color>
+
+    <color name="azulEscuro">#07689f</color>
+    <color name="azulClaro">#a2d5f2</color>
+    <color name="laranja">#FF8C00</color>
+
+    <color name="azulClarotransp">#3AA2D5F2</color>
+    <color name="vermelhotransp">#57FF9800</color>
+
+    <!-- cores do facebook -->
+    <color name="com_facebook_button_background_color_focused_disabled">#07689f</color>
+    <color name="com_facebook_button_background_color_focused">#07689f</color>
+    <color name="com_facebook_button_border_color_focused">#07689f</color>
+
+    <color name="vermelho">#F44336</color>
+    <color name="branco">#ffffff</color>
+    <color name="preto">#000000</color>
+    <color name="azul">#2196F3</color>
+    <color name="amarelo">#FFEB3B</color>
+</resources>

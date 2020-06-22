@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1086486078979",
+    "firebase_url": "https://farejadorapp.firebaseio.com",
+    "project_id": "farejadorapp",
+    "storage_bucket": "farejadorapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1086486078979:android:1cb0880f1ce26e04ea9036",
+        "android_client_info": {
+          "package_name": "com.petcare.petcare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1086486078979-f3gb6d93190ei7v52oi8m5qhn35q0qic.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.petcare.petcare",
+            "certificate_hash": "4b95503b55c9e66350dde95d646784128e6edf23"
+          }
+        },
+        {
+          "client_id": "1086486078979-tnd8gnoc0qntkiv88fg7f3q4h3e0gvtt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJLLfb7c4olkAYbSD88_euT-qzIGCOn6o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1086486078979-tnd8gnoc0qntkiv88fg7f3q4h3e0gvtt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

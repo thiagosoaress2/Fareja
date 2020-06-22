@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/azulClaro"
+    tools:context=".relatorio">
+
+
+    <Button
+        android:id="@+id/btnFecharActivityRelatorio"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/ic_close_black_24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/bahnschrift"
+        android:text="Relatórios"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/gerarRelat_layRelatorio"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="70dp"
+        android:background="#ffffff"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <ScrollView
+            android:id="@+id/scrollView6"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layMaisVendidos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:visibility="gone">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/constraintLayout30"
+                        android:layout_width="match_parent"
+                        android:layout_height="5dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@color/azulClaro"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMin3">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="0dp"
+                        android:layout_height="5dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@color/azulClaro"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMin2">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="5dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@color/azulClaro"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMin">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtQnt3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="qnt"
+                        android:textColor="@color/laranja"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline41"
+                        app:layout_constraintTop_toTopOf="@+id/maisvendidosTxtNome3" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtQnt2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="qnt"
+                        android:textColor="@color/laranja"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline41"
+                        app:layout_constraintTop_toTopOf="@+id/maisvendidosTxtNome2" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtQnt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="qnt"
+                        android:textColor="@color/laranja"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline41"
+                        app:layout_constraintTop_toTopOf="@+id/maisvendidosTxtNome" />
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/guideline43"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintGuide_percent="0.94" />
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/guideline41"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintGuide_percent="0.74" />
+
+                    <TextView
+                        android:id="@+id/textView72"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="Quantidade"
+                        android:textAlignment="center"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline41"
+                        app:layout_constraintTop_toTopOf="@+id/textView71" />
+
+                    <TextView
+                        android:id="@+id/textView71"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Produto"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline40"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView48" />
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/guideline40"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintGuide_percent="0.3" />
+
+                    <TextView
+                        android:id="@+id/textView48"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/bahnschrift"
+                        android:text="Produtos mais vendidos da região"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="20sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtNome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="50dp"
+                        android:text="produto 1"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline40"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView71" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMedio"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="precoMed"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulClaro"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/guideline40"
+                        app:layout_constraintTop_toTopOf="@+id/maisvendidosTxtNome" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMax"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="PrecoMax"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulEscuro"
+                        app:layout_constraintBottom_toTopOf="@+id/maisvendidosTxtPrecoMedio"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/guideline40" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMin"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="8dp"
+                        android:text="PrecoMin"
+                        android:textAlignment="center"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/guideline40"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMedio" />
+
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtNome2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="55dp"
+                        android:text="produto 2"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline40"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMin" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMedio2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="precoMed"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulClaro"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/guideline40"
+                        app:layout_constraintTop_toTopOf="@+id/maisvendidosTxtNome2" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMax2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="PrecoMax"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulEscuro"
+                        app:layout_constraintBottom_toTopOf="@+id/maisvendidosTxtPrecoMedio2"
+                        app:layout_constraintEnd_toEndOf="@+id/maisvendidosTxtPrecoMedio2"
+                        app:layout_constraintStart_toStartOf="@+id/maisvendidosTxtPrecoMedio2" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMin2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="PrecoMin"
+                        android:textAlignment="center"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/maisvendidosTxtPrecoMedio2"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMedio2" />
+
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtNome3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="55dp"
+                        android:text="produto 3"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline40"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMin2" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMedio3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="precoMed"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulClaro"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/guideline40"
+                        app:layout_constraintTop_toTopOf="@+id/maisvendidosTxtNome3" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMax3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="PrecoMax"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulEscuro"
+                        app:layout_constraintBottom_toTopOf="@+id/maisvendidosTxtPrecoMedio3"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/maisvendidosTxtPrecoMedio3" />
+
+                    <TextView
+                        android:id="@+id/maisvendidosTxtPrecoMin3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="PrecoMin"
+                        android:textAlignment="center"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline41"
+                        app:layout_constraintStart_toStartOf="@+id/maisvendidosTxtPrecoMedio3"
+                        app:layout_constraintTop_toBottomOf="@+id/maisvendidosTxtPrecoMedio3" />
+
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layGrafico"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="8dp"
+                    android:background="#D1ECF9"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/layMaisVendidos"
+                    tools:visibility="gone">
+
+
+                    <TextView
+                        android:id="@+id/customgraphTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/bahnschrift"
+                        android:text="TextView"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="20sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/guideline44"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintGuide_percent="0.66" />
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/guideline42"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintGuide_percent="0.33" />
+
+                    <TextView
+                        android:id="@+id/label3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="TextView"
+                        android:textAlignment="center"
+                        app:layout_constraintBottom_toTopOf="@+id/customgraphBar3"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline44" />
+
+                    <TextView
+                        android:id="@+id/label2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="TextView"
+                        android:textAlignment="center"
+                        app:layout_constraintBottom_toTopOf="@+id/customgraphBar2"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline44"
+                        app:layout_constraintStart_toStartOf="@+id/guideline42" />
+
+                    <TextView
+                        android:id="@+id/label1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="TextView"
+                        android:textAlignment="center"
+                        app:layout_constraintBottom_toTopOf="@+id/customgraphBar1"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline42"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/customgraphBar3"
+                        android:layout_width="50dp"
+                        android:layout_height="1dp"
+                        android:background="@color/azulEscuro"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline44">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/customgraphBar2"
+                        android:layout_width="50dp"
+                        android:layout_height="1dp"
+                        android:background="@color/azulClaro"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline44"
+                        app:layout_constraintStart_toStartOf="@+id/guideline42">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/customgraphBar1"
+                        android:layout_width="50dp"
+                        android:layout_height="1dp"
+                        android:background="#A5CFD3"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline42"
+                        app:layout_constraintStart_toStartOf="parent">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layValores"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/layGrafico"
+                    tools:visibility="gone">
+
+
+                    <TextView
+                        android:id="@+id/textView70"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/bahnschrift"
+                        android:text="Comparações de vendas"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="18sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/layValoresTxVendaDoMeuPet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="16dp"
+                        android:text="TextView"
+                        android:textColor="@color/laranja"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView70" />
+
+                    <TextView
+                        android:id="@+id/layValoresTxVendasPetsNerby"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:text="TextView"
+                        android:textColor="@color/azulEscuro"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/layValoresTxVendaDoMeuPet" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layGraficoVendas"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/layValores"
+                    tools:visibility="visible">
+
+
+                    <TextView
+                        android:id="@+id/customgraphTitle2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/bahnschrift"
+                        android:text="Gráfico comparativo"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="20sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/guideline142"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintGuide_percent="0.5" />
+
+                    <TextView
+                        android:id="@+id/label22"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="TextView"
+                        android:textAlignment="center"
+                        app:layout_constraintBottom_toTopOf="@+id/customgraphBar22"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline142" />
+
+                    <TextView
+                        android:id="@+id/label12"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="TextView"
+                        android:textAlignment="center"
+                        app:layout_constraintBottom_toTopOf="@+id/customgraphBar12"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline142"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/customgraphBar22"
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginEnd="32dp"
+                        android:background="@color/azulClaro"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/guideline142">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/customgraphBar12"
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginEnd="32dp"
+                        android:background="#A5CFD3"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline142"
+                        app:layout_constraintHorizontal_bias="0.6"
+                        app:layout_constraintStart_toStartOf="parent">
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layVisitas"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="32dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/layGraficoVendas">
+
+
+                    <TextView
+                        android:id="@+id/textView76"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/bahnschrift"
+                        android:text="Visitas no Farejador"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="18sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/layVisitastxVisitas"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="TextView"
+                        android:textAlignment="center"
+                        android:textSize="22sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView76" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="180dp"
+                        android:layout_height="180dp"
+                        android:layout_marginTop="24dp"
+                        android:background="@drawable/circular_bg_withborder"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/layVisitastxVisitas">
+
+                        <TextView
+                            android:id="@+id/layVisitastxVisitasNumero"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/colombia"
+                            android:text="TextView"
+                            android:textColor="@color/laranja"
+                            android:textSize="50dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/gerarRelat_layInicial"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="70dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/rounded_layout_bg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone">
+
+        <Button
+            android:id="@+id/btnGerarRelatorio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginEnd="32dp"
+            android:background="@drawable/ic_btnbranco"
+            android:fontFamily="@font/bahnschrift"
+            android:text="Gerar relatório"
+            android:textColor="@color/laranja"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/LayoutProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:progressDrawable="@drawable/circular_progressbar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/progressBar1"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/bahnschrift"
+            android:text="Gerando Relatório. Isto pode demorar um pouco pois lidamos com muitos dados. =)"
+            android:textAlignment="center"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar1" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

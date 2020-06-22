@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fillAfter="true">
+
+    <translate
+        android:duration="4500"
+        android:fillAfter="true"
+        android:fromXDelta="-450"
+        android:toXDelta="-150" />
+
+    <translate
+        android:duration="3000"
+        android:fillAfter="true"
+        android:fromXDelta="-150"
+        android:startOffset="4500"
+        android:toXDelta="200" />
+
+    <translate
+        android:duration="1000"
+        android:fillAfter="true"
+        android:fromXDelta="200"
+        android:startOffset="7500"
+        android:toXDelta="-50" />
+
+
+</set>

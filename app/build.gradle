@@ -1,0 +1,78 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.google.gms.google-services'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
+    defaultConfig {
+        applicationId "com.petcare.petcare"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 40
+        versionName "1.47"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.core:core-ktx:1.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
+
+    //gogle ads
+    //anuncio google
+    implementation 'com.google.firebase:firebase-ads:19.1.0'
+    //google ads
+
+    //implementation 'com.google.firebase:firebase-auth:16.0.5'
+    implementation 'com.google.firebase:firebase-auth:19.3.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
+    //esta dependencia é para poder fazer ligar o gps automáticamente
+
+    //firebase atualizado
+    implementation 'com.google.firebase:firebase-database:19.3.0'
+    implementation 'com.google.firebase:firebase-storage:19.1.1'
+
+    // implementation 'com.google.firebase:firebase-database:16.0.4'
+    // implementation 'com.google.firebase:firebase-storage:16.0.4'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+
+
+    implementation 'com.facebook.android:facebook-login:5.15.3'
+    implementation 'com.facebook.android:facebook-android-sdk:4.42.0'
+
+    //implementation 'com.facebook.android:facebook-android-sdk:[4,5]'
+
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+
+    implementation 'com.google.android.play:core:1.7.2'
+
+
+    //maps utils para clustering dos markers
+    //https://developers.google.com/maps/documentation/android-sdk/utility/setup
+    //https://developers.google.com/maps/documentation/android-sdk/utility/marker-clustering
+    //implementation 'com.google.maps.android:android-maps-utils:1.1.0'
+
+
+}

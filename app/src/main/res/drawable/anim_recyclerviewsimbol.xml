@@ -1,0 +1,30 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <path
+                android:name="path"
+                android:pathData="M 4.856 12 L 4.856 4.968 L 19.144 4.968 L 19.144 12 Z"
+                android:fillColor="#ffffff"
+                android:strokeColor="#a2d5f2"
+                android:strokeWidth="1"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="path">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="pathData"
+                android:duration="175"
+                android:valueFrom="M 7.237 12 L 4.856 12 L 4.856 4.968 L 9.619 4.968 L 14.381 4.968 L 19.144 4.968 L 19.144 12 L 16.763 12 C 15.969 12 15.175 12 14.381 12 L 12 12 C 11.206 12 10.412 12 9.619 12 L 7.237 12 M 18.5 11.91 L 18.5 11.91 L 18.5 11.91 L 18.5 11.91 L 18.5 11.91 L 18.5 11.91 L 18.5 11.91 L 18.5 11.91 M 7 10.41 L 7 10.41 L 7 10.41 L 7 10.41 L 7 10.41 L 7 10.41 L 7 10.41 L 7 10.41 M 9.875 21.125 L 9.875 21.125 L 9.875 21.125 L 9.875 21.125 L 9.875 21.125 C 9.875 21.125 9.875 21.125 9.875 21.125 L 9.875 21.125 C 9.875 21.125 9.875 21.125 9.875 21.125 L 9.875 21.125 L 9.875 21.125 L 9.875 21.125 L 9.875 21.125"
+                android:valueTo="M 5 7 L 7 7 L 7 5 L 7 5 L 17 5 L 17 7 L 19 7 L 19 3 C 19 1.9 18.1 1.01 17 1.01 L 7 1 C 5.9 1 5 1.9 5 3 L 5 7 M 15.41 16.59 L 20 12 L 15.41 7.41 L 14 8.83 L 17.17 12 L 14 15.17 L 15.41 16.59 L 15.41 16.59 M 10 15.17 L 10 15.17 L 8.59 16.59 L 4 12 L 8.59 7.41 L 10 8.83 L 6.83 12 L 10 15.17 M 17 19 L 7 19 L 7 17 L 5 17 L 5 21 C 5 22.1 5.9 23 7 23 L 17 23 C 18.1 23 19 22.1 19 21 L 19 17 L 17 17 L 17 19 L 17 19"
+                android:valueType="pathType"
+                android:interpolator="@android:anim/anticipate_overshoot_interpolator"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

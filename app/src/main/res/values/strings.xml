@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Farejador</string>
+
+    <string name="facebook_app_id">1535786006582485</string>
+    <string name="fb_login_protocol_scheme">fb1535786006582485</string>
+    <string name="title_activity_maps">Map</string>
+
+
+    <string name="selected_item">Selected item:</string>
+
+    <string name="sharedpreferences">SharedFarejador</string>
+
+
+
+</resources>

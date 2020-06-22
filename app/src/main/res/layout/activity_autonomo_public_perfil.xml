@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".autonomoPublicPerfil">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <ScrollView
+            android:id="@+id/scrollView8"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/autonomoPublicPerfil_index"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <Button
+                        android:id="@+id/autonomoPublicPerfil_btnVoltar"
+                        android:layout_width="50dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/seta_to_marker"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageView
+                        android:id="@+id/autonomoPublicPerfil_ivPerfil"
+                        android:layout_width="90dp"
+                        android:layout_height="90dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="32dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/background_white_chapado" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/laydescricaodoservicoautonomo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:background="@android:drawable/dialog_holo_light_frame"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/constraintLayout38">
+
+                        <TextView
+                            android:id="@+id/autonomoPublicPerfil_etDescricao"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginBottom="16dp"
+                            android:fontFamily="@font/bahnschrift"
+                            android:text="Descrição"
+                            android:textAlignment="textStart"
+                            android:textSize="17sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <TextView
+                        android:id="@+id/autonomoPublicPerfil_Nome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/impact"
+                        android:text="Nome"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="25sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/autonomoPublicPerfil_ivPerfil"
+                        app:layout_constraintTop_toBottomOf="@+id/autonomoPublicPerfil_btnVoltar" />
+
+                    <TextView
+                        android:id="@+id/textView96"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Serviço:"
+                        android:textColor="@color/azulEscuro"
+                        app:layout_constraintStart_toEndOf="@+id/autonomoPublicPerfil_ivPerfil"
+                        app:layout_constraintTop_toBottomOf="@+id/autonomoPublicPerfil_Nome" />
+
+                    <TextView
+                        android:id="@+id/textView97"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Pagamento:"
+                        android:textColor="@color/azulEscuro"
+                        app:layout_constraintStart_toEndOf="@+id/autonomoPublicPerfil_ivPerfil"
+                        app:layout_constraintTop_toBottomOf="@+id/textView96" />
+
+                    <TextView
+                        android:id="@+id/textView112"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Código único:"
+                        android:textColor="@color/azulEscuro"
+                        android:visibility="invisible"
+                        app:layout_constraintStart_toStartOf="@+id/textView97"
+                        app:layout_constraintTop_toBottomOf="@+id/textView97" />
+
+                    <TextView
+                        android:id="@+id/autonomoPublicPerfil_Cu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="codigo"
+                        android:visibility="invisible"
+                        app:layout_constraintBottom_toBottomOf="@+id/textView112"
+                        app:layout_constraintStart_toEndOf="@+id/textView112" />
+
+                    <TextView
+                        android:id="@+id/autonomoPublicPerfil_Servico"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:text="Servico"
+                        android:textAlignment="textStart"
+                        app:layout_constraintBottom_toBottomOf="@+id/textView96"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/textView96"
+                        app:layout_constraintTop_toTopOf="@+id/textView96" />
+
+                    <TextView
+                        android:id="@+id/autonomoPublicPerfil_Pagamento"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:text="Forma pgt"
+                        android:textAlignment="textStart"
+                        app:layout_constraintBottom_toBottomOf="@+id/textView97"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/textView97"
+                        app:layout_constraintTop_toTopOf="@+id/textView97" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/constraintLayout38"
+                        android:layout_width="match_parent"
+                        android:layout_height="150dp"
+                        android:layout_marginTop="16dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView112">
+
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/autonomoPublicPerfil_recyclerView"
+                            android:layout_width="0dp"
+                            android:layout_height="150dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginEnd="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <Button
+                        android:id="@+id/autonomoPublicPerfil_btnContratar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@drawable/ic_btnazul"
+                        android:drawableLeft="@drawable/handshaking"
+                        android:drawablePadding="10dp"
+                        android:elevation="25dp"
+                        android:enabled="false"
+                        android:fontFamily="@font/bahnschrift"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="48dp"
+                        android:paddingBottom="5dp"
+                        android:text="Contratar este serviço"
+                        android:textAllCaps="false"
+                        android:textColor="@color/branco"
+                        android:textSize="20sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/laydescricaodoservicoautonomo" />
+
+                    <Button
+                        android:id="@+id/autonomoPublicPerfil_btnUpload"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/ic_btnbranco"
+                        android:elevation="25dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="Upload de fotos"
+                        android:textAllCaps="false"
+                        android:textColor="@color/laranja"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout38"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/constraintLayout38"
+                        tools:visibility="visible" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/constraintLayout40"
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/roundedbg_photomask"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/autonomoPublicPerfil_btnContratar">
+
+                        <TextView
+                            android:id="@+id/autonomoPublicPerfil_Nota"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:text="nota"
+                            android:textColor="@color/azulEscuro"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/autonomoPublicPerfil_Avaliacoes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="24dp"
+                            android:text="avaliacoes"
+                            android:textColor="@color/azulEscuro"
+                            app:layout_constraintStart_toEndOf="@+id/autonomoPublicPerfil_Nota"
+                            app:layout_constraintTop_toTopOf="@+id/autonomoPublicPerfil_Nota" />
+
+                        <androidx.constraintlayout.widget.Guideline
+                            android:id="@+id/guideline51"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            app:layout_constraintGuide_percent="0.66" />
+
+                        <androidx.constraintlayout.widget.Guideline
+                            android:id="@+id/guideline50"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            app:layout_constraintGuide_percent="0.33" />
+
+                        <ImageView
+                            android:id="@+id/autonomoPublicPerfil_star1"
+                            android:layout_width="80dp"
+                            android:layout_height="0dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginBottom="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/autonomoPublicPerfil_star2"
+                            app:layout_constraintTop_toBottomOf="@+id/autonomoPublicPerfil_Avaliacoes"
+                            app:srcCompat="@drawable/background_white_chapado" />
+
+
+                        <ImageView
+                            android:id="@+id/autonomoPublicPerfil_star2"
+                            android:layout_width="80dp"
+                            android:layout_height="0dp"
+                            android:layout_marginBottom="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/guideline51"
+                            app:layout_constraintStart_toStartOf="@+id/guideline50"
+                            app:layout_constraintTop_toTopOf="@+id/autonomoPublicPerfil_star1"
+                            app:srcCompat="@drawable/background_white_chapado" />
+
+
+                        <ImageView
+                            android:id="@+id/autonomoPublicPerfil_star3"
+                            android:layout_width="80dp"
+                            android:layout_height="0dp"
+                            android:layout_marginBottom="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/autonomoPublicPerfil_star2"
+                            app:layout_constraintTop_toTopOf="@+id/autonomoPublicPerfil_star1"
+                            app:srcCompat="@drawable/background_white_chapado" />
+
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        </ScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+    <RelativeLayout
+        android:id="@+id/LayoutProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffff"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:progressDrawable="@drawable/circular_progressbar" />
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
