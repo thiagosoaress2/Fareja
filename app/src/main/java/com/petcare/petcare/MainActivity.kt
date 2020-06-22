@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         //fazer login depos
         val btnLoginDepois : Button = findViewById(R.id.btnLoginDepois)
         btnLoginDepois.setOnClickListener {
-            if (isNetworkAvailable(this)){
+            if (MainController.isNetworkAvailable(this)){
                 ChamaDialog()
 
                 telainicial.visibility = View.GONE
@@ -101,15 +101,13 @@ class MainActivity : AppCompatActivity() {
 
                 val intent = Intent(this, MapsActivity::class.java)
                 intent.putExtra("email", "semLogin" )
-
                 startActivity(intent)
                 val telainicial: ConstraintLayout = findViewById(R.id.layInicial)
                 val layoutin = AnimationUtils.loadAnimation(this, R.anim.telainicial_comeback_withdelay_paraajustelogin)
                 telainicial.startAnimation(layoutin)
 
-
             } else {
-                Toast.makeText(this, "Você está sem conexão com a internet.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Você está sem conexão com a internet e não pode logar.", Toast.LENGTH_SHORT).show()
             }
 
         }
@@ -117,8 +115,8 @@ class MainActivity : AppCompatActivity() {
 
         val btnLoginWithMail = findViewById<Button>(R.id.layInicial_btnSignWithEmail)
         btnLoginWithMail.setOnClickListener {
-            if (isNetworkAvailable(this)) {
-                LoginWithEmail()
+            if (MainController.isNetworkAvailable(this)) {
+                LoginWithEmail() //tem que fazer aqui dentro
             } else {
                 Toast.makeText(this, "Você está sem conexão com a internet.", Toast.LENGTH_SHORT).show()
             }
@@ -128,7 +126,7 @@ class MainActivity : AppCompatActivity() {
         val loginButton: LoginButton = findViewById(R.id.login_button)
         val loginFaceVisivel = findViewById<Button>(R.id.layInicial_btnSignWithFace)
         loginFaceVisivel.setOnClickListener {
-            if (isNetworkAvailable(this)) {
+            if (MainController.isNetworkAvailable(this)) {
                 layinicialOut()
                 ChamaDialog()
                 loginButton.performClick()
@@ -196,15 +194,7 @@ class MainActivity : AppCompatActivity() {
         EncerraDialog()
 
         MainModels.checkAuth()
-        /*
-        val currentUser = auth.currentUser
-        if (currentUser == null){
-            auth.signOut()
-            updateUI(currentUser, "null")
-        } else {
-            updateUI(currentUser, "unknown")
-        }
-         */
+
         var retorno = "nao"
         val user = MainModels.returnUser()
         if (user.equals("nao")){
@@ -216,22 +206,20 @@ class MainActivity : AppCompatActivity() {
         retornoUpdateUi(retorno)
 
 
-        //daqui pra baixo ainda nao mexi
-
         val LoginWithMail = findViewById<Button>(R.id.layInicial_btnSignWithEmail)
         val layInicial = findViewById<ConstraintLayout>(R.id.layInicial)
         LoginWithMail.setOnClickListener {
-            if (isNetworkAvailable(this)) {
+            if (MainController.isNetworkAvailable(this)){
                 LoginWithEmail() //aqui estao os clickes
                 val layLoginMail =
                     findViewById<ConstraintLayout>(R.id.layLoginWithEmail)  //pagina inicial
                 layLoginMail.visibility = View.VISIBLE
                 layInicial.visibility = View.GONE
             } else {
-                Toast.makeText(this, "Você está sem conexão com a internet.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Você está sem conexão com a internet e não pode entrar.", Toast.LENGTH_SHORT).show()
             }
-        }
 
+        }
 
     }
 
@@ -320,170 +308,6 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
-
-    private fun updateUI(user: FirebaseUser?, tipoLogin:String) {
-
-        tipoLoginGlobal = tipoLogin
-        //se ja tiver dado permissão, segue normal
-        EncerraDialog()
-
-
-        val layNovoUser = findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-        val layLoginMail =
-            findViewById<ConstraintLayout>(R.id.layLoginWithEmail)  //pagina inicial do login com email
-
-        if (tipoLogin.equals("mail")) {
-
-            //hideProgressDialog()
-            if (user != null) {
-
-                if (!user.isEmailVerified) {
-                    //exibe a tela de verificação
-                    val telaDeVerificacao =
-                        findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                    telaDeVerificacao.visibility = View.VISIBLE
-                    layNovoUser.visibility = View.GONE
-                    laygenericoOutCenterToLeft(layNovoUser)
-                    laygenericoInRightToCenter(telaDeVerificacao)
-                    sendEmailVerification()
-                    emailVerificationCheckMeth()
-
-                } else {
-
-                    val user: FirebaseUser? = auth.currentUser
-                    val emailAddress = user?.email
-                    val intent = Intent(this, MapsActivity::class.java)
-
-                    intent.putExtra("email", emailAddress)
-                    startActivity(intent)
-                    val telaDeVerificacao =
-                        findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                    telaDeVerificacao.visibility = View.GONE
-                    val telaLoginMail =
-                        findViewById<ConstraintLayout>(R.id.layLoginWithEmail)
-                    telaLoginMail.visibility = View.GONE
-                    val telaLoginMailNew =
-                        findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-                    telaLoginMailNew.visibility = View.GONE
-                    val telainicial = findViewById<ConstraintLayout>(R.id.layInicial)
-                    telainicial.visibility = View.VISIBLE
-                    EncerraDialog()
-                    val layoutin = AnimationUtils.loadAnimation(this, R.anim.telainicial_comeback_withdelay_paraajustelogin)
-                    telainicial.startAnimation(layoutin)
-                }
-
-
-                //verifyEmailButton.isEnabled = !user.isEmailVerified  //tem que mexer aqui ainda
-
-            } else {
-
-                layLoginMail.visibility = View.GONE
-            }
-        } else if (tipoLogin.equals("unknown")) {  //este if é para o caso do usuario entrar depois, então nao sei qual métood de login mas ainda nao verificou email.
-
-            var tipoLoginMeth = getLoginType(user, 0)
-
-
-            if (tipoLoginMeth.equals("mail")) { //se for email verifica se a pessoa ja verificou o email. Se nao tiver feito abre a lay com verificacao. Senao vai abrir a proxima activity
-                if (user != null) {
-                    if (!user.isEmailVerified) {
-                        //exibe a tela de verificação
-                        val telaDeVerificacao =
-                            findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                        telaDeVerificacao.visibility = View.VISIBLE
-                        laygenericoInRightToCenter(telaDeVerificacao)
-                        emailVerificationCheckMeth() //libera o clique do botão para verificar se o e-mail foi enviado
-                        //layNovoUser.visibility = View.GONE
-                        //layLoginMail.visibility = View.GONE
-                        laygenericoOutCenterToLeft(layLoginMail)
-                        laygenericoOutCenterToLeft(layLoginMail)
-
-                    } else {
-                        val user: FirebaseUser? = auth.currentUser
-                        val emailAddress = user?.email
-                        val intent = Intent(this, MapsActivity::class.java)
-
-                        intent.putExtra("email", emailAddress)
-                        startActivity(intent)
-                        val telaDeVerificacao =
-                            findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                        telaDeVerificacao.visibility = View.GONE
-                        val telaLoginMail =
-                            findViewById<ConstraintLayout>(R.id.layLoginWithEmail)
-                        telaLoginMail.visibility = View.GONE
-                        val telaLoginMailNew =
-                            findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-                        telaLoginMailNew.visibility = View.GONE
-                        val telainicial = findViewById<ConstraintLayout>(R.id.layInicial)
-                        telainicial.visibility = View.VISIBLE
-                        EncerraDialog()
-                        val layoutin = AnimationUtils.loadAnimation(this, R.anim.telainicial_comeback_withdelay_paraajustelogin)
-                        telainicial.startAnimation(layoutin)
-                    }
-                }
-
-            } else { //aqui é para o caso de nao ser via email. E neste caso, nao precisa verificar nada. Abre direto a segunda activity
-                val intent = Intent(this, MapsActivity::class.java)
-                val user: FirebaseUser? = auth.currentUser
-                val emailAddress = user?.email
-                intent.putExtra("email", emailAddress)
-
-                startActivity(intent)
-                val telaDeVerificacao =
-                    findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                telaDeVerificacao.visibility = View.GONE
-                val telaLoginMail = findViewById<ConstraintLayout>(R.id.layLoginWithEmail)
-                telaLoginMail.visibility = View.GONE
-                val telaLoginMailNew =
-                    findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-                telaLoginMailNew.visibility = View.GONE
-                val telainicial = findViewById<ConstraintLayout>(R.id.layInicial)
-                telainicial.visibility = View.VISIBLE
-                EncerraDialog()
-
-                val layoutin = AnimationUtils.loadAnimation(this, R.anim.telainicial_comeback_withdelay_paraajustelogin)
-                telainicial.startAnimation(layoutin)
-            }
-
-        } else if (tipoLogin.equals("facebook")) {
-            val intent = Intent(this, MapsActivity::class.java)
-
-            val user: FirebaseUser? = auth.currentUser
-            val emailAddress = user?.email
-            intent.putExtra("email", emailAddress)
-
-            //intent.putExtra("key", value)
-            startActivity(intent)
-            EncerraDialog()
-            val telainicial: ConstraintLayout = findViewById(R.id.layInicial)
-            val layoutin = AnimationUtils.loadAnimation(this, R.anim.telainicial_comeback_withdelay_paraajustelogin)
-            telainicial.startAnimation(layoutin)
-
-        } else {
-
-            val telaDeVerificacao =
-                findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-            telaDeVerificacao.visibility = View.GONE
-            val telaLoginMail = findViewById<ConstraintLayout>(R.id.layLoginWithEmail)
-            telaLoginMail.visibility = View.GONE
-            val telaLoginMailNew =
-                findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-            telaLoginMailNew.visibility = View.GONE
-            val telainicial = findViewById<ConstraintLayout>(R.id.layInicial)
-            telainicial.visibility = View.VISIBLE
-            layinicialVoltaAoInicio()
-            EncerraDialog()
-        }
-
-
-    }
-
-
-
-
-
-
-
 
     private fun createAccount(email: String, password: String) {
         //Log.d(TAG, "createAccount:$email")
@@ -1211,13 +1035,6 @@ class MainActivity : AppCompatActivity() {
         layout.visibility = View.GONE
         spinner.visibility = View.GONE
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) //libera os clicks
-    }
-
-    fun isNetworkAvailable(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        var activeNetworkInfo: NetworkInfo? = null
-        activeNetworkInfo = cm.activeNetworkInfo
-        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting
     }
 
     /* To hide Keyboard */
