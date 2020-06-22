@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_main)
 
-        //auth = FirebaseAuth.getInstance()
+        auth = FirebaseAuth.getInstance()
         MainModels.setupInicial()
         MainController.setInicial()
 
@@ -222,6 +222,8 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        metodosDeCreate()
+
     }
 
     fun retornoUpdateUi(result: String){
@@ -261,6 +263,11 @@ class MainActivity : AppCompatActivity() {
             telainicial.startAnimation(layoutin)
         } else if (result.equals("email_logado")){
             layLoginMail.visibility = View.GONE
+            val email = MainModels.getUserMail()
+            val intent = Intent(this, MapsActivity::class.java)
+            intent.putExtra("email", email)
+            startActivity(intent)
+
         } else if (result.equals("logado")){
 
             val email = MainModels.getUserMail()
@@ -386,7 +393,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun signIn(email: String) {
+    private fun signIn() {
 
         layinicialOut()
 
@@ -409,15 +416,15 @@ class MainActivity : AppCompatActivity() {
             fieldPassword.error = "A senha deve conter pelo menos 6 dígitos"
 
         } else {
-            auth.signInWithEmailAndPassword(email, password)
+            ChamaDialog()
+            auth.signInWithEmailAndPassword(fieldEmail.text.toString(), password)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
-
+                        
                         var retorno = "nao"
                         val user2 = MainModels.returnUser()
                         retorno = MainController.updateUI(user2, "mail")
-
                         retornoUpdateUi(retorno)
                         EncerraDialog()
                     } else {
@@ -752,28 +759,8 @@ class MainActivity : AppCompatActivity() {
 
         val signInEmail = findViewById<Button>(R.id.emailSignInButton) //botão de signin
         signInEmail.setOnClickListener {
-            val etEmail = findViewById<EditText>(R.id.fieldEmail);
-            val etPassword = findViewById<EditText>(R.id.fieldPassword);
 
-            //ChamaDialog()
-
-            /*
-            if (etEmail.text.isEmpty()){
-                etEmail.setError("Obrigatório")
-            } else if (!etEmail.text.contains("@")){
-                etEmail.setError("formato inválido")
-            } else if (!etEmail.text.contains(".")){
-                etEmail.setError("formato inválido")
-            } else if (etPassword.text.isEmpty()){
-                etPassword.setError("Obrigatório")
-            } else if (etPassword.text.length<6){
-                etPassword.setError("A senha deve conter pelo menos 6 dígitos")
-            } else {
-                signIn(etEmail.text.toString(), etPassword.text.toString())
-            }
-
-             */
-            signIn(etEmail.text.toString())
+            signIn()
             hideKeyboard()
 
         }
@@ -969,6 +956,7 @@ class MainActivity : AppCompatActivity() {
     fun laygenericoInRightToCenter (layout:ConstraintLayout){
 
         val layoutMove = AnimationUtils.loadAnimation(this, R.anim.layout_slidein)
+        layout.visibility = View.VISIBLE
         layout.startAnimation(layoutMove)
 
     }

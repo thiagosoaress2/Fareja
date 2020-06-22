@@ -39,7 +39,11 @@ object MainModels {
 
     fun isEmailVerified () : Boolean {
         val currentUser = auth.currentUser
-        return isEmailVerified()
+        if (currentUser!!.isEmailVerified){
+            return true
+        } else {
+            return false
+        }
     }
 
     fun sendEmailVerification(activity: Activity) {
