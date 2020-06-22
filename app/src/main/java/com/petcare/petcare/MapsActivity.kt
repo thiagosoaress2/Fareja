@@ -68,6 +68,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.FirebaseDatabase.getInstance
+import com.petcare.petcare.Controller.MapsController
 import com.petcare.petcare.Utils.fineLocationPermission
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.io.IOException
@@ -184,7 +185,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //animaLoad()
 
         //if (!permissaoSeguindoGoogle()){ //sem autorização pede novamente
-            requestTheDamnPermission()
+
         if (fineLocationPermission.hasPermissions(this)==false){
             fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
         } else {  //senao seguir com procedimentos
@@ -192,9 +193,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             databaseReference = FirebaseDatabase.getInstance().reference
 
             FacebookSdk.sdkInitialize(getApplicationContext())
-
-            //permissoes de camera, mapa
-            permissaoSeguindoGoogle()
 
             //verifica se tem verso mais recente na loja
             checkForAppUpdate()
@@ -204,7 +202,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-            requestToOpenGpsLikeWaze()
+            //requestToOpenGpsLikeWaze()
+            MapsController.requestToOpenGpsLikeWaze(this)
 
             //ChamaDialog()
 
@@ -248,13 +247,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             //centralBtnApenasLocaliza() //clique inicial do botão central. Depois ele vai assumir outras funções
 
-            if (isNetworkAvailable(this)) {
+            if (MapsController.isNetworkAvailable(this)) {
                 queriesIniciais()
             } else {
                 makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos")
             }
 
-            if (permissaoSeguindoGoogle()){
+            if (fineLocationPermission.hasPermissions(this)){
                 fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
             }
 
@@ -1417,14 +1416,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         centralBtnApenasLocaliza ()
 
-        if (permissaoSeguindoGoogle()){
+        if (fineLocationPermission.hasPermissions(this)){
             getUserLocation(raioUser, 0)
+        } else {
+            fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
         }
 
 
     }
-
-
 
 
     //pega a posição do usuário e marca o circulo no mapa
@@ -1433,110 +1432,117 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         if (temPermissaoParaGps()) {
 
             // 1
-            mMap.isMyLocationEnabled = true
+            if (fineLocationPermission.hasPermissions(this)==false){
+                fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
+            } else {
 
-            // 2
-            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-                // Got last known location. In some rare situations this can be null.
-                // 3
+                mMap.isMyLocationEnabled = true
 
-                if (location != null) {
+                // 2
+                fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                    // Got last known location. In some rare situations this can be null.
+                    // 3
 
-                    getLocal=true
-                    //minha localização
-                    lastLocation = location
-                    val currentLatLng = LatLng(location.latitude, location.longitude)
+                    if (location != null) {
 
-                    //vai verificar se tem anuncio no pais e dentro dele vai chamando os outros métodos
-                    //estava fazendo verificação várias vezes, todas as vezes que opassava aqui. ENtão vamos fazer uma trava
-                    if (checkAds==0) {
-                        checkAds=1
-                        val paisanuncio: String =
-                            getAddressOnlyPaisParaAnuncioProprio(currentLatLng)
-                        if (paisanuncio.equals("nao")) {
-                            //mantem anuncio adMob pois nao identificou corretamente o país
-                        } else {
-                            queryAnunciosPropriosNivelPais(paisanuncio, currentLatLng)
+                        getLocal=true
+                        //minha localização
+                        lastLocation = location
+                        val currentLatLng = LatLng(location.latitude, location.longitude)
+
+                        //vai verificar se tem anuncio no pais e dentro dele vai chamando os outros métodos
+                        //estava fazendo verificação várias vezes, todas as vezes que opassava aqui. ENtão vamos fazer uma trava
+                        if (checkAds==0) {
+                            checkAds=1
+                            val paisanuncio: String =
+                                getAddressOnlyPaisParaAnuncioProprio(currentLatLng)
+                            if (paisanuncio.equals("nao")) {
+                                //mantem anuncio adMob pois nao identificou corretamente o país
+                            } else {
+                                queryAnunciosPropriosNivelPais(paisanuncio, currentLatLng)
+                            }
                         }
-                    }
 
 
-                    /*
-                    //este bloco é para o anuncio proprio. Verifica a cidade do usuario e faz uma query para ver se tem anuncio nesta cidade. Se tiver, desativa o admob. Dentro desta query ele faz um clicklistener para mandar pro site do anunciante
-                    val cidadeAnuncio: String = getAddressOnlyCidadeParaAnuncioProprio(currentLatLng)
-                    if (cidadeAnuncio.equals("nao")){
-                        //mantem anuncio adMob pois nao achou a cidade
-                    } else {
-                        //verifica se tem um anuncio proprio. Se tiver vai trocar o adMob pelo anuncio proprio
-                        queryAnunciosPropriosNivelCidade(cidadeAnuncio, currentLatLng)
-                    }
+                        /*
+                        //este bloco é para o anuncio proprio. Verifica a cidade do usuario e faz uma query para ver se tem anuncio nesta cidade. Se tiver, desativa o admob. Dentro desta query ele faz um clicklistener para mandar pro site do anunciante
+                        val cidadeAnuncio: String = getAddressOnlyCidadeParaAnuncioProprio(currentLatLng)
+                        if (cidadeAnuncio.equals("nao")){
+                            //mantem anuncio adMob pois nao achou a cidade
+                        } else {
+                            //verifica se tem um anuncio proprio. Se tiver vai trocar o adMob pelo anuncio proprio
+                            queryAnunciosPropriosNivelCidade(cidadeAnuncio, currentLatLng)
+                        }
+
+                         */
+
+                        //ajusta o zoom para aparecer o petshop mais distante na tela do user
+                        if (situacao == 3){
+
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f))
+                        }
+
+                        //se situação não for 0, é o priemiro acesso do user. Se for 2, é o botão de centralizar;  obs: Situacao 1 é que nao achou petshops e aumentou o raio de busca. Nao precisa aproximar a cam
+                        if (situacao == 0 || situacao == 2) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f))
+                        }
+
+                        if (situacao == 0) {
+                            val circle: Circle
+                            circle = mMap.addCircle(
+
+                                CircleOptions()
+                                    .center(currentLatLng)
+                                    .radius((raio).toDouble()) //=10 km
+                                    .strokeColor(Color.CYAN)
+                                    .fillColor(ContextCompat.getColor(this!!, R.color.azulClarotransp))
+                            )
+
+
+
+                            //se for primeiro acesso também achar os usuarios proximos PetFriends
+                            //vou tentar levar pra dentro da qiery inicial  REFORMA
+                            //findUsersNerby(location.latitude, location.longitude)
+                            //findAutonomosNerby(location.latitude, location.longitude)
+                        }
+
+
+
+                        /*
+                    val markerOptions = MarkerOptions()
+                    val titleStr = getAddress(currentLatLng)  // add these two lines
+                    markerOptions.title(titleStr)
+                    mMap.addMarker(markerOptions)
 
                      */
 
-                    //ajusta o zoom para aparecer o petshop mais distante na tela do user
-                    if (situacao == 3){
+                        //tirando o caso do user clicar no botão do meio, nao precisa buscar novamente os pets proximos
+                        if (situacao != 2) {
+                            if (petsNerbyWhereAlredyQueried==false) { //assim garantimos que nao entre duas vezes
+                                queryPetsNerby(location.latitude, location.longitude)
+                            }
+                            MetodosDoImpulsionamentoGerencia(location.latitude, location.longitude)
+                            //queryStories(location.latitude, location.longitude)
 
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f))
-                    }
-
-                    //se situação não for 0, é o priemiro acesso do user. Se for 2, é o botão de centralizar;  obs: Situacao 1 é que nao achou petshops e aumentou o raio de busca. Nao precisa aproximar a cam
-                    if (situacao == 0 || situacao == 2) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f))
-                    }
-
-                    if (situacao == 0) {
-                        val circle: Circle
-                        circle = mMap.addCircle(
-
-                            CircleOptions()
-                                .center(currentLatLng)
-                                .radius((raio).toDouble()) //=10 km
-                                .strokeColor(Color.CYAN)
-                                .fillColor(ContextCompat.getColor(this!!, R.color.azulClarotransp))
-                        )
-
-
-
-                        //se for primeiro acesso também achar os usuarios proximos PetFriends
-                        //vou tentar levar pra dentro da qiery inicial  REFORMA
-                        //findUsersNerby(location.latitude, location.longitude)
-                        //findAutonomosNerby(location.latitude, location.longitude)
-                    }
-
-
-
-                    /*
-                val markerOptions = MarkerOptions()
-                val titleStr = getAddress(currentLatLng)  // add these two lines
-                markerOptions.title(titleStr)
-                mMap.addMarker(markerOptions)
-
-                 */
-
-                    //tirando o caso do user clicar no botão do meio, nao precisa buscar novamente os pets proximos
-                    if (situacao != 2) {
-                        if (petsNerbyWhereAlredyQueried==false) { //assim garantimos que nao entre duas vezes
-                            queryPetsNerby(location.latitude, location.longitude)
                         }
-                        MetodosDoImpulsionamentoGerencia(location.latitude, location.longitude)
-                        //queryStories(location.latitude, location.longitude)
 
+
+                        EncerraDialog() //fecha o loading que iniciou em onCreate
+                    } else {
+                        //para aparelhos antigos não estava encontrando a localização
+                        val toast = Toast.makeText(
+                            this@MapsActivity,
+                            "Não foi possível encontrar sua localização. Ligue o GPS ou Digite o endereço",
+                            Toast.LENGTH_LONG
+                        )
+                        toast.setGravity(Gravity.CENTER, 0, 100)
+                        toast.show()
+                        val btnBuscaEnd: Button = findViewById(R.id.btnInserirEndereco)
+                        btnBuscaEnd.performClick()
                     }
-
-
-                    EncerraDialog() //fecha o loading que iniciou em onCreate
-                } else {
-                    //para aparelhos antigos não estava encontrando a localização
-                    val toast = Toast.makeText(
-                        this@MapsActivity,
-                        "Não foi possível encontrar sua localização. Ligue o GPS ou Digite o endereço",
-                        Toast.LENGTH_LONG
-                    )
-                    toast.setGravity(Gravity.CENTER, 0, 100)
-                    toast.show()
-                    val btnBuscaEnd: Button = findViewById(R.id.btnInserirEndereco)
-                    btnBuscaEnd.performClick()
                 }
+
+
             }
 
         } else {
@@ -2667,21 +2673,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     if (!tipo.equals("autonomo")){ //se for autonomo vai fazer a query. Isto está la no else. Entao nao precisamos fazer nenhum destes métodos
 
 
-                        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-                            // Got last known location. In some rare situations this can be null.
-                            // 3
+                        if (ActivityCompat.checkSelfPermission(
+                                this,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                                this,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
 
-                            if (location != null) {
+                            fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
 
-                                lastLocation = location
+                        } else {
 
-                                findUsersNerby(lastLocation.latitude, lastLocation.longitude)
-                                findAutonomosNerby(lastLocation.latitude, lastLocation.longitude)
-                                getUserLocation(raioUser, 0)
+                            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                                // Got last known location. In some rare situations this can be null.
+                                // 3
 
+                                if (location != null) {
+
+                                    lastLocation = location
+
+                                    findUsersNerby(lastLocation.latitude, lastLocation.longitude)
+                                    findAutonomosNerby(lastLocation.latitude, lastLocation.longitude)
+                                    getUserLocation(raioUser, 0)
+
+                                }
                             }
-                        }
 
+                        }
 
                     }
 
@@ -6014,42 +6034,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
-    //avisa que o gps está desligado e o força a ligar
-    fun requestToOpenGpsLikeWaze (){
-        val locationRequest : LocationRequest = LocationRequest()
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-        locationRequest.setInterval(30*1000)
-        locationRequest.setFastestInterval(5*1000)
-        val builder = LocationSettingsRequest.Builder()
-            .addLocationRequest(locationRequest)
-
-        builder.setAlwaysShow(true)
-
-        val result: Task<LocationSettingsResponse> =
-            LocationServices.getSettingsClient(this).checkLocationSettings(builder.build())
-        result.addOnCompleteListener(object : OnCompleteListener<LocationSettingsResponse?> {
-            override fun onComplete(@NonNull task: Task<LocationSettingsResponse?>) {
-                val btnCentral: Button = findViewById(R.id.btnLocalizaNovamente)
-                btnCentral.performClick()
-                try {
-                    task.getResult(ApiException::class.java)
-                } catch (exception: ApiException) {
-                    when (exception.getStatusCode()) {
-                        LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> try {
-                            val resolvable: ResolvableApiException =
-                                exception as ResolvableApiException
-                            resolvable.startResolutionForResult(this@MapsActivity, 100)
-                        } catch (e: SendIntentException) {
-
-                        } catch (e: ClassCastException) {
-                            Log.d("testeGps", e.message)
-                        }
-                    }
-                }
-            }
-        })
-    }
-
+    /*
     fun permissaoSeguindoGoogle():Boolean{
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
@@ -6085,45 +6070,39 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
+     */
+
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            171 -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    Toast.makeText(this, "Permissão concedida. Reiniciando a aplicação para achar sua localização.", Toast.LENGTH_SHORT).show()
-                    finish()
-                    //getUserLocation(raioUser, 0) REFORMA
+        if (requestCode==FINE_LOCATION_CODE){
 
-                } else {
-                    Toast.makeText(this, "Permissão não concedida. Não podemos acessar sua localização", Toast.LENGTH_SHORT).show()
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                //permissão concedida
+                Toast.makeText(this, "Permissão concedida. Reiniciando a aplicação para achar sua localização.", Toast.LENGTH_SHORT).show()
+                finish()
 
-                    //colocando clicks para chamar a permissão em tudo
-                    val btnMenu: ImageView = findViewById(R.id.lay_Maps_MenuBtn)
-                    btnMenu.setOnClickListener {
-                        requestTheDamnPermission()
-                    }
-                    val btnInserirEndereco : Button = findViewById(R.id.btnInserirEndereco)
-                    btnInserirEndereco.setOnClickListener {
-                        requestTheDamnPermission()
-                    }
-                    val btnShowHideLista : Button = findViewById(R.id.btnShowHideLista)
-                    btnShowHideLista.visibility = View.GONE
 
+            } else {
+                Toast.makeText(this, "Permissão não concedida. Não podemos acessar sua localização", Toast.LENGTH_SHORT).show()
+                // permission denied, boo! Disable the
+                // functionality that depends on this permission.
+
+                //colocando clicks para chamar a permissão em tudo
+                val btnMenu: ImageView = findViewById(R.id.lay_Maps_MenuBtn)
+                btnMenu.setOnClickListener {
+                    fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
                 }
-                return
+                val btnInserirEndereco : Button = findViewById(R.id.btnInserirEndereco)
+                btnInserirEndereco.setOnClickListener {
+                    fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
+                }
+                val btnShowHideLista : Button = findViewById(R.id.btnShowHideLista)
+                btnShowHideLista.visibility = View.GONE
+
             }
 
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
-            }
         }
+
     }
 
     fun temPermissaoParaGps(): Boolean{
@@ -6668,34 +6647,48 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         if (this@MapsActivity::lastLocation.isInitialized) {
 
 
-            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-                // Got last known location. In some rare situations this can be null.
-                // 3
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
 
-                if (location != null) {
+                fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
+                return
+            } else {
+                fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                    // Got last known location. In some rare situations this can be null.
+                    // 3
 
-                    lastLocation = location
+                    if (location != null) {
 
-                    val lat = lastLocation.latitude
-                    val long = lastLocation.longitude
+                        lastLocation = location
 
-                    if (state.equals("online")) {
-                        databaseReference.child("onlineUsers").child(userBD).child("latlong")
-                            .setValue(lat + long)
-                        databaseReference.child("onlineUsers").child(userBD).child("state")
-                            .setValue(state)
-                        databaseReference.child("onlineUsers").child(userBD).child("img")
-                            .setValue(img)
-                        databaseReference.child("onlineUsers").child(userBD).child("lat")
-                            .setValue(lat)
-                        databaseReference.child("onlineUsers").child(userBD).child("long")
-                            .setValue(long)
-                    } else {
-                        databaseReference.child("onlineUsers").child(userBD).removeValue()
+                        val lat = lastLocation.latitude
+                        val long = lastLocation.longitude
+
+                        if (state.equals("online")) {
+                            databaseReference.child("onlineUsers").child(userBD).child("latlong")
+                                .setValue(lat + long)
+                            databaseReference.child("onlineUsers").child(userBD).child("state")
+                                .setValue(state)
+                            databaseReference.child("onlineUsers").child(userBD).child("img")
+                                .setValue(img)
+                            databaseReference.child("onlineUsers").child(userBD).child("lat")
+                                .setValue(lat)
+                            databaseReference.child("onlineUsers").child(userBD).child("long")
+                                .setValue(long)
+                        } else {
+                            databaseReference.child("onlineUsers").child(userBD).removeValue()
+                        }
+
                     }
-
                 }
             }
+
 
         } else{
             centralBtnApenasLocaliza()
@@ -6706,78 +6699,95 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //Pega dados do usuário e coloca ele no mapa
     fun placeUserInMap() {
 
-        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-            // Got last known location. In some rare situations this can be null.
-            // 3
 
-            if (location != null) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
 
-                getLocal = true
-                //minha localização
-                lastLocation = location
+            fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
+            return
+        } else {
+
+            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                // Got last known location. In some rare situations this can be null.
+                // 3
+
+                if (location != null) {
+
+                    getLocal = true
+                    //minha localização
+                    lastLocation = location
 
 
-                //criar uma função para colocar um marker desse para cada petshop
-                val latLng = LatLng(lastLocation.latitude, lastLocation.longitude)
+                    //criar uma função para colocar um marker desse para cada petshop
+                    val latLng = LatLng(lastLocation.latitude, lastLocation.longitude)
 
-                var bitmapFinal : Bitmap?
+                    var bitmapFinal : Bitmap?
 
-                //pega o tamanho da tela para ajustar a qualquer celular na mesma proporção
-                val display = windowManager.defaultDisplay
-                val size = Point()
-                display.getSize(size)
-                val width: Int = size.x
-                val height: Int = size.y
+                    //pega o tamanho da tela para ajustar a qualquer celular na mesma proporção
+                    val display = windowManager.defaultDisplay
+                    val size = Point()
+                    display.getSize(size)
+                    val width: Int = size.x
+                    val height: Int = size.y
 
-                //aqui é o tamanho total da imagem do user. Alterar aqui se quiser aumentar ou diminuir
-                val withPercent  = ((12*width)/100).toInt()
-                val heigthPercent : Int = ((7*height)/100).toInt()
+                    //aqui é o tamanho total da imagem do user. Alterar aqui se quiser aumentar ou diminuir
+                    val withPercent  = ((12*width)/100).toInt()
+                    val heigthPercent : Int = ((7*height)/100).toInt()
 
-                var img = "nao"
-                if (imgDoUser.equals("nao")){
-                    img = "https://firebasestorage.googleapis.com/v0/b/farejadorapp.appspot.com/o/imgs_sistema%2Fimgusernoimg.png?alt=media&token=8a119c04-3295-4c5a-8071-dde1fe7849ea"
-                } else {
-                    img = imgDoUser
+                    var img = "nao"
+                    if (imgDoUser.equals("nao")){
+                        img = "https://firebasestorage.googleapis.com/v0/b/farejadorapp.appspot.com/o/imgs_sistema%2Fimgusernoimg.png?alt=media&token=8a119c04-3295-4c5a-8071-dde1fe7849ea"
+                    } else {
+                        img = imgDoUser
+                    }
+
+                    //com o Glide vamos transformar a imagem que vem cmo link do storage firebase em um bitmap que iremos trabalhar
+                    Glide.with(this)
+                        .asBitmap()
+                        .load(img)
+                        .apply(RequestOptions().override(withPercent, heigthPercent)) //ajusta o tamanho
+                        .apply(RequestOptions.circleCropTransform()) //coloca em formato circulo
+                        .into(object : CustomTarget<Bitmap>(){
+                            override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+
+                                //pega a imagem do fundo branco
+                                val bit = BitmapFactory.decodeResource(
+                                    this@MapsActivity.getResources(),
+                                    R.drawable.placeholder
+                                )
+
+                                //no metodo abaixo ajustamos o tamanho das imagens e juntamos os dois
+                                bitmapFinal = createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
+
+                                //coloca a marca com titulo
+
+                                val mark1 = mMap.addMarker(MarkerOptions().position(latLng).title("Você").icon(BitmapDescriptorFactory.fromBitmap(bitmapFinal)))
+
+                                mark1.tag=0
+
+                                mMap.setOnMarkerClickListener (this@MapsActivity)
+
+                            }
+                            override fun onLoadCleared(placeholder: Drawable?) {
+                                // this is called when imageView is cleared on lifecycle call or for
+                                // some other reason.
+                                // if you are referencing the bitmap somewhere else too other than this imageView
+                                // clear it here as you can no longer have the bitmap
+                            }
+                        })
+
+
                 }
-
-                //com o Glide vamos transformar a imagem que vem cmo link do storage firebase em um bitmap que iremos trabalhar
-                Glide.with(this)
-                    .asBitmap()
-                    .load(img)
-                    .apply(RequestOptions().override(withPercent, heigthPercent)) //ajusta o tamanho
-                    .apply(RequestOptions.circleCropTransform()) //coloca em formato circulo
-                    .into(object : CustomTarget<Bitmap>(){
-                        override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-
-                            //pega a imagem do fundo branco
-                            val bit = BitmapFactory.decodeResource(
-                                this@MapsActivity.getResources(),
-                                R.drawable.placeholder
-                            )
-
-                            //no metodo abaixo ajustamos o tamanho das imagens e juntamos os dois
-                            bitmapFinal = createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
-
-                            //coloca a marca com titulo
-
-                            val mark1 = mMap.addMarker(MarkerOptions().position(latLng).title("Você").icon(BitmapDescriptorFactory.fromBitmap(bitmapFinal)))
-
-                            mark1.tag=0
-
-                            mMap.setOnMarkerClickListener (this@MapsActivity)
-
-                        }
-                        override fun onLoadCleared(placeholder: Drawable?) {
-                            // this is called when imageView is cleared on lifecycle call or for
-                            // some other reason.
-                            // if you are referencing the bitmap somewhere else too other than this imageView
-                            // clear it here as you can no longer have the bitmap
-                        }
-                    })
-
-
             }
+
         }
+
 
     }
 
@@ -7390,6 +7400,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             //openPopUp("O que é esta barra?", "Nós assumimos um compromisso com nossos parceiros. A cada 500 transações dentro do aplicativo nós doamos um saco de ração para a Suipa (Sociedade União Internacional Protetora dos Animais). Você pode acompanhar todo o processo nas nossas redes sociais", false, "n", "n", "n")
         }
 
+        databaseReference = FirebaseDatabase.getInstance().reference
 
         val rootRef = databaseReference.child("donation")
         rootRef.addListenerForSingleValueEvent(object : ValueEventListener {

@@ -57,7 +57,7 @@ object MainController {
                 }
 
             } else { //aqui é para o caso de nao ser via email. E neste caso, nao precisa verificar nada. Abre direto a segunda activity.
-
+                //facebook
                 retorno = "logado"
 
             }

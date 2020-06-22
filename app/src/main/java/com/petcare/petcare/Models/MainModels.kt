@@ -18,15 +18,6 @@ object MainModels {
         auth = FirebaseAuth.getInstance()
     }
 
-    fun checkAuth () : Boolean {
-        val currentUser = auth.currentUser
-        if (currentUser == null){
-            auth.signOut()
-            return false
-        } else {
-            return true
-        }
-    }
 
     fun returnUser (): String {
         val currentUser = auth.currentUser

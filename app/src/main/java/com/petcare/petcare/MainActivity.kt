@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -18,14 +16,11 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
-import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.facebook.*
 import com.facebook.login.LoginResult
 import com.facebook.login.widget.LoginButton
@@ -34,14 +29,9 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.petcare.petcare.Controller.MainController
 import com.petcare.petcare.Models.MainModels
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_maps.*
-import kotlinx.android.synthetic.main.activity_minhas_vendas.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -81,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         val telaLoginMail = findViewById<ConstraintLayout>(R.id.layLoginWithEmail)
         val telaLoginMailNew = findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
 
-        telaDeVerificacao.visibility = View.GONE
+        //telaDeVerificacao.visibility = View.GONE
 
         //fazer login depos
         val btnLoginDepois : Button = findViewById(R.id.btnLoginDepois)
@@ -193,14 +183,14 @@ class MainActivity : AppCompatActivity() {
 
         EncerraDialog()
 
-        MainModels.checkAuth()
+        //MainModels.checkAuth()
 
         var retorno = "nao"
-        val user = MainModels.returnUser()
-        if (user.equals("nao")){
-            retorno = MainController.updateUI("nao", "null")
+        val sit = MainModels.returnUser()
+        if (sit.equals("nao")){
+            retorno = MainController.updateUI("nao", sit)
         } else {
-            retorno = MainController.updateUI(user, "unknown")
+            retorno = MainController.updateUI(auth.currentUser.toString(), sit)
         }
 
         retornoUpdateUi(retorno)
@@ -233,14 +223,21 @@ class MainActivity : AppCompatActivity() {
 
         //preciso refazer os métodos daqui de dentro
         if (result.equals("email_nao_verificado")){
+            /*
+            val telainicial = findViewById<ConstraintLayout>(R.id.layInicial)
+            telainicial.visibility = View.GONE
             val telaDeVerificacao = findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
             telaDeVerificacao.visibility = View.VISIBLE
+
+             */
+            //param 1 : lay que vai sair, param 2: lay que vai entrar
+            trocaTela(findViewById<ConstraintLayout>(R.id.layInicial), findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail))
+
             layNovoUser.visibility = View.GONE
-            laygenericoOutCenterToLeft(layNovoUser)
-            laygenericoInRightToCenter(telaDeVerificacao)
-            MainModels.sendEmailVerification(this)
-            val emailVerifyCheck = findViewById<Button>(R.id.verifyEmailButtonCheck) //botao que o user aperta quando ja vericou o email
-            emailVerifyCheck.setOnClickListener {
+            //MainModels.sendEmailVerification(this)   vai sair daqui para parar de reenviar toda entrada nova. Vai mandar apenas quando acabar o cadastor e quando o user clicar no botão
+
+            val btnEmailVerifyCheck = findViewById<Button>(R.id.verifyEmailButtonCheck) //botao que o user aperta quando ja vericou o email
+            btnEmailVerifyCheck.setOnClickListener {
                 emailVerificationCheckMeth()
             }
 
@@ -274,7 +271,6 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("email", email)
             startActivity(intent)
 
-            startActivity(intent)
             val telaDeVerificacao =
                 findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
             telaDeVerificacao.visibility = View.GONE
@@ -375,6 +371,8 @@ class MainActivity : AppCompatActivity() {
                         val layNovoUser= findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
                         layNovoUser.visibility = View.GONE
                         laygenericoOutCenterToLeft(layNovoUser)
+
+                        MainModels.sendEmailVerification(this)
                         MainModels.createNewUser()
 
                     } else {
@@ -972,6 +970,16 @@ class MainActivity : AppCompatActivity() {
         val layoutMove = AnimationUtils.loadAnimation(this, R.anim.layout_slideout_centro_to_right)
         layout.startAnimation(layoutMove)
 
+    }
+
+    fun trocaTela (layoutSai: ConstraintLayout, layoutEntra: ConstraintLayout){
+
+        val saindo = AnimationUtils.loadAnimation(this, R.anim.layout_slideout)
+        val entrando = AnimationUtils.loadAnimation(this, R.anim.layout_slidein)
+        layoutEntra.visibility = View.VISIBLE
+        layoutSai.startAnimation(saindo)
+        layoutEntra.startAnimation(entrando)
+        layoutSai.visibility = View.GONE
     }
 
 }
