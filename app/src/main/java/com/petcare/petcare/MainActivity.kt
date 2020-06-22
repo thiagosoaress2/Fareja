@@ -59,7 +59,6 @@ class MainActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         MainModels.setupInicial()
-        MainController.setInicial()
 
         //minha chave ca-app-pub-6912617107153681/4839063139
         //chave para testes ca-app-pub-3940256099942544/6300978111
@@ -421,7 +420,7 @@ class MainActivity : AppCompatActivity() {
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
-                        
+
                         var retorno = "nao"
                         val user2 = MainModels.returnUser()
                         retorno = MainController.updateUI(user2, "mail")

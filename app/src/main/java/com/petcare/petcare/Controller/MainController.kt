@@ -20,10 +20,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 //controla método que precisam de inteligencia
 object MainController {
 
-    fun setInicial(){
-
-    }
-
     fun updateUI(user: String, tipoLogin:String) : String {
 
         var retorno = "nao"

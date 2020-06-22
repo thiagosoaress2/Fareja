@@ -68,6 +68,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.FirebaseDatabase.getInstance
+import com.petcare.petcare.Utils.fineLocationPermission
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.io.IOException
 import java.math.BigDecimal
@@ -85,6 +86,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //3 - criar clusters (pega a distancia entre marks - basta usar o arrayPetFriendMarkers e medir as distancias....se forem pequenas esconder em cluster   ref: https://github.com/googlemaps/android-maps-utils/blob/master/demo/src/main/java/com/google/maps/android/utils/demo/CustomMarkerClusteringDemoActivity.java
     //SERVICO: TINDER
     //ADICIONAR AS PERMISSOES EM TODAS ACTIVITIES NVOAS QUE USAM CAMERA E FOOT
+
+    private val FINE_LOCATION_CODE = 721
 
     //upadte automático
     private val appUpdateManager: AppUpdateManager by lazy { AppUpdateManagerFactory.create(this) }
@@ -180,21 +183,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         //animaLoad()
 
-        if (!permissaoSeguindoGoogle()){ //sem autorização pede novamente
+        //if (!permissaoSeguindoGoogle()){ //sem autorização pede novamente
             requestTheDamnPermission()
+        if (fineLocationPermission.hasPermissions(this)==false){
+            fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
         } else {  //senao seguir com procedimentos
-
-            /*
-            //val btnShowHideLista : Button = findViewById(R.id.btnShowHideLista)
-            //btnShowHideLista.visibility = View.GONE  //ele some quando nao tem permissão
-            //so pra teste
-            tipo = "empresario"
-            petBDseForEmpresario = "-M6jACzWPX5RiI3il_kP"
-            val btnMinhasVendas:Button = findViewById(R.id.menu_btnMinhasVendas)
-            btnMinhasVendas.visibility= View.VISIBLE
-            //fim do teste
-             */
-
 
             databaseReference = FirebaseDatabase.getInstance().reference
 
