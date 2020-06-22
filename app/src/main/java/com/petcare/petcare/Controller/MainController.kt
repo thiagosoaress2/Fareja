@@ -1,15 +1,21 @@
 package com.petcare.petcare.Controller
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.text.TextUtils
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat.getSystemService
 import com.google.firebase.auth.FirebaseUser
 import com.petcare.petcare.MapsActivity
 import com.petcare.petcare.Models.MainModels
+import kotlinx.android.synthetic.main.activity_main.*
 
 //controla método que precisam de inteligencia
 object MainController {
@@ -75,6 +81,7 @@ object MainController {
         return retorno
 
     }
+
 
     fun isNetworkAvailable(context: Context): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

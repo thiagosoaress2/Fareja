@@ -48,12 +48,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var mAdView : AdView
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var databaseReference: DatabaseReference
     //variaveis de login do face
     private lateinit var callbackManager: CallbackManager
     //fim das variaveis de login do face
-
-    var tipoLoginGlobal: String = "nao"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -141,13 +138,17 @@ class MainActivity : AppCompatActivity() {
         loginButton.setReadPermissions("email", "public_profile")
         loginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
             override fun onError(error: FacebookException?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                updateUI(null, "facebook")
+
+                var retorno = "nao"
+                retorno = MainController.updateUI("nao", "facebook")
+                retornoUpdateUi(retorno)
             }
 
             override fun onCancel() {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                updateUI(null, "facebook")
+                var retorno = "nao"
+                retorno = MainController.updateUI("nao", "nao")
+                retornoUpdateUi(retorno)
             }
 
             override fun onSuccess(loginResult: LoginResult) {
@@ -236,8 +237,12 @@ class MainActivity : AppCompatActivity() {
             layNovoUser.visibility = View.GONE
             laygenericoOutCenterToLeft(layNovoUser)
             laygenericoInRightToCenter(telaDeVerificacao)
-            sendEmailVerification()
-            emailVerificationCheckMeth()
+            MainModels.sendEmailVerification(this)
+            val emailVerifyCheck = findViewById<Button>(R.id.verifyEmailButtonCheck) //botao que o user aperta quando ja vericou o email
+            emailVerifyCheck.setOnClickListener {
+                emailVerificationCheckMeth()
+            }
+
         } else if (result.equals("email_verificado")){
             val email = MainModels.getUserMail()
             val intent = Intent(this, MapsActivity::class.java)
@@ -310,241 +315,133 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createAccount(email: String, password: String) {
-        //Log.d(TAG, "createAccount:$email")
-        if (!validateForm("MailNew")) {
-            return
-        }
-
-        //showProgressDialog()
-
-        // [START create_user_with_email]
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-
-                    val user = auth.currentUser
-                    updateUI(user, "mail")
-
-                    val layLoginWithMail_VerificationMail = findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
-                    layLoginWithMail_VerificationMail.visibility=View.VISIBLE
-                    laygenericoInLeftToCenter(layLoginWithMail_VerificationMail)
-                    emailVerificationCheckMeth()
-                    val layNovoUser= findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
-                    layNovoUser.visibility = View.GONE
-                    laygenericoOutCenterToLeft(layNovoUser)
-                    createNewUser()
-
-                } else {
-                    // If sign in fails, display a message to the user.
-                    //Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                    Toast.makeText(baseContext, "A autenticação falhou",
-                        Toast.LENGTH_SHORT).show()
-                    updateUI(null, "null")
-                }
-
-                // [START_EXCLUDE]
-                //hideProgressDialog()
-                // [END_EXCLUDE]
-            }
-        // [END create_user_with_email]
-    }
-
-    private fun sendEmailVerification() {
-        // Disable button
-        verifyEmailButton.isEnabled = false
-
-        // Send verification email
-        // [START send_email_verification]
-        val user = auth.currentUser
-        user?.sendEmailVerification()
-            ?.addOnCompleteListener(this) { task ->
-                // [START_EXCLUDE]
-                // Re-enable button
-                verifyEmailButton.isEnabled = true
-
-                if (task.isSuccessful) {
-                    Toast.makeText(baseContext,
-                        "E-mail enviado para ${user.email} ",
-                        Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(baseContext,
-                        "Falha no envio do e-mail de verificação.",
-                        Toast.LENGTH_SHORT).show()
-                }
-                // [END_EXCLUDE]
-            }
-        // [END send_email_verification]
-    }
-
-    private fun validateForm(tipo: String): Boolean {
-        var valid = true
 
 
-        if (tipo.equals("mail")) {
-            val fieldEmail = findViewById<EditText>(R.id.fieldEmail)
-            val fieldPassword = findViewById<EditText>(R.id.fieldPassword)
+        val fieldEmail = findViewById<EditText>(R.id.fieldEmail_newUser)
+        val fieldPassword = findViewById<EditText>(R.id.fieldPassword_newUser)
+        val confirmaPassword = fieldPasswordConfirmation_newUser.text.toString()
             //val email = fieldEmail.text.toString()
-            val password = fieldPassword.text.toString()
+        val password = fieldPassword.text.toString()
 
-            if (fieldEmail.text.toString().isEmpty()) {
+        if (fieldEmail.text.toString().isEmpty()) {
                 fieldEmail.error = "Obrigatório"
-                valid = false
-            } else {
-                //fieldEmail.error = null
-            }
 
-            if (!fieldEmail.text.toString().contains("@")){
+        } else if (!fieldEmail.text.toString().contains("@")){
                 fieldEmail.error = "E-mail inválido"
-                valid = false
-            } else {
-                //fieldEmail.error = null
-            }
 
-            if (!fieldEmail.text.toString().contains(".")){
+        } else if (!fieldEmail.text.toString().contains(".")){
                 fieldEmail.error = "E-mail inválido"
-                valid = false
-            } else {
-                //fieldEmail.error = null
-            }
 
-            if (TextUtils.isEmpty(password)) {
+        } else if (TextUtils.isEmpty(password)) {
                 fieldPassword.error = "Obrigatório"
-                valid = false
-            } else {
-                //fieldPassword.error = null
-            }
 
-            if (password.length<6){
-                fieldPassword.error = "A senha deve conter pelo menos 6 dígitos"
-                valid = false
-            } else {
-                //fieldPassword.error = null
-            }
-        }
-
-        if (tipo.equals("MailNew")){
-
-            val fieldEmail = findViewById<EditText>(R.id.fieldEmail_newUser)
-            val fieldPassword = findViewById<EditText>(R.id.fieldPassword_newUser)
-            //val email = fieldEmail.text.toString()
-            val password = fieldPassword.text.toString()
-
-            if (fieldEmail.text.toString().isEmpty()) {
-                fieldEmail.error = "Obrigatório"
-                valid = false
-            } else {
-                //fieldEmail.error = null
-            }
-
-
-            if (!fieldEmail.text.toString().contains("@")){
-                fieldEmail.error = "E-mail inválido"
-                valid = false
-            } else {
-                //fieldEmail.error = null
-            }
-
-            if (!fieldEmail.text.toString().contains(".")){
-                fieldEmail.error = "E-mail inválido"
-                valid = false
-            } else {
-                //fieldEmail.error = null
-            }
-
-
-            if (TextUtils.isEmpty(password)) {
-                fieldPassword.error = "Obrigatório"
-                valid = false
-            } else {
-                //fieldPassword.error = null
-            }
-
-            if (password.length<6){
+        } else if (password.length<6){
                 fieldPassword.error = "A senha deve ter pelo menos 6 dígitos"
-                valid = false
-            } else {
-                //fieldPassword.error = null
-            }
 
-            val confirmaPassword = fieldPasswordConfirmation_newUser.text.toString()
-            if (TextUtils.isEmpty(confirmaPassword)) {
-                fieldPasswordConfirmation_newUser.error = "Obrigatório"
-                valid = false
-            } else if (!confirmaPassword.equals(password)) {
+        } else if (TextUtils.isEmpty(confirmaPassword)) {
+            fieldPasswordConfirmation_newUser.error = "Obrigatório"
+
+        } else if (!confirmaPassword.equals(password)) {
                 fieldPasswordConfirmation_newUser.error = "As senhas são diferentes"
-                valid = false
-            }
+
+        } else {
+
+
+            // [START create_user_with_email]
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+
+                        var retorno = "nao"
+                        val user = MainModels.returnUser()
+                        if (user.equals("nao")){
+                            retorno = MainController.updateUI("nao", "null")
+                        } else {
+                            retorno = MainController.updateUI(user, "unknown")
+                        }
+                        retornoUpdateUi(retorno)
+
+                        val layLoginWithMail_VerificationMail = findViewById<ConstraintLayout>(R.id.layLoginWithMail_VerificationMail)
+                        layLoginWithMail_VerificationMail.visibility=View.VISIBLE
+                        laygenericoInLeftToCenter(layLoginWithMail_VerificationMail)
+                        emailVerificationCheckMeth()
+                        val layNovoUser= findViewById<ConstraintLayout>(R.id.layLoginWithEmail_newUser)
+                        layNovoUser.visibility = View.GONE
+                        laygenericoOutCenterToLeft(layNovoUser)
+                        MainModels.createNewUser()
+
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        //Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                        Toast.makeText(baseContext, "A autenticação falhou",
+                            Toast.LENGTH_SHORT).show()
+                        retornoUpdateUi("nao")
+                    }
+
+                }
+
         }
 
-        return valid
-        EncerraDialog()
+
     }
 
-    private fun signIn(email: String, password: String) {
+    private fun signIn(email: String) {
 
-        //val layInicial: ConstraintLayout = findViewById(R.id.layInicial)
-        //layInicial.visibility = View.GONE
         layinicialOut()
-        //laygenericoIn()
 
+        val fieldEmail = findViewById<EditText>(R.id.fieldEmail)
+        val fieldPassword = findViewById<EditText>(R.id.fieldPassword)
+        //val email = fieldEmail.text.toString()
+        val password = fieldPassword.text.toString()
 
-        if (!validateForm("mail")) {
-            return
-            EncerraDialog()
+        if (fieldEmail.text.toString().isEmpty()) {
+            fieldEmail.error = "Obrigatório"
+        } else if (!fieldEmail.text.toString().contains("@")){
+            fieldEmail.error = "E-mail inválido"
+        } else if (!fieldEmail.text.toString().contains(".")){
+            fieldEmail.error = "E-mail inválido"
+
+        } else if (TextUtils.isEmpty(password)) {
+            fieldPassword.error = "Obrigatório"
+
+        } else if (password.length<6){
+            fieldPassword.error = "A senha deve conter pelo menos 6 dígitos"
+
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+
+                        var retorno = "nao"
+                        val user2 = MainModels.returnUser()
+                        retorno = MainController.updateUI(user2, "mail")
+
+                        retornoUpdateUi(retorno)
+                        EncerraDialog()
+                    } else {
+
+                        val mtextViewNovoUser = findViewById<TextView>(R.id.tvNovoUser)
+                        mtextViewNovoUser.setTextColor(Color.parseColor("#FF8C00"));
+                        Toast.makeText(this, "E-mail ou senha inválidos", Toast.LENGTH_SHORT).show()
+                        EncerraDialog()
+                    }
+
+                    // [START_EXCLUDE]
+                    if (!task.isSuccessful) {
+                        Toast.makeText(this, "Algo deu errado", Toast.LENGTH_SHORT).show()
+                        EncerraDialog()
+                    }
+
+                }
         }
 
         //showProgressDialog()
 
         // [START sign_in_with_email]
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    val user = auth.currentUser
-                    updateUI(user, "mail")
-                    EncerraDialog()
-                } else {
 
-                    val mtextViewNovoUser = findViewById<TextView>(R.id.tvNovoUser)
-                    mtextViewNovoUser.setTextColor(Color.parseColor("#FF8C00"));
-                    Toast.makeText(this, "E-mail ou senha inválidos", Toast.LENGTH_SHORT).show()
-                    EncerraDialog()
-                }
-
-                // [START_EXCLUDE]
-                if (!task.isSuccessful) {
-                    Toast.makeText(this, "Algo deu errado", Toast.LENGTH_SHORT).show()
-                    EncerraDialog()
-                }
-                //  hideProgressDialog()
-                // [END_EXCLUDE]
-            }
         // [END sign_in_with_email]
-    }
-
-    fun getLoginType (user: FirebaseUser?): String {
-
-        var valor:Int =0
-        var provedor: String;
-
-        if (user != null) {
-            for (userInfo in user.getProviderData()) {
-                if (userInfo.getProviderId().equals("facebook.com")) {
-                    valor=1
-                }
-            }
-        } else {
-            valor=2
-        }
-
-        if (valor==1){ //se entrar neste if é pq é facebook e ai não precisa verificar e-mail
-            provedor="facebook"
-        } else {
-            provedor="mail"
-        }
-
-        return provedor
     }
 
     fun openPopUp (titulo: String, texto:String, exibeBtnOpcoes:Boolean, btnSim: String, btnNao: String, call: String) {
@@ -705,15 +602,18 @@ class MainActivity : AppCompatActivity() {
                     val isNewUser =
                         task.result!!.additionalUserInfo?.isNewUser
                     if (isNewUser!!) {
-                        createNewUser()
+                        MainModels.createNewUser()
                     }
-                    updateUI(user, "facebook")
+                    var retorno = "nao"
+                    val user2 = MainModels.returnUser()
+                    retorno = MainController.updateUI(user2, "facebook")
+                    retornoUpdateUi(retorno)
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w("testeHandleFacebook", "signInWithCredential:failure", task.exception)
                     Toast.makeText(baseContext, "A autenticação falhou.",
                         Toast.LENGTH_SHORT).show()
-                    updateUI(null, "null")
+                    retornoUpdateUi("nao")
                     layinicialVoltaAoInicio()
                 }
 
@@ -873,7 +773,7 @@ class MainActivity : AppCompatActivity() {
             }
 
              */
-            signIn(etEmail.text.toString(), etPassword.text.toString())
+            signIn(etEmail.text.toString())
             hideKeyboard()
 
         }
@@ -926,7 +826,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         verifyEmailButton.setOnClickListener {
-            sendEmailVerification()
+            MainModels.sendEmailVerification(this)
         }
 
         emailVerificationCheckMeth()
@@ -939,12 +839,11 @@ class MainActivity : AppCompatActivity() {
                 if (!user.isEmailVerified){
                     Toast.makeText(this, "O e-mail ainda não foi verificado.", Toast.LENGTH_SHORT)
                 } else {
-                    updateUI(user, "mail")
-                    /*
-                        val intent = Intent(this, index::class.java)
-                        //intent.putExtra("key", value)
-                        startActivity(intent)
-                         */
+                    var retorno = "nao"
+                    val user2 = MainModels.returnUser()
+                    retorno = MainController.updateUI(user2, "mail")
+                    retornoUpdateUi(retorno)
+
                 }
             }
         }
@@ -975,44 +874,29 @@ class MainActivity : AppCompatActivity() {
             if (user != null) {
                 user!!.reload()
 
-                if (!user.isEmailVerified){
-                    Toast.makeText(this, "O e-mail ainda não foi verificado.", Toast.LENGTH_SHORT)
-                } else {
-                    updateUI(user, "mail")
-                    /*
-                    val intent = Intent(this, index::class.java)
-                    //intent.putExtra("key", value)
-                    startActivity(intent)
-                     */
+                var retorno = "nao"
+                val user2 = MainModels.returnUser()
+                retorno = MainController.updateUI(user2, "mail")
+
+                retornoUpdateUi(retorno)
                 }
             }
         }
-    }
-
-
-    fun createNewUser (){
-
-        databaseReference = FirebaseDatabase.getInstance().reference
-        val user: FirebaseUser? = auth.currentUser
-        val emailAddress = user?.email
-
-        val newCad: DatabaseReference = databaseReference.child("usuarios").push()
-        val userBD = newCad.key.toString()
-        newCad.child("email").setValue(emailAddress)
-        newCad.child("tipo").setValue("usuario")
-        newCad.child("userBD").setValue(userBD)
-        newCad.child("nota").setValue(0)
-        newCad.child("avaliacoes").setValue(0)
-        newCad.child("img").setValue("nao")
-    }
 
     //por fim, pegue o retorno dos métodos aqui
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == 999){
             if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED){
-                //permissao garantida
-                val user = auth.currentUser
-                updateUI(user, tipoLoginGlobal)
+                var retorno = "nao"
+                val user = MainModels.returnUser()
+                if (user.equals("nao")){
+                    retorno = MainController.updateUI("nao", "null")
+                } else {
+                    retorno = MainController.updateUI(user, "unknown")
+                }
+
+                retornoUpdateUi(retorno)
+
             }
         }
     }

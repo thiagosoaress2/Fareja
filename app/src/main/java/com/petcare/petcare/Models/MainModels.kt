@@ -1,8 +1,11 @@
 package com.petcare.petcare.Models
 
+import android.app.Activity
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 //controla ida e volta de dados do bd
 object MainModels {
@@ -39,6 +42,27 @@ object MainModels {
         return isEmailVerified()
     }
 
+    fun sendEmailVerification(activity: Activity) {
+        val user = auth.currentUser
+        user?.sendEmailVerification()
+            ?.addOnCompleteListener(activity) { task ->
+                // [START_EXCLUDE]
+                // Re-enable button
+
+                if (task.isSuccessful) {
+                    Toast.makeText(activity,
+                        "E-mail enviado para ${user.email} ",
+                        Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(activity,
+                        "Falha no envio do e-mail de verificação.",
+                        Toast.LENGTH_SHORT).show()
+                }
+                // [END_EXCLUDE]
+            }
+        // [END send_email_verification]
+    }
+
     fun getUserMail () : String {
         val user: FirebaseUser? = auth.currentUser
         return user?.email.toString()
@@ -68,4 +92,21 @@ object MainModels {
 
         return provedor
     }
+
+    fun createNewUser (){
+
+        databaseReference = FirebaseDatabase.getInstance().reference
+        val user: FirebaseUser? = auth.currentUser
+        val emailAddress = user?.email
+
+        val newCad: DatabaseReference = databaseReference.child("usuarios").push()
+        val userBD = newCad.key.toString()
+        newCad.child("email").setValue(emailAddress)
+        newCad.child("tipo").setValue("usuario")
+        newCad.child("userBD").setValue(userBD)
+        newCad.child("nota").setValue(0)
+        newCad.child("avaliacoes").setValue(0)
+        newCad.child("img").setValue("nao")
+    }
+
 }
