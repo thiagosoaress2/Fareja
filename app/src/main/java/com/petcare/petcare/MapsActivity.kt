@@ -69,7 +69,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.FirebaseDatabase.getInstance
 import com.petcare.petcare.Controller.MapsController
+import com.petcare.petcare.Models.MapsModels
 import com.petcare.petcare.Utils.fineLocationPermission
+import com.petcare.petcare.Utils.sharePrefs
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.io.IOException
 import java.math.BigDecimal
@@ -98,7 +100,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 when {
                     installState.installStatus() == InstallStatus.DOWNLOADED -> popupSnackbarForCompleteUpdate()
                     installState.installStatus() == InstallStatus.INSTALLED -> appUpdateManager.unregisterListener(this)
-                    else ->   makeToast("Instalando atualização. %"+installState.installStatus()) //Timber.d("InstallStateUpdatedListener: state: %s", installState.installStatus())
+                    else ->   MapsController.makeToast("Instalando atualização. %"+installState.installStatus(), this@MapsActivity) //Timber.d("InstallStateUpdatedListener: state: %s", installState.installStatus())
                 }
             }
         }
@@ -111,29 +113,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
-    var raioBusca = 5.0 //var raioBusca  = 0.3 //marca o raio da busca dos pets  0.1 = 1km no mapa              obs: Mudamos para 10 km
-    var raioUser = 7000 //obs: A busca está pegando endereços de um raio um pouco maior do que o desenhado. Vou aumentar o raio desenhado para nao apareceer o erro pro usuario               //var raioUser = 3000 //marca o circulo da distancia que foi buscada pelo user. 1000 = 1km no mapa    obs: Mudamos de 3000 para 10000 (10km)
-    val dif = -0.07576889999999992 //diferença a ser adicona em startAtVal
+
+    private lateinit var databaseReference: DatabaseReference
+    private lateinit var auth: FirebaseAuth
 
     val enderecoUser: MutableList<String> = ArrayList()
     val petShops: MutableList<String> = ArrayList()
     val lojaInfo: MutableList<String> = ArrayList()
 
-    var userMail = "nao"
-    var userBD = "nao"
-    var alvara = "nao"
-    var tipo = "usuario"
-    var petBDseForEmpresario = "nao"
-    var bdDoPet = "nao"
-    var plano = "nao"
-    var imgDoUser = "nao"
-
-    var bdDoImpulsionamento = "nao"
-
-    var tipoProdParaImpulso = "nao"
-
-    private lateinit var databaseReference: DatabaseReference
-    private lateinit var auth: FirebaseAuth
 
     //arrays da loja para o recycleview
     val arrayNomes: MutableList<String> = ArrayList()
@@ -151,13 +138,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     val arrayBDCarrinho: MutableList<String> = ArrayList()
     val arrayTipoCarrinho: MutableList<String> = ArrayList()
 
-    var popupAberta = false
-
-    var posicao: Int = 0 //usada no botão de carrinho que acompanha a tela na loja
-
-    //anuncios
-    var contadorAnuncio=0
-    var checkAds = 0  //para controlar se já verificou o anuncio do local. Quando for pela localização isnerida ele vai verificar novamente, pois pode ser outro lugar
 
     //variaveis dos petFriends
     val arrayPetFriendMarker: MutableList<Marker> = ArrayList()
@@ -166,13 +146,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     val arrayImgStories: MutableList<String> = ArrayList()  //Todos stories num unico lugar. Utilizado para retirar os markers no mapa
 
     val arrayAutonomos: MutableList<Marker> = ArrayList()  //Todos autonomos num unico lugar. Este array é usado para tirar os markers do mapa
-    var autonomoPlanoPremium: Boolean = false
 
     val arrayAutonomosNomeBdParaLista: MutableList<String> = ArrayList()  //Todos autonomos num unico lugar. Este array é usado para tirar os markers do mapa
 
-    var liberaServico = false //vou verificar na query inicial. Se o user já tiver comprado algo alguma vez (saberemos isso pela avaliação) vailiberar o serviço.
-
-    var petsNerbyWhereAlredyQueried = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -181,6 +157,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        MapsModels.setupInicial()
 
         //animaLoad()
 
@@ -207,11 +185,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             //ChamaDialog()
 
+            databaseReference = FirebaseDatabase.getInstance().reference
+
             //essa query não tem função, só serve para corrigir possiveis petshops emq ualquer lugar que nao tenha latlong (erro no cadastro)
             queryPetsSemLatLong()
-
-
-            databaseReference = FirebaseDatabase.getInstance().reference
 
             // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
 
@@ -223,24 +200,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
             //recupera o email do usuário
-            userMail = intent.getStringExtra("email")
+            MapsModels.userMail = intent.getStringExtra("email")
 
+            //só entra aqui quando acaba de criar a loja e volta pra cá.
             if (intent.getStringExtra("chamaLatLong")!=null){
                 val endereco = intent.getStringExtra("endereco")
                 val bd = intent.getStringExtra("petBD")
-                getLatLong(endereco, bd)
+                MapsController.getLatLong(endereco, bd, this)
+                //getLatLong(endereco, bd)
+
                 val toast = Toast.makeText(this@MapsActivity, "Aguarde alguns segundos, estamos configurando sua loja.", Toast.LENGTH_LONG)
                 toast.setGravity(Gravity.CENTER, 0, 0)
                 toast.show()
             }
 
             if (intent.getStringExtra("voltaDoUser")!=null){
-                userMail = intent.getStringExtra("email")
+                //userMail = intent.getStringExtra("email")
+                MapsModels.userMail = intent.getStringExtra("email")
             }
 
 
             //aqui é para o caso dele ter entrado sem login (fazer login depois), vamos mudar o texto do botão de logout
-            if (userMail.equals("semLogin")){
+            //if (userMail.equals("semLogin")){
+            if (MapsModels.userMail.equals("semLogin")){
                 val btnLogout: Button = findViewById(R.id.mapsLogoutBtn)
                 btnLogout.setText("Fazer login")
             }
@@ -248,9 +230,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             //centralBtnApenasLocaliza() //clique inicial do botão central. Depois ele vai assumir outras funções
 
             if (MapsController.isNetworkAvailable(this)) {
-                queriesIniciais()
+                //antigamente ficava aqui queries iniciais. Não existe mais este método. tudo que havia lá foi movido para outro momento
             } else {
-                makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos")
+                MapsController.makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos", this)
             }
 
             if (fineLocationPermission.hasPermissions(this)){
@@ -262,7 +244,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             if (isNetworkAvailable(this)) {
                 btnBuscaPorEndClick()
             } else {
-                makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos")
+                MapsController.makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos", this)
             }
 
 
@@ -380,7 +362,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         //bd
                         val plus = position*7
                         val bdPet = petShops.get(plus+3)
-                        bdDoPet =bdPet
+                        MapsModels.bdDoPet =bdPet
                         //este método está ajustando o botão central que muda de imagem. Dentro dele está o click da loja
                         //aqui abre a loja
                         centralBtnMarkerToSeta_MapaToLoja("user")
@@ -444,10 +426,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                         val intent = Intent(this@MapsActivity, autonomoPublicPerfil::class.java)
                         intent.putExtra("autonomoBD", bd)
-                        intent.putExtra("userBD", userBD)
-                        intent.putExtra("userMail", userMail)
+                        intent.putExtra("userBD", MapsModels.userBD)
+                        intent.putExtra("userMail", MapsModels.userMail)
                         var libera = "nao"
-                        if (liberaServico){
+                        if (MapsModels.liberaServico){
                             libera="sim"
                         }
                         intent.putExtra("liberado", libera)
@@ -526,7 +508,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 etEnd.setError("Informe o endereço")
             } else {
                 hideKeyboard()
-                findLocationFromAdress( etEnd.text.toString())
+                val location = MapsController.findLocationFromAdress(etEnd.text.toString(), this)
+                if (location!=null){
+                    markLocationFromAdress(location)
+                } else {
+                    MapsController.makeToast("Endereço não foi encontrado.", this)
+                }
+
             }
 
         }
@@ -540,100 +528,53 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
-    //descobre o lat e long a partir do endereço
-    fun findLocationFromAdress(endereco: String){
+    fun markLocationFromAdress(location: Address){
 
-        Log.d("teste", "o valor de latlong original é"+ lastLocation.latitude+" e long"+lastLocation.longitude)
-        var latlongteste = lastLocation.latitude.toDouble()+lastLocation.longitude.toDouble()
-        Log.d("teste", "o valor de latlong original somado"+latlongteste)
-        val geocoder = Geocoder(this)
-        val address : List<Address>?
-        try {
-            address = geocoder.getFromLocationName(endereco,1)
-            if (address==null || address.size==0) {
-                makeToast("Nenhum endereço encontrado.")
-            } else {
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
+        val latLong = LatLng(location.latitude, location.longitude)
 
-                val location : Address = address.get(0)
+        var circle: Circle
+        circle= mMap.addCircle(
 
-                //tip: To just change the zoom value to any desired value between minimum value=2.0 and maximum value=21.0.
-                val latLong : LatLng = LatLng(location.latitude, location.longitude)
-                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, 11.0f))
-                Log.d("teste", "o valor de latlong do endereço é lat "+ location.latitude+" e long"+location.longitude)
-                latlongteste = location.latitude.toDouble()+location.longitude.toDouble()
-                Log.d("teste", "o valor de latlong do endereço somado"+latlongteste)
-
-                //este bloco é para o anuncio proprio. Verifica a cidade do usuario e faz uma query para ver se tem anuncio nesta cidade. Se tiver, desativa o admob. Dentro desta query ele faz um clicklistener para mandar pro site do anunciante
-                //vai verificar se tem anuncio no pais e dentro dele vai chamando os outros métodos
-                val paisanuncio: String = getAddressOnlyPaisParaAnuncioProprio(latLong)
-                if (paisanuncio.equals("nao")){
-                    //mantem anuncio adMob pois nao identificou corretamente o país
-                } else {
-                    queryAnunciosPropriosNivelPais(paisanuncio, latLong)
-                }
-                /*
-                val cidadeAnuncio: String = getAddressOnlyCidadeParaAnuncioProprio(latLong)
-                if (cidadeAnuncio.equals("nao")){
-                    //mantem anuncio adMob pois nao achou a cidade
-                } else {
-                    //verifica se tem um anuncio proprio. Se tiver vai trocar o adMob pelo anuncio proprio
-                    queryAnunciosPropriosNivelCidade(cidadeAnuncio)
-                }
-
-                 */
+            CircleOptions()
+                .center(latLong)
+                .radius((10).toDouble()) //=10 km
+                .strokeColor(Color.BLUE)
+                .fillColor(Color.BLUE)
+        )
 
 
-                //val options = mMap.addMarker(MarkerOptions().position(latLong).title("Localização escolhida"))
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
+        circle= mMap.addCircle(
 
-                var circle: Circle
-                circle= mMap.addCircle(
+            CircleOptions()
+                .center(latLong)
+                .radius((MapsModels.raioUser).toDouble()) //=10 km
+                .strokeColor(Color.CYAN)
+                .fillColor(ContextCompat.getColor(this!!, R.color.azulClarotransp))
+        )
 
-                    CircleOptions()
-                        .center(latLong)
-                        .radius((10).toDouble()) //=10 km
-                        .strokeColor(Color.BLUE)
-                        .fillColor(Color.BLUE)
-                )
-
-
-                circle= mMap.addCircle(
-
-                    CircleOptions()
-                        .center(latLong)
-                        .radius((raioUser).toDouble()) //=10 km
-                        .strokeColor(Color.CYAN)
-                        .fillColor(ContextCompat.getColor(this!!, R.color.azulClarotransp))
-                )
-
-                val btnBuscaEnd: Button = findViewById(R.id.btnInserirEndereco)
-                btnBuscaEnd.performClick()//fecha a janela
+        val btnBuscaEnd: Button = findViewById(R.id.btnInserirEndereco)
+        btnBuscaEnd.performClick()//fecha a janela
 
 
-                queryPetsNerbyFromGiverLocation(location.latitude, location.longitude, 1)
+        queryPetsNerbyFromGiverLocation(location.latitude, location.longitude, 1)
 
 
-            }
 
-
-        }catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
+        val paisanuncio: String = MapsController.getAddressOnlyPaisParaAnuncioProprio(latLong, this)
+        if (paisanuncio.equals("nao")){
+            //mantem anuncio adMob pois nao identificou corretamente o país
+        } else {
+            queryAnunciosPropriosNivelPais(paisanuncio, latLong)
         }
-
 
     }
 
     fun queryPetsNerbyFromGiverLocation(lat: Double, long: Double, multiple: Int) {
 
-        //petShops.clear()
-
         //o valor 0.01f equivale a 1 km em latlent (soma de latitude e longitude)
 
         var latlong = lat + long  //esta latlong é um double para calculos
-
-        //inicio codigo antigo
-        //val startAtval = latlong-(0.01f*0.7)  //0.7 vai equivaler a 7 km  0.8 = 8km
-        //val endAtval = latlong+(0.01f*0.7)
 
         var startAtval = latlong-(0.01f*0.6*multiple)
         var endAtval = latlong+(0.01f*0.6*multiple)
@@ -673,7 +614,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //entao basta adiconar essa diferença a startAtVal antes da busca para ele corrigir o erro. A verificar se isto também precisa ser feito para endAtAval.
 
 
-        startAtval = (dif+startAtval) //ajuste
+        startAtval = (MapsModels.dif+startAtval) //ajuste
 
         getInstance().reference.child("petshops").orderByChild("latlong").startAt(startAtval).endAt(endAtval)
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -714,8 +655,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             //posicao++ reforma 3
 
-
-
                         }
                     } else {
 
@@ -746,39 +685,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 }
             })  //addValueEventListener
 
-
-    }
-
-    fun queriesIniciais (){
-
-
-        /*
-        if (jafezQueryInicial){
-            //ja fez e nao precisa fazer nvoamente
-        } else {
-            jafezQueryInicial=true
-            queryUserInitial()
-        }
-
-         */
-
-
-
-        /*
-        //primeiro ve se tem permissão pra acessar localização
-        //aqui ele vai verificar o gps. Se estiver desligado vai abrir uma janela. Se estiver ligado vai chamar a querieUserInicial e começar o processo de coleta de dados do user.
-        if (setupPermissionGPS()){
-            if (verificaGPS()){
-                queryUserInitial() //começa processo
-            } else {
-                //buildAlertMessaNoGps() //pede pra ligar gps
-                makeToast("Ligue seu gps")
-            }
-        } else {
-            RequestGpsPermission() //se nao tem permissão, requerer permissão
-        }
-
-         */
 
     }
 
@@ -838,14 +744,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val btnMinhasCompras: Button = findViewById(R.id.menu_btnMinhasCompras)
         btnMinhasCompras.setOnClickListener {
 
-            if (userMail.equals("semLogin")){
+            if (MapsModels.userMail.equals("semLogin")){
                 //precisa fazer o login
                 openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
                 btnMenu.performClick()
             } else {
                 btnMenu.performClick()
                 val intent = Intent(this, minhasComprasActivity::class.java)
-                intent.putExtra("userBD", userBD)
+                intent.putExtra("userBD", MapsModels.userBD)
                 startActivity(intent)
             }
 
@@ -853,15 +759,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         val btnProprietario:Button = findViewById(R.id.menu_btn1)
         btnProprietario.setOnClickListener {
-            if (userBD!="nao" || userBD==null){
+            if (MapsModels.userBD!="nao" || MapsModels.userBD==null){
                 btnMenu.performClick()
                 val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("alvara", alvara)
-                intent.putExtra("tipo", tipo)
-                intent.putExtra("email", userMail)
-                if (!petBDseForEmpresario.equals("nao")){
-                    intent.putExtra("petBD", petBDseForEmpresario)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("alvara", MapsModels.alvara)
+                intent.putExtra("tipo", MapsModels.tipo)
+                intent.putExtra("email", MapsModels.userMail)
+                if (!MapsModels.petBDseForEmpresario.equals("nao")){
+                    intent.putExtra("petBD", MapsModels.petBDseForEmpresario)
                 }
                 startActivity(intent)
                 finish()
@@ -875,19 +781,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         btnMinhasVendas.setOnClickListener {
             btnMenu.performClick()//fecha o menu e ajusta animação
             val intent = Intent(this, minhasVendas::class.java)
-            intent.putExtra("userBD", userBD)
-            intent.putExtra("tipo", tipo)
-            intent.putExtra("petBD", petBDseForEmpresario)
+            intent.putExtra("userBD", MapsModels.userBD)
+            intent.putExtra("tipo", MapsModels.tipo)
+            intent.putExtra("petBD", MapsModels.petBDseForEmpresario)
             startActivity(intent)
 
         }
 
         val btnMinhaLoja: Button = findViewById(R.id.menu_btnMinhaLoja)
         btnMinhaLoja.setOnClickListener {
-            if (!petBDseForEmpresario.equals("nao")){
+            if (!MapsModels.petBDseForEmpresario.equals("nao")){
                 btnMenu.performClick()
                 centralBtnMarkerToSeta_MapaToLoja("prop")
-                queryDetalhesDaLoja(petBDseForEmpresario, "prop")
+                queryDetalhesDaLoja(MapsModels.petBDseForEmpresario, "prop")
 
             }
         }
@@ -895,8 +801,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val btnAutonomos: Button = findViewById(R.id.menu_btnAutonomo)
         btnAutonomos.setOnClickListener {
             val intent = Intent(this, autonomosActivity::class.java)
-            intent.putExtra("userBD", userBD)
-            intent.putExtra("tipo", tipo)
+            intent.putExtra("userBD", MapsModels.userBD)
+            intent.putExtra("tipo", MapsModels.tipo)
             //intent.putExtra("petBD", petBDseForEmpresario)
             startActivity(intent)
 
@@ -905,9 +811,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val btnAdocao: Button = findViewById(R.id.menu_btnAdocao)
         btnAdocao.setOnClickListener {
             val intent = Intent(this, adocaoActivity::class.java)
-            intent.putExtra("userBD", userBD)
+            intent.putExtra("userBD", MapsModels.userBD)
             val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
-            val mycity = getAddressOnlyCidadeParaAnuncioProprio(currentLatLng)
+            val mycity = MapsController.getAddressOnlyCidadeParaAnuncioProprio(currentLatLng, this)
             if (mycity.isEmpty()){
                 //OBS: se for nao informar que nao tem animais na sua cidade
                 intent.putExtra("cidade", "nao")
@@ -915,7 +821,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 intent.putExtra("cidade", mycity)
             }
             var libera = "nao"
-            if (liberaServico){
+            if (MapsModels.liberaServico){
                 libera="sim"
             }
             intent.putExtra("liberado", libera)
@@ -926,12 +832,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val btnPerfil: Button = findViewById(R.id.menu_btnPerfil)
         btnPerfil.setOnClickListener {
 
-            if (this@MapsActivity::lastLocation.isInitialized && !userBD.equals("nao")) {
+            if (this@MapsActivity::lastLocation.isInitialized && !MapsModels.userBD.equals("nao")) {
 
                 val intent = Intent(this, userPerfilActivity::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("img", imgDoUser)
-                intent.putExtra("userMail", userMail)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("img", MapsModels.imgDoUser)
+                intent.putExtra("userMail", MapsModels.userMail)
                 intent.putExtra("tipo", "meuPerfil")
                 val lat: String = lastLocation.latitude.toString()
                 val long: String = lastLocation.longitude.toString()
@@ -941,7 +847,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 finish()
 
             } else{
-                makeToast("Aguarde. Ainda estamos carregando suas informações")
+                MapsController.makeToast("Aguarde. Ainda estamos carregando suas informações", this)
             }
 
         }
@@ -950,12 +856,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //busca informações iniciais do usuario
     fun queryUserInitial() {
 
-        if (userBD.equals("nao")) {
+        if (MapsModels.userBD.equals("nao")) {
 
             Log.d("teste", "entrou na query mesmo assim")
 
             val rootRef = databaseReference.child("usuarios")
-            rootRef.orderByChild("email").equalTo(userMail).limitToFirst(1)
+            rootRef.orderByChild("email").equalTo(MapsModels.userMail).limitToFirst(1)
                 //getInstance().reference.child("usuarios").orderByChild("email").equalTo(userMail)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -967,47 +873,44 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 //createUser()
                             } else {
 
-                                val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
-                                val editor = sharedPref.edit()
-
                                 //carregar infos
                                 var values: String
                                 values = querySnapshot.child("userBD").value.toString()
-                                userBD = values
-                                editor.putString("userBdInicial", values)
+                                MapsModels.userBD = values
+                                sharePrefs.setUserBdInicial(this@MapsActivity, values)
 
 
                                 values = querySnapshot.child("tipo").value.toString()
-                                tipo = values
-                                editor.putString("tipoInicial", values)
+                                MapsModels.tipo = values
+                                sharePrefs.setTipo(this@MapsActivity, values)
 
                                 values = querySnapshot.child("avaliacoes").value.toString()
                                 val qntAval = values.toInt()
                                 if (qntAval > 0) {
-                                    liberaServico = true
-                                    editor.putString("liberaServicoInicial", "1")
+                                    MapsModels.liberaServico = true
+                                    sharePrefs.setAvaliacoes(this@MapsActivity, "1")
                                 } else {
-                                    editor.putString("liberaServicoInicial", "0")
+                                    sharePrefs.setAvaliacoes(this@MapsActivity, "0")
                                 }
 
                                 if (this@MapsActivity::lastLocation.isInitialized) {
 
                                     if (!querySnapshot.child("img").exists()){
-                                        databaseReference.child("usuarios").child(userBD).child("img").setValue("nao")
-                                        imgDoUser="nao"
-                                        editor.putString("imgInicial", "nao")
+                                        databaseReference.child("usuarios").child(MapsModels.userBD).child("img").setValue("nao")
+                                        MapsModels.imgDoUser="nao"
+                                        sharePrefs.setImgInicial(this@MapsActivity, values)
                                     } else {
-                                        imgDoUser = querySnapshot.child("img").value.toString()
-                                        editor.putString("imgInicial", imgDoUser) //atualização da imagem do user ok na activity devida.
+                                        MapsModels.imgDoUser = querySnapshot.child("img").value.toString()
+                                        sharePrefs.setImgInicial(this@MapsActivity, values)
                                     }
 
-                                    if (tipo.equals("autonomo")) {
+                                    if (MapsModels.tipo.equals("autonomo")) {
 
                                         val sit = querySnapshot.child("situacao").value.toString()
 
                                         if (sit.equals("analise")) {  //se estiver em analise nao vamos exibi-lo
                                             //do nothing
-                                            makeToast("Seu pedido ainda está em análise. Você ainda não aparece no mapa.")
+                                            MapsController.makeToast("Seu pedido ainda está em análise. Você ainda não aparece no mapa.", this@MapsActivity)
                                         } else {
 
                                             val servico =
@@ -1016,18 +919,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                             values = querySnapshot.child("apelido").value.toString()
 
                                             liberaBotoesAutonomo()
-                                            updateAutonomosStatus("online", servico, values)
+                                            MapsModels.updateAutonomosStatus("online", servico, values, lastLocation)
                                             queryGetAutonomoAditionalInfo()
-                                            updateUserStatus("offline", "bla")
-                                            val btn: Button =
-                                                findViewById(R.id.menu_btnMinhasVendas)
+                                            if (this@MapsActivity::lastLocation.isInitialized){
+                                                MapsModels.updateUserStatus("offline", "bla", lastLocation, this@MapsActivity)
+                                            }
+                                            fimDeTudo()
+                                            val btn: Button = findViewById(R.id.menu_btnMinhasVendas)
                                             btn.visibility = View.VISIBLE
                                             findViewById<Button>(R.id.menu_btnAutonomo).setText("Editar informações de prestação de serviço")
 
-
                                         }
                                     } else {
-                                        updateUserStatus("online", imgDoUser)
+                                        if (this@MapsActivity::lastLocation.isInitialized){
+                                            fimDeTudo()
+
+                                            //se chegou aqui ao ponto de colocar o user online, todos os metodos iniciais ja foram apliados
+                                            MapsModels.updateUserStatus("online", MapsModels.imgDoUser, lastLocation, this@MapsActivity)
+                                        }
                                         placeUserInMap()
                                     }
 
@@ -1039,11 +948,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                 //values = querySnapshot.child("tipo").value.toString()
                                 //tipo = values  //reforma1
-                                if (tipo.equals("empresario")) {
-                                    tipo = "empresario"
+                                if (MapsModels.tipo.equals("empresario")) {
+                                    MapsModels.tipo = "empresario"
                                     values = querySnapshot.child("petBD").value.toString()
-                                    petBDseForEmpresario = values
-                                    editor.putString("petBdSeForEmpresarioInicial", petBDseForEmpresario)
+                                    MapsModels.petBDseForEmpresario = values
+                                    sharePrefs.setPetBdSeForEmpresarioInicial(this@MapsActivity, MapsModels.petBDseForEmpresario)
+                                    //editor.putString("petBdSeForEmpresarioInicial", MapsModels.petBDseForEmpresario)
 
                                     var btn: Button
                                     btn = findViewById(R.id.menu_btn1)
@@ -1062,7 +972,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 }
 
                                 rootRef.removeEventListener(this)
-                                editor.apply()
                             }
                         }
 
@@ -1083,7 +992,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //se o usuario for empresário, pega aqui informações do petshop dele
     fun queryPetDoEmpresario() {
 
-        getInstance().reference.child("petshops").orderByChild("BDdoDono").equalTo(userBD).limitToFirst(1)
+        getInstance().reference.child("petshops").orderByChild("BDdoDono").equalTo(MapsModels.userBD).limitToFirst(1)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     for (querySnapshot in dataSnapshot.children) {
@@ -1108,14 +1017,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 val estado = querySnapshot.child("estado").value.toString()
                                 val petbd = querySnapshot.child("bd").value.toString()
                                 val address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
-                                getLatLong(address, petbd)
+                                MapsController.getLatLong(address, petbd, this@MapsActivity)
                             }
 
                             values = querySnapshot.child("plano").value.toString()
-                            plano = values
+                            MapsModels.plano = values
 
                             values = querySnapshot.child("alvara").value.toString()
-                            alvara = values
+                            MapsModels.alvara = values
 
                             val itens = querySnapshot.child("itens_venda").value.toString()
                             val logo = querySnapshot.child("logo").value.toString()
@@ -1123,7 +1032,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             var percent = 0  //20% são as infos básicas como endereço e tal. Então ele sempre parte de 20%.
                             percent = percent+20 //estes 20 são os descritos acima
-                            if (!alvara.equals("nao")){
+                            if (!MapsModels.alvara.equals("nao")){
                                 percent = percent+20
                             }
                             if (itens.toInt()!=0){
@@ -1138,7 +1047,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             val key = querySnapshot.key.toString()
 
-                            if (alvara.equals("nao")){
+                            if (MapsModels.alvara.equals("nao")){
                                 //openPopUp("Atenção", "Você ainda não finalizou o cadastro da sua empresa. Está faltando o alvará. Sem este documento sua empresa não aparece no mapa para os clientes. Clique no menu e depois no botão proprietário. Em seguida entre em Cadastrar Empreendimento para enviar as informações que ainda faltam.", false, "sim", "nao", "lalala")
                                 openPopUpNotifyPetShopInfoFaltando("Vamos melhorar sua presença?", "Você ainda não finalizou o cadastro da sua empresa e ficou faltando o alvará. Sem este documento sua empresa não aparece no mapa para os clientes.", true, "Completar", "deixar assim", "alvara", percent, key)
                             } else if (logo.equals("nao")){
@@ -1417,7 +1326,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         centralBtnApenasLocaliza ()
 
         if (fineLocationPermission.hasPermissions(this)){
-            getUserLocation(raioUser, 0)
+            getUserLocation(MapsModels.raioUser, 0)
         } else {
             fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
         }
@@ -1452,10 +1361,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                         //vai verificar se tem anuncio no pais e dentro dele vai chamando os outros métodos
                         //estava fazendo verificação várias vezes, todas as vezes que opassava aqui. ENtão vamos fazer uma trava
-                        if (checkAds==0) {
-                            checkAds=1
+                        if (MapsModels.checkAds==0) {
+                            MapsModels.checkAds=1
                             val paisanuncio: String =
-                                getAddressOnlyPaisParaAnuncioProprio(currentLatLng)
+                                MapsController.getAddressOnlyPaisParaAnuncioProprio(currentLatLng, this)
                             if (paisanuncio.equals("nao")) {
                                 //mantem anuncio adMob pois nao identificou corretamente o país
                             } else {
@@ -1518,7 +1427,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                         //tirando o caso do user clicar no botão do meio, nao precisa buscar novamente os pets proximos
                         if (situacao != 2) {
-                            if (petsNerbyWhereAlredyQueried==false) { //assim garantimos que nao entre duas vezes
+                            if (MapsModels.petsNerbyWhereAlredyQueried==false) { //assim garantimos que nao entre duas vezes
                                 queryPetsNerby(location.latitude, location.longitude)
                             }
                             MetodosDoImpulsionamentoGerencia(location.latitude, location.longitude)
@@ -1553,6 +1462,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     //private fun getAddress(latLng: LatLng): String {
+    /*
     private fun getAddress(latLng: LatLng): String {
         // 1
         val geocoder = Geocoder(this)
@@ -1642,34 +1552,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         return addressText
     }
+     */
 
-    private fun getAddressOnlyPaisParaAnuncioProprio(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        var pais: String = "nao"
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-
-
-                if (addresses[0].countryName == null){
-
-                } else {
-                    pais = addresses[0].countryName.toString()
-                }
-
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return pais
-    }
-
+    /*
     private fun getAddressOnlyEstadoParaAnuncioProprio(latLng: LatLng): String {
         // 1
         val geocoder = Geocoder(this)
@@ -1696,7 +1581,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         return estado
     }
-
+     */
+    /*
     private fun getAddressOnlyCidadeParaAnuncioProprio(latLng: LatLng): String {
         // 1
         val geocoder = Geocoder(this)
@@ -1725,7 +1611,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         return cidade
     }
+     */
 
+
+
+    /*
     //pega um endereço e transforma em lat e long. Este método é usado uma única vez, quando o usuário cadastrou um petshop mas ainda não tem latitude e longitude ainda.
     //OBS: Este método poderia ser transferido para o cadastro do pet se for preciso no futuro.
     private fun getLatLong (endereco: String, petBD: String){
@@ -1781,6 +1671,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
 
     }
+     */
 
     //esta query não tem função para o usuário. Ela está aqui para corrigir erros. Pets que por algum motivo tenham cadastro mas ainda não tenham latlong (e por isso nao aparecem na busca) serão corrigidos. Nenhuma função depende desta busca e nem precisa aparecer para o usuário os pets que forem corrigidos aqui
     fun queryPetsSemLatLong() {
@@ -1812,7 +1703,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             endereco = endereco+"- "+vez
                             //val address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
                             values = querySnapshot.key.toString() //pos3
-                            getLatLong(endereco, values)
+
+                            MapsController.getLatLong(endereco, values, this@MapsActivity)
+
+                            //getLatLong(endereco, values) reforma
 
 
                         }
@@ -1835,7 +1729,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //0,01 representa 1km em latitude e longitude.
     fun queryPetsNerby(lat: Double, long: Double) {
 
-        petsNerbyWhereAlredyQueried=true
+        MapsModels.petsNerbyWhereAlredyQueried=true
         animaLoad() //chama animação de loading
 
         //o valor 0.01f equivale a 1 km em latlent (soma de latitude e longitude)
@@ -1845,8 +1739,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //val startAtval = latlong-(0.01f*0.7)  //0.7 vai equivaler a 7 km  0.8 = 8km
         //val endAtval = latlong+(0.01f*0.7)
 
-        var startAtval = latlong-(0.01f*raioBusca)
-        var endAtval = latlong+(0.01f*raioBusca)
+        var startAtval = latlong-(0.01f*MapsModels.raioBusca)
+        var endAtval = latlong+(0.01f*MapsModels.raioBusca)
 
 
         if (isNetworkAvailable(this)) {
@@ -1861,7 +1755,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             //entao basta adiconar essa diferença a startAtVal antes da busca para ele corrigir o erro. A verificar se isto também precisa ser feito para endAtAval.
 
 
-            startAtval = (dif+startAtval) //ajuste
+            startAtval = (MapsModels.dif+startAtval) //ajuste
             getInstance().reference.child("petshops").orderByChild("latlong").startAt(startAtval)
                 .endAt(endAtval)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -1906,7 +1800,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
                                 //aqui é para o caso do petshop estar sem latitude ou longitude definido. Então vai fazer este gadastro
-                                if (petShops.get(posicao + 1).toString().equals("nao")) {
+                                if (petShops.get(MapsModels.posicao + 1).toString().equals("nao")) {
 
                                     var endereco: String
                                     var vez: String
@@ -1921,7 +1815,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                     vez = querySnapshot.child("estado").value.toString()
                                     endereco = endereco + "- " + vez
                                     //val address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
-                                    getLatLong(endereco, petShops.get(posicao + 3))
+
+                                    //aqui dentro ele salva e faz tudo
+                                    MapsController.getLatLong(endereco, petShops.get(MapsModels.posicao + 3), this@MapsActivity)
                                     EncerraDialog()
                                 }
 
@@ -1932,18 +1828,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             EncerraDialog()
                             //openPopUp("Que pena", "Não existem clinicas ou petshops perto de você. Vamos aumentar o raio da busca?", false, "n", "n","n")
-                            if (raioBusca <= 10.0) {
+                            if (MapsModels.raioBusca <= 10.0) {
 
-                                if (raioBusca == 3.2) {
+                                if (MapsModels.raioBusca == 3.2) {
                                     //showToast()
                                 }
                                 //ChamaDialog()
                                 //val km = (raioBusca * 10).toInt()
-                                raioBusca = raioBusca + 5.0
-                                raioUser = raioUser + 7000
+                                MapsModels.raioBusca = MapsModels.raioBusca + 5.0
+                                MapsModels.raioUser = MapsModels.raioUser + 7000
                                 //ao chamar aqui coloca os petshops no mapa.
-                                petsNerbyWhereAlredyQueried=false
-                                getUserLocation(raioUser, 1)
+                                MapsModels.petsNerbyWhereAlredyQueried=false
+                                getUserLocation(MapsModels.raioUser, 1)
 
                             } else {
                                 openPopUp(
@@ -1961,7 +1857,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         //EncerraDialog()
                         placePetShopsInMap("normal")
                         //animaLoad()
-                        if (raioBusca > 10.0) {
+                        if (MapsModels.raioBusca > 10.0) {
                             //AGORA EXISTE UM METODO QUE TRATA DISTO EM CALCULATEZOOMTOFIT. ELE É CHAMADO DE PLACEPETSHOPSONMAP
                             //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong, 15f))
                             // mMap.animateCamera(CameraUpdateFactory.zoomTo((raioBusca * 1.5).toFloat()))
@@ -1980,7 +1876,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         } else {
             animaLoad()
-            makeToast("Você está sem internet")
+            MapsController.makeToast("Você está sem internet", this)
         }
 
     }
@@ -1996,7 +1892,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         lay.setOnClickListener {
             //abre o pet com este bd
             centralBtnMarkerToSeta_MapaToLoja("impulso")
-            queryDetalhesDaLoja(bdDoImpulsionamento, "user")
+            queryDetalhesDaLoja(MapsModels.bdDoImpulsionamento, "user")
 
             //vamos adicionar ao carrinho com o preço promocional
             var txt: TextView = findViewById(R.id.impulsionado_nome)
@@ -2014,7 +1910,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             arrayDescCarrinho.add(desc)
 
-            arrayBDCarrinho.add(bdDoImpulsionamento)  //que é igual do pet
+            arrayBDCarrinho.add(MapsModels.bdDoImpulsionamento)  //que é igual do pet
 
 
             val layCarrinho : ConstraintLayout = findViewById(R.id.lay_carrinho)
@@ -2023,7 +1919,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             btnAbrirCarrinho.performClick()
 
             //verificar aqui tipoProdParaImpulso
-            CalculaTotalCompra(bdDoImpulsionamento)
+            CalculaTotalCompra(MapsModels.bdDoImpulsionamento)
 
             layCarrinho.setOnTouchListener(object : View.OnTouchListener {
                 override fun onTouch(v: View?, event: MotionEvent?): Boolean {
@@ -2033,7 +1929,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             })
 
             ChamaDialog()
-            val rootRef = databaseReference.child("petshops").child(bdDoImpulsionamento).child("produtos")
+            val rootRef = databaseReference.child("petshops").child(MapsModels.bdDoImpulsionamento).child("produtos")
             rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
                     //TODO("Not yet implemented")
@@ -2046,12 +1942,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     values = p0.child("servicos").child("entrega").getValue().toString()
 
 
-                    SetUpRecycleViewDoCarrinho(tipoProdParaImpulso)
+                    SetUpRecycleViewDoCarrinho(MapsModels.tipoProdParaImpulso)
                     EncerraDialog()
                 }
             })
 
-            popupAberta = false
+            MapsModels.popupAberta = false
 
             //fim de adicionar ao carrinho
             btnFecharImpulso.performClick()
@@ -2082,8 +1978,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         var latlong = lat + long
 
-        var startAtval = latlong-(0.01f*(raioBusca*2))
-        var endAtval = latlong+(0.01f*(raioBusca*2))
+        var startAtval = latlong-(0.01f*(MapsModels.raioBusca*2))
+        var endAtval = latlong+(0.01f*(MapsModels.raioBusca*2))
 
         //nova regra de ouro
         //Por conta das características da latitude e longitude, nao podemos usar o mesmo valor para startAtVal (pois fica a esquerda) e endAtVal(que fica a direita).
@@ -2094,7 +1990,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //entao basta adiconar essa diferença a startAtVal antes da busca para ele corrigir o erro. A verificar se isto também precisa ser feito para endAtAval.
 
 
-        startAtval = (dif+startAtval) //ajuste
+        startAtval = (MapsModels.dif+startAtval) //ajuste
 
         getInstance().reference.child("impulsionamentos").orderByChild("latlong").startAt(startAtval).endAt(endAtval)
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -2131,7 +2027,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 var values: String
 
                                 //primeiro vamos verificar se o anuncio já venceu
-                                val dataHojeStr = GetDate()
+                                val dataHojeStr = MapsController.GetDate()
                                 values = querySnapshot.child("data_final").value.toString()  //pos0
 
                                 val format = SimpleDateFormat("dd/MM/yyyy")
@@ -2154,7 +2050,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                 } else if (date1.compareTo(date2) == 0){ //se a data for igual, vamos verifica a hora.
 
-                                    val horaAgoraStr = GetHour()
+                                    val horaAgoraStr = MapsController.GetHour()
                                     val formathour = SimpleDateFormat("hh:mm")
                                     values = querySnapshot.child("hora_inicio").value.toString()  //pos0
                                     val hora1 = formathour.parse(horaAgoraStr)
@@ -2197,7 +2093,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                         txt.setText(values.toString()+"*"+img) //este valor é passado apenas para o caso do user clicar e querer comprar. Vai ser pelo txt que pegaremos os valores
 
                                         values = querySnapshot.child("pet").value.toString() //pos2
-                                        bdDoImpulsionamento = values
+                                        MapsModels.bdDoImpulsionamento = values
                                         val layImpulso: ConstraintLayout =
                                             findViewById(R.id.lay_impulsionado)
                                         layImpulso.visibility = View.VISIBLE
@@ -2206,14 +2102,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                         values =
                                             querySnapshot.child("tipo").value.toString()
-                                        tipoProdParaImpulso = values
+                                        MapsModels.tipoProdParaImpulso = values
 
                                         val horaInicio = querySnapshot.child("hora_inicio").value.toString()  //vai definir a hora final
                                         val dataLimite = querySnapshot.child("hora_inicio").value.toString()  //vai definir a hora final
-                                        val horaAgora = GetHour()
-                                        val dataAgora = GetDate()
+                                        val horaAgora = MapsController.GetHour()
+                                        val dataAgora = MapsController.GetDate()
 
-                                        val tempoRestante = getDifferenceInTwoDates(dataAgora, dataLimite, horaAgora, horaInicio)
+                                        val tempoRestante = MapsController.getDifferenceInTwoDates(dataAgora, dataLimite, horaAgora, horaInicio, this@MapsActivity)
                                         val tvHoraRestante: TextView = findViewById(R.id.lay_impulsionado_txtTempo)
                                         tvHoraRestante.setText("Tempo restante: "+tempoRestante)
 
@@ -2247,14 +2143,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
                                     values = querySnapshot.child("pet").value.toString() //pos2
-                                    bdDoImpulsionamento = values
+                                    MapsModels.bdDoImpulsionamento = values
                                     val layImpulso: ConstraintLayout =
                                         findViewById(R.id.lay_impulsionado)
                                     layImpulso.visibility = View.VISIBLE
 
                                     values =
                                         querySnapshot.child("tipo").value.toString()
-                                    tipoProdParaImpulso = values
+                                    MapsModels.tipoProdParaImpulso = values
 
                                     cont++
                                 }
@@ -2272,14 +2168,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                         EncerraDialog()
                         //openPopUp("Que pena", "Não existem clinicas ou petshops perto de você. Vamos aumentar o raio da busca?", false, "n", "n","n")
-                        if (raioBusca <= 10.0) {
+                        if (MapsModels.raioBusca <= 10.0) {
 
-                            if (raioBusca == 0.3) {
+                            if (MapsModels.raioBusca == 0.3) {
                                 //showToast()
                             }
                             //ChamaDialog()
-                            raioBusca = raioBusca + 5.0
-                            raioUser = raioUser + 7000
+                            MapsModels.raioBusca = MapsModels.raioBusca + 5.0
+                            MapsModels.raioUser = MapsModels.raioUser + 7000
                             //getUserLocation(raioUser, 1)
 
                         }
@@ -2415,7 +2311,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     locationPet.latitude = latLng.latitude
                     locationPet.longitude = latLng.longitude
                     val distancia = lastLocation.distanceTo(locationPet)
-                    val zoomAdjusted = calculateZoomToFit(distancia)
+                    val zoomAdjusted = MapsController.calculateZoomToFit(distancia)
                     val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
 
                     //ajusta o zoom para aparecer o petshop mais distante na tela do user
@@ -2472,6 +2368,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
 
+    /*
     //ajusta o zoom para aparecer o petshop mais distante
     private fun calculateZoomToFit(distanceInMeter: Float) : Float {
 
@@ -2495,7 +2392,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         return zoom
 
     }
-
+     */
 
     /*
     private fun setUpMap() {
@@ -2545,9 +2442,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                  */
 
                 val intent = Intent(this, userPerfilActivity::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("img", imgDoUser)
-                intent.putExtra("userMail", userMail)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("img", MapsModels.imgDoUser)
+                intent.putExtra("userMail", MapsModels.userMail)
                 intent.putExtra("tipo", "meuPerfil")
                 val lat: String = lastLocation.latitude.toString()
                 val long: String = lastLocation.longitude.toString()
@@ -2570,16 +2467,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                 //abrir nova intent com este BD bdDoUser
                 val intent = Intent(this, autonomoPublicPerfil::class.java)
-                intent.putExtra("autonomoBD", userBD)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("userMail", userMail) //aqui é o email do usuario mesmo. É para quando voltar a activity
+                intent.putExtra("autonomoBD", MapsModels.userBD)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("userMail", MapsModels.userMail) //aqui é o email do usuario mesmo. É para quando voltar a activity
                 var libera: String = "nao"
-                if (liberaServico){
+                if (MapsModels.liberaServico){
                     libera = "sim"
                 }
                 intent.putExtra("liberado", libera)
                 //intent.putExtra("tipo", "visitante")
-                if (autonomoPlanoPremium){
+                if (MapsModels.autonomoPlanoPremium){
                     intent.putExtra("planoPremium", "sim")
                 } else {
                     intent.putExtra("planoPremium", "nao")
@@ -2597,10 +2494,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 //abrir nova intent com este BD bdDoUser
                 val intent = Intent(this, autonomoPublicPerfil::class.java)
                 intent.putExtra("autonomoBD", bdDoUser)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("userMail", userMail) //aqui é o email do usuario mesmo. É para quando voltar a activity
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("userMail", MapsModels.userMail) //aqui é o email do usuario mesmo. É para quando voltar a activity
                 var libera = "nao"
-                if (liberaServico){
+                if (MapsModels.liberaServico){
                     libera="sim"
                 }
                 intent.putExtra("liberado", libera) //aqui é o email do usuario mesmo. É para quando voltar a activity
@@ -2622,7 +2519,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 val intent = Intent(this, userPerfilActivity::class.java)
                 intent.putExtra("userBD", bdDoUser)
                 intent.putExtra("img", img)
-                intent.putExtra("userMail", userMail) //aqui é o email do usuario mesmo. É para quando voltar a activity
+                intent.putExtra("userMail", MapsModels.userMail) //aqui é o email do usuario mesmo. É para quando voltar a activity
                 intent.putExtra("tipo", "visitante")
                 intent.putExtra("latlong", latlong)
                 startActivity(intent)
@@ -2630,7 +2527,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             } else {  //clicou numa loja
 
                 ChamaDialog()
-                bdDoPet = bd
+                MapsModels.bdDoPet = bd
                 //este método está ajustando o botão central que muda de imagem. Dentro dele está o click da loja
                 centralBtnMarkerToSeta_MapaToLoja("user")
 
@@ -2642,7 +2539,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         return true
     }
 
-
     //aqui ele apenas centraliza a tela. Não faz mais nada, nao muda imagem. NADA
     fun centralBtnApenasLocaliza () {
         val btnCentral: Button = findViewById(R.id.btnLocalizaNovamente)
@@ -2650,7 +2546,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         btnCentral.setOnClickListener {
 
 
-            if (userBD.equals("nao")){
+            if (MapsModels.userBD.equals("nao")){
 
                 //vamos ver se tem coisa arquivada e se queremos usar o sharedprefs pra evitar queries desnecessárias o tempo todo
                 val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
@@ -2660,17 +2556,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 if (!x.equals("nao")) {
                     //O user ainda nao tem sharedprefs ou apagou
                     //verificar tudo aqui
-                    userBD = sharedPref.getString("userBdInicial", "nao").toString()
-                    tipo = sharedPref.getString("tipoInicial", "nao").toString()
+                    MapsModels.userBD = sharedPref.getString("userBdInicial", "nao").toString()
+                    MapsModels.tipo = sharedPref.getString("tipoInicial", "nao").toString()
                     val servico = sharedPref.getString("liberaServicoInicial", "0").toString()
 
                     if (servico.toInt() > 0){
-                        liberaServico = true
+                        MapsModels.liberaServico = true
                     } else {
-                        liberaServico = false
+                        MapsModels.liberaServico = false
                     }
 
-                    if (!tipo.equals("autonomo")){ //se for autonomo vai fazer a query. Isto está la no else. Entao nao precisamos fazer nenhum destes métodos
+                    if (!MapsModels.tipo.equals("autonomo")){ //se for autonomo vai fazer a query. Isto está la no else. Entao nao precisamos fazer nenhum destes métodos
 
 
                         if (ActivityCompat.checkSelfPermission(
@@ -2696,7 +2592,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                     findUsersNerby(lastLocation.latitude, lastLocation.longitude)
                                     findAutonomosNerby(lastLocation.latitude, lastLocation.longitude)
-                                    getUserLocation(raioUser, 0)
+                                    getUserLocation(MapsModels.raioUser, 0)
 
                                 }
                             }
@@ -2705,13 +2601,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     }
 
-                    imgDoUser = sharedPref.getString("imgInicial", "nao").toString()
+                    MapsModels.imgDoUser = sharedPref.getString("imgInicial", "nao").toString()
 
-                    updateUserStatus("online", imgDoUser)
+                    if (this@MapsActivity::lastLocation.isInitialized){
+                        MapsModels.updateUserStatus("online", MapsModels.imgDoUser, lastLocation)
+                    }
+
                     placeUserInMap()
 
-                    if (tipo.equals("empresario")){
-                        petBDseForEmpresario = sharedPref.getString("petBdSeForEmpresarioInicial", "nao").toString()
+                    if (MapsModels.tipo.equals("empresario")){
+                        MapsModels.petBDseForEmpresario = sharedPref.getString("petBdSeForEmpresarioInicial", "nao").toString()
                         var btn: Button
                         btn = findViewById(R.id.menu_btn1)
                         btn.visibility = View.VISIBLE
@@ -2727,9 +2626,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         QueryPedidosParaFinalizar()
                     }
 
-                } else if (userBD.equals("nao")){
+                } else if (MapsModels.userBD.equals("nao")){
                     queryUserInitial()
-                } else if (tipo.equals("autonomo")){ //o autonomo precisa de info atualizada. Então faz query
+                } else if (MapsModels.tipo.equals("autonomo")){ //o autonomo precisa de info atualizada. Então faz query
                     queryUserInitial()
                 }
 
@@ -2744,7 +2643,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             }
 
-             getUserLocation(raioUser, 2)
+             getUserLocation(MapsModels.raioUser, 2)
 
 
         }
@@ -2764,7 +2663,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         btnLupa.visibility = View.GONE
 
         if (userOuProp.equals("user")) {
-            queryDetalhesDaLoja(bdDoPet, "user")
+            queryDetalhesDaLoja(MapsModels.bdDoPet, "user")
         }
 
         btnIVcentral.setImageResource(R.drawable.seta_to_marker)
@@ -2846,7 +2745,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                 //verifica se é o dono através do bd. Poderia ser o dono entrando pelo mapa normalmente como um user. Mas ele nao pode comprar o proprio produto
                 values = p0.child("BDdoDono").value.toString()
-                if (values.equals(userBD)){  //se o bddo usuario for igual ao do pet, é pq
+                if (values.equals(MapsModels.userBD)){  //se o bddo usuario for igual ao do pet, é pq
                     queryItensDaLojaParaRecycleView(BdEscolhido, "prop")
                 } else {
                     queryItensDaLojaParaRecycleView(BdEscolhido, userOuProp)
@@ -2921,7 +2820,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             txt.setText(values.toString() + "*" + img) //este valor é passado apenas para o caso do user clicar e querer comprar. Vai ser pelo txt que pegaremos os valores
 
                             values = querySnapshot.child("pet").value.toString() //pos2
-                            bdDoImpulsionamento = values
+                            MapsModels.bdDoImpulsionamento = values
                             val layImpulso: ConstraintLayout =
                                 findViewById(R.id.lay_impulsionado)
                             layImpulso.visibility = View.VISIBLE
@@ -3006,6 +2905,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
+
+
     //verifica se este produto já está registrado no bd. Se não, ele vai criar uma entrada para depois verificar quantos produtos deste topo ja foram vendidos na região
     fun ExisteEsteProduto (cidade: String, nomeProduto: String, preco: String) {
 
@@ -3029,7 +2930,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     var precoMedio : String
                     precoMedio = p0.child("precoTotal").value.toString()
-                    precoMedio = CalculeEstesValoresEmDinheiro(precoMedio, preco, qnt)
+                    precoMedio = MapsController.CalculeEstesValoresEmDinheiro(precoMedio, preco, qnt)
 
                     //salva a quantidade de vendas
                     databaseReference.child("produtos").child(cidade).child(nomeProduto).child("quantidade")
@@ -3039,7 +2940,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     //verificando preços para definir o preço mais alto deste produto
                     values = p0.child("precoMax").value.toString()
-                    var precoMax = CalculeSeEsteEoMaiorPreco(values, preco)
+                    var precoMax = MapsController.CalculeSeEsteEoMenorPreco(values, preco)
 
                     //se for igual, não precisa mexer no bd
                     if (!precoMax.equals(values)){
@@ -3048,7 +2949,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     //vamos agora verificar o menor preco. Vamos usar as mesmas variaveis pra não precisar criar outras a toa. Mas na verdade estamso falando aqui do menor valor
                     values = p0.child("precoMin").value.toString()
-                    precoMax = CalculeSeEsteEoMenorPreco(values, preco)
+                    precoMax = MapsController.CalculeSeEsteEoMenorPreco(values, preco)
 
 
                     //se for igual, não precisa mexer no bd
@@ -3074,24 +2975,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
-    fun CalculeEstesValoresEmDinheiro(val1:String, val2:String, quantidade:Int) :String{
-
-        var precoMedio = val1.replace("R$", "")
-        precoMedio = precoMedio.replace("R$", "")
-        var precoaqui = val2.replace("R$", "")
-        precoMedio = precoMedio.replace(",", ".")
-        var precoMedioBigDec = precoMedio.toBigDecimal().setScale(2, RoundingMode.HALF_EVEN)
-        precoaqui = precoaqui.replace(",", ".")
-        var precoAquiBigDec = precoaqui.toBigDecimal().setScale(2, RoundingMode.HALF_EVEN)
-        precoMedioBigDec = precoMedioBigDec+precoAquiBigDec
-        precoMedio = precoMedioBigDec.toString()
-        precoMedio = precoMedio.replace(".", ",")
-        precoMedio = "R$"+precoMedio
-
-        return precoMedio
-
-    }
-
+    /*
     fun CalculeSeEsteEoMaiorPreco(valorDoBd: String, valorDaNovaVenda: String) :String {
 
         var precoArmazenado = valorDoBd.replace("R$", "")
@@ -3119,6 +3003,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
+
+
+
     fun CalculeSeEsteEoMenorPreco(valorDoBd: String, valorDaNovaVenda: String) :String {
 
         var precoArmazenado = valorDoBd.replace("R$", "")
@@ -3145,7 +3032,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         return precoArmazenado
 
     }
-
+ */
+    /*
     fun GetMonthWithYear(): String{
         val c: Calendar = GregorianCalendar()
         c.time = Date()
@@ -3155,8 +3043,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         return  datafinal
         //fazer a query para ver se ja existe um node com o nome do produto
     }
-
+     */
     //pega  a data
+
+    /*
     private fun GetDate () : String {
 
         val sdf = SimpleDateFormat("dd/MM/yyyy")
@@ -3189,8 +3079,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         return currentDate
     }
+     */
 
     //metodos suporte
+    /*
     fun getDifferenceInTwoDates (dateStart: String, dateStop: String, hourToStart: String, hourToStop: String) : String {
 
         //format to imput "01/14/2012 09:29:58";
@@ -3233,6 +3125,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         return dateFinal
 
     }
+     */
+
 
     fun setupLoja(bdDestaLoja: String){
 
@@ -3547,8 +3441,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         tipoProduto="racao"
                         if (userOuProp.equals("user")){
                             //se for usuario vai abrir popup para adicionar prod. no carrinho
-                            if (popupAberta==false){
-                                if (userMail.equals("semLogin")){
+                            if (MapsModels.popupAberta==false){
+                                if (MapsModels.userMail.equals("semLogin")){
                                     openPopUpLogin("Você não está logado", "Para acessar esta função você precisa fazer login.", "Fazer login", "Cancelar")
                                 } else {
 
@@ -3558,7 +3452,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
 
                             //se for proprietário ao clicar no item vai perguntar se quiser impulsionar
-                            if (userMail.equals("semLogin")){
+                            if (MapsModels.userMail.equals("semLogin")){
                                 openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
                             } else {
                                 openPopUpPromocao("Impulsionar vendas", "Deseja impulsionar as vendas deste produto?", "Sim, impulsionar", "Não", position*5, arrayRecyclerList1, tipoProduto)
@@ -3660,8 +3554,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         tipoProduto = "servicos"
                         if (userOuProp.equals("user")){
                             //se for usuario vai abrir popup para adicionar prod. no carrinho
-                            if (popupAberta==false){
-                                if (userMail.equals("semLogin")){
+                            if (MapsModels.popupAberta==false){
+                                if (MapsModels.userMail.equals("semLogin")){
                                     openPopUpLogin("Você não está logado", "Para acessar esta função você precisa fazer login.", "Fazer login", "Cancelar")
                                 } else {
 
@@ -3671,7 +3565,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
 
                             //se for proprietário ao clicar no item vai perguntar se quiser impulsionar
-                            if (userMail.equals("semLogin")){
+                            if (MapsModels.userMail.equals("semLogin")){
                                 openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
                             } else {
                                 openPopUpPromocao("Impulsionar vendas", "Deseja impulsionar as vendas deste produto?", "Sim, impulsionar", "Não", position*5, arrayRecycleListServ, tipoProduto)
@@ -3772,8 +3666,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         tipoProduto = "estetica"
                         if (userOuProp.equals("user")){
                             //se for usuario vai abrir popup para adicionar prod. no carrinho
-                            if (popupAberta==false){
-                                if (userMail.equals("semLogin")){
+                            if (MapsModels.popupAberta==false){
+                                if (MapsModels.userMail.equals("semLogin")){
                                     openPopUpLogin("Você não está logado", "Para acessar esta função você precisa fazer login.", "Fazer login", "Cancelar")
                                 } else {
 
@@ -3783,7 +3677,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
 
                             //se for proprietário ao clicar no item vai perguntar se quiser impulsionar
-                            if (userMail.equals("semLogin")){
+                            if (MapsModels.userMail.equals("semLogin")){
                                 openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
                             } else {
                                 openPopUpPromocao("Impulsionar vendas", "Deseja impulsionar as vendas deste produto?", "Sim, impulsionar", "Não", position*5, arrayRecycleListEstetica, tipoProduto)
@@ -3886,8 +3780,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         tipoProduto="remedios"
                         if (userOuProp.equals("user")){
                             //se for usuario vai abrir popup para adicionar prod. no carrinho
-                            if (popupAberta==false){
-                                if (userMail.equals("semLogin")){
+                            if (MapsModels.popupAberta==false){
+                                if (MapsModels.userMail.equals("semLogin")){
                                     openPopUpLogin("Você não está logado", "Para acessar esta função você precisa fazer login.", "Fazer login", "Cancelar")
                                 } else {
 
@@ -3897,7 +3791,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
 
                             //se for proprietário ao clicar no item vai perguntar se quiser impulsionar
-                            if (userMail.equals("semLogin")){
+                            if (MapsModels.userMail.equals("semLogin")){
                                 openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
                             } else {
                                 openPopUpPromocao("Impulsionar vendas", "Deseja impulsionar as vendas deste produto?", "Sim, impulsionar", "Não", position*5, arrayRecycleListRem, tipoProduto)
@@ -4005,8 +3899,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         tipoProduto = "acessorios"
                         if (userOuProp.equals("user")){
                             //se for usuario vai abrir popup para adicionar prod. no carrinho
-                            if (popupAberta==false){
-                                if (userMail.equals("semLogin")){
+                            if (MapsModels.popupAberta==false){
+                                if (MapsModels.userMail.equals("semLogin")){
                                     openPopUpLogin("Você não está logado", "Para acessar esta função você precisa fazer login.", "Fazer login", "Cancelar")
                                 } else {
 
@@ -4016,7 +3910,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
 
                             //se for proprietário ao clicar no item vai perguntar se quiser impulsionar
-                            if (userMail.equals("semLogin")){
+                            if (MapsModels.userMail.equals("semLogin")){
                                 openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
                             } else {
                                 openPopUpPromocao("Impulsionar vendas", "Deseja impulsionar as vendas deste produto?", "Sim, impulsionar", "Não", position*5, arrayRecycleListProd, tipoProduto)
@@ -4111,7 +4005,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun openPopUpPromocao (titulo: String, texto:String, btnSim: String, btnNao: String, posicao: Int, array: MutableList<String>, tipoProd: String) {
         //exibeBtnOpcoes - se for não, vai exibir apenas o botão com OK, sem opção. Senão, exibe dois botões e pega os textos deles de btnSim e btnNao
 
-        popupAberta=true
+        MapsModels.popupAberta=true
 
         //EXIBIR POPUP
         // Initialize a new layout inflater instance
@@ -4166,7 +4060,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         // Set a click listener for popup's button widget
         buttonPopupN.setOnClickListener{
             // Dismiss the popup window
-            popupAberta = false
+            MapsModels.popupAberta = false
             popupWindow.dismiss()
         }
 
@@ -4178,15 +4072,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             val intent = Intent(this, impulsionarPromoActivity::class.java)
             intent.putExtra("nome", array.get(posicao))
             intent.putExtra("img", array.get(posicao+1))
-            intent.putExtra("plano", plano)
-            intent.putExtra("bdPet", petBDseForEmpresario)
+            intent.putExtra("plano", MapsModels.plano)
+            intent.putExtra("bdPet", MapsModels.petBDseForEmpresario)
             intent.putExtra("preco", array.get(posicao+2))
-            intent.putExtra("email", userMail)
+            intent.putExtra("email", MapsModels.userMail)
             intent.putExtra("desc", array.get(posicao+3))
             intent.putExtra("tipo", tipoProd)
             startActivity(intent)
 
-            popupAberta = false
+            MapsModels.popupAberta = false
             popupWindow.dismiss()
         }
 
@@ -4199,7 +4093,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         popupWindow.setOnDismissListener {
             //Fecha a janela ao clicar fora também
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
         }
 
         //lay_root é o layout parent que vou colocar a popup
@@ -4214,10 +4108,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             0 // Y offset
         )
 
-    }
-
-    fun makeToast(mensagem: String){
-        Toast.makeText(this, mensagem, Toast.LENGTH_SHORT).show()
     }
 
     //click listener da recycleview da loja
@@ -4267,7 +4157,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //este método será chamado após todas as queries terem sido feitas.
     fun QueryPedidosParaFinalizar (){
 
-        FirebaseDatabase.getInstance().reference.child("compras").orderByChild("cliente").equalTo(userBD)
+        FirebaseDatabase.getInstance().reference.child("compras").orderByChild("cliente").equalTo(MapsModels.userBD)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     for (querySnapshot in dataSnapshot.children) {
@@ -4324,14 +4214,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         if (opcao==0){
             val intent = Intent(this, minhasComprasActivity::class.java)
-            intent.putExtra("userBD", userBD)
+            intent.putExtra("userBD", MapsModels.userBD)
             startActivity(intent)
         } else {
             //a diferença entre autonomo e usuario será verificada dentro da activity
             val intent = Intent(this, minhasVendas::class.java)
-            intent.putExtra("userBD", userBD)
-            intent.putExtra("tipo", tipo)
-            intent.putExtra("petBD", petBDseForEmpresario)
+            intent.putExtra("userBD", MapsModels.userBD)
+            intent.putExtra("tipo", MapsModels.tipo)
+            intent.putExtra("petBD", MapsModels.petBDseForEmpresario)
             startActivity(intent)
         }
     }
@@ -4340,7 +4230,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //este método será chamado após todas as queries terem sido feitas.
     fun QueryPedidosParaFinalizarDoEmpresario (){
 
-        FirebaseDatabase.getInstance().reference.child("compras").orderByChild("petshop").equalTo(petBDseForEmpresario)
+        FirebaseDatabase.getInstance().reference.child("compras").orderByChild("petshop").equalTo(MapsModels.petBDseForEmpresario)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     for (querySnapshot in dataSnapshot.children) {
@@ -4395,21 +4285,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //val btn: Button = findViewById(R.id.lay_loja_btnAbrirCarrinho)
 
         myScroll.viewTreeObserver.addOnScrollChangedListener {
-            var posicaoAntiga = posicao
-            posicao = myScroll.scrollY
-            if (posicao<posicaoAntiga) {
+            var posicaoAntiga = MapsModels.posicao
+            MapsModels.posicao = myScroll.scrollY
+            if (MapsModels.posicao<posicaoAntiga) {
                 val animset = AnimatorSet()
                 val botaoMovendo = ObjectAnimator.ofFloat(
                     btn,
                     "translationY",
                     posicaoAntiga.toFloat(),
-                    posicao.toFloat()
+                    MapsModels.posicao.toFloat()
                 )
                 val imgMovendo = ObjectAnimator.ofFloat(
                     img,
                     "translationY",
                     posicaoAntiga.toFloat(),
-                    posicao.toFloat()
+                    MapsModels.posicao.toFloat()
                 )
                 animset.play(botaoMovendo).with(imgMovendo)
                 animset.setDuration(100)
@@ -4420,14 +4310,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 val botaoMovendo = ObjectAnimator.ofFloat(
                     btn,
                     "translationY",
-                    posicao.toFloat(),
+                    MapsModels.posicao.toFloat(),
                     posicaoAntiga.toFloat()
                 )
                 val imgMovendo = ObjectAnimator.ofFloat(
                     img,
                     "translationY",
                     posicaoAntiga.toFloat(),
-                    posicao.toFloat()
+                    MapsModels.posicao.toFloat()
                 )
                 animset.play(botaoMovendo).with(imgMovendo)
                 animset.play(botaoMovendo)
@@ -4438,15 +4328,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
-    fun ConvertDateToMillis (dataArmazenada: String) :Long {
-
-        //primeiro converte o string para Calendar
-        var sdf = SimpleDateFormat("dd/MM/yyyy")
-        val currentDate = sdf.parse(dataArmazenada)
-        val calendarDate: Calendar = sdf.calendar
-
-        return calendarDate.timeInMillis
-    }
 
 
 
@@ -4502,7 +4383,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             }
                         })
 
-                        if (popupAberta==false){
+                        if (MapsModels.popupAberta==false){
                             //verificar aqui
                             openPopUpRemoverDoCarrinho("Atenção", "Deseja remover este item do seu carrinho?", "Sim, remover", "Não", position, tipo)
                         }
@@ -4560,7 +4441,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             arrayDesc.add(values)
                             values = querySnapshot.child("preco").value.toString()
 
-                            val precoProv = currencyTranslation(values)
+                            val precoProv = MapsController.currencyTranslation(values)
 
                             arrayPreco.add(precoProv)
                             values = querySnapshot.child("img").value.toString()
@@ -4594,7 +4475,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //exibeBtnOpcoes - se for não, vai exibir apenas o botão com OK, sem opção. Senão, exibe dois botões e pega os textos deles de btnSim e btnNao
 
 
-        popupAberta=true
+        MapsModels.popupAberta=true
 
         //EXIBIR POPUP
         // Initialize a new layout inflater instance
@@ -4648,7 +4529,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         // Set a click listener for popup's button widget
         buttonPopupN.setOnClickListener{
             // Dismiss the popup window
-            popupAberta = false
+            MapsModels.popupAberta = false
             popupWindow.dismiss()
         }
 
@@ -4670,7 +4551,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             var btnAbrirCarrinho : Button = findViewById(R.id.lay_loja_btnAbrirCarrinho)
             btnAbrirCarrinho.performClick()
 
-            CalculaTotalCompra(bdDoPet)
+            CalculaTotalCompra(MapsModels.bdDoPet)
 
             layCarrinho.setOnTouchListener(object : View.OnTouchListener {
                 override fun onTouch(v: View?, event: MotionEvent?): Boolean {
@@ -4680,7 +4561,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             })
 
             SetUpRecycleViewDoCarrinho(tipoProd)
-            popupAberta = false
+            MapsModels.popupAberta = false
             popupWindow.dismiss()
         }
 
@@ -4693,7 +4574,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         popupWindow.setOnDismissListener {
             //Fecha a janela ao clicar fora também
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
         }
 
         //lay_root é o layout parent que vou colocar a popup
@@ -4830,7 +4711,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun openPopUpRemoverDoCarrinho (titulo: String, texto:String, btnSim: String, btnNao: String, posicao: Int, tipoProd: String) {
         //exibeBtnOpcoes - se for não, vai exibir apenas o botão com OK, sem opção. Senão, exibe dois botões e pega os textos deles de btnSim e btnNao
 
-        popupAberta=true
+        MapsModels.popupAberta=true
         //EXIBIR POPUP
         // Initialize a new layout inflater instance
         val inflater: LayoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -4891,7 +4772,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         buttonPopupN.setOnClickListener{
             // Dismiss the popup window
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
         }
 
         buttonPopupS.setOnClickListener {
@@ -4907,8 +4788,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             SetUpRecycleViewDoCarrinho("anything")
 
             popupWindow.dismiss()
-            popupAberta = false
-            CalculaTotalCompra(bdDoPet)
+            MapsModels.popupAberta = false
+            CalculaTotalCompra(MapsModels.bdDoPet)
         }
 
 
@@ -4919,7 +4800,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         // Set a dismiss listener for popup window
         popupWindow.setOnDismissListener {
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
             //Fecha a janela ao clicar fora também
         }
 
@@ -4971,6 +4852,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
+
+
+    /*
     fun SomaEstaVenda (petBD: String, data:String, preco: String){
 
         //FirebaseDatabase.getInstance().reference.child("produtos").child(cidade).child(nomeProduto).orderByChild("controle").equalTo("controle")
@@ -4988,7 +4872,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     var values: String
                     values = p0.child("valor").value.toString()
-                    values = CalculeEstesValoresEmDinheiro(values, preco, 1)  //1 é para repetir o valor
+                    values = MapsController.CalculeEstesValoresEmDinheiro(values, preco, 1)
                     databaseReference.child("vendaCadaPet").child(petBD).child(data).child("valor").setValue(values)
 
                 } else {
@@ -5003,6 +4887,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
     }
+     */
+
 
     fun CalculaTotalCompra (bdDoPet: String){  //tipoProd armazena o tipo de produto. Vai ser usado caso seja ração para colocar um observador e lembrar o user se quer comrpar ração novamente
 
@@ -5060,7 +4946,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
 
             val tvTotal: TextView = findViewById(R.id.carrinho_tvTotal)
-            tvTotal.text = "Total: "+currencyTranslation(string)
+            tvTotal.text = "Total: "+MapsController.currencyTranslation(string)
 
 
             /*
@@ -5083,7 +4969,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             if (tvTotal.text.equals("Total: R$0,00")){
                 Toast.makeText(this, "Você não tem nenhum item no carrinho.", Toast.LENGTH_SHORT).show()
             } else {
-                openPopUpConfirmaCompra("Finalizando compra", "Ao confirmar você vai combinar o pagamento com o vendedor. O valor total da sua compra foi de "+currencyTranslation(string)+". Você confirma que quer fazer esta compra?", "Confirmar compra", "Não", currencyTranslation(string), bdDoPet)
+                openPopUpConfirmaCompra("Finalizando compra", "Ao confirmar você vai combinar o pagamento com o vendedor. O valor total da sua compra foi de "+MapsController.currencyTranslation(string)+". Você confirma que quer fazer esta compra?", "Confirmar compra", "Não", MapsController.currencyTranslation(string), bdDoPet)
             }
         }
     }
@@ -5092,7 +4978,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun openPopUpConfirmaCompra (titulo: String, texto:String, btnSim: String, btnNao: String, total: String, bdDoPet: String) {
         //exibeBtnOpcoes - se for não, vai exibir apenas o botão com OK, sem opção. Senão, exibe dois botões e pega os textos deles de btnSim e btnNao
 
-        popupAberta=true
+        MapsModels.popupAberta=true
         //EXIBIR POPUP
         // Initialize a new layout inflater instance
         val inflater: LayoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -5153,14 +5039,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         buttonPopupN.setOnClickListener{
             // Dismiss the popup window
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
         }
 
         buttonPopupS.setOnClickListener {
 
             fechaCompra(total, bdDoPet)
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
         }
 
 
@@ -5171,7 +5057,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         // Set a dismiss listener for popup window
         popupWindow.setOnDismissListener {
             popupWindow.dismiss()
-            popupAberta = false
+            MapsModels.popupAberta = false
             //Fecha a janela ao clicar fora também
         }
 
@@ -5253,7 +5139,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         val tvTotalCompra : TextView = findViewById(R.id.compras_tvTotalCompra)
                         tvTotalCompra.text = "O valor total da sua compra é: "+total
                     } else {
-                        textView.text = "O valor da entrega é "+currencyTranslation(valorEntrega)
+                        textView.text = "O valor da entrega é "+MapsController.currencyTranslation(valorEntrega)
 
 
                         var str:String = total.replace("R$", "")
@@ -5265,7 +5151,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         str2 = str2.replace(".", "").trim()
 
                         val totalizando = (str).toInt()+(str2).toInt()
-                        tvTotalCompra.text = "O valor total da sua compra é: "+currencyTranslation(
+                        tvTotalCompra.text = "O valor total da sua compra é: "+MapsController.currencyTranslation(
                             totalizando.toString()
                         )
                     }
@@ -5299,7 +5185,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     str2 = str2.replace(".", "").trim()
 
                     val totalizando = (str).toInt()+(str2).toInt()
-                    tvTotalCompra.text = "O valor total da sua compra é: "+currencyTranslation(
+                    tvTotalCompra.text = "O valor total da sua compra é: "+MapsController.currencyTranslation(
                         totalizando.toString())
 
                 }
@@ -5313,16 +5199,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     if (valorEntrega.equals("gratis")){
                         textView.text = "A entrega é grátis"
                         val tvTotalCompra : TextView = findViewById(R.id.compras_tvTotalCompra)
-                        tvTotalCompra.text = "O valor total da sua compra é: "+currencyTranslation(total)
+                        tvTotalCompra.text = "O valor total da sua compra é: "+MapsController.currencyTranslation(total)
                     } else {
-                        textView.text = "O valor da entrega é "+currencyTranslation(valorEntrega)
+                        textView.text = "O valor da entrega é "+MapsController.currencyTranslation(valorEntrega)
 
                         val tvTotalCompra : TextView = findViewById(R.id.compras_tvTotalCompra)
                         var str:String = total.replace("R$", "")
                         str = str.replace(",", "").trim()
                         str = str.replace(".", "").trim()
 
-                        tvTotalCompra.text = "O valor total da sua compra é: "+currencyTranslation(
+                        tvTotalCompra.text = "O valor total da sua compra é: "+MapsController.currencyTranslation(
                             str
                         )
                     }
@@ -5414,7 +5300,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 }
 
                 val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
-                val endereco = getAddress(currentLatLng)
+                val endereco = MapsController.getAddress(currentLatLng, this@MapsActivity)
                 val etEndereco: EditText = findViewById(R.id.entrega_etEndereco)
                 etEndereco.setText(endereco)
 
@@ -5501,15 +5387,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
-    //após o usuário confirmar a compra, chama este método que grava os dados no BD
-    fun VendaEfetuada (buscaOuEntrega: String, formaPagamento: String, bandeira: String, endereco: String, numero: String, complemento: String, whatsApp: String, precoFinal: String, nomePet: String, bairro: String, cidade: String, estado: String, bdDoPet: String){
 
+
+    //após o usuário confirmar a compra, chama este método que grava os dados no BD
+    /* codigo original de backup
+    fun VendaEfetuada (buscaOuEntrega: String, formaPagamento: String, bandeira: String, endereco: String, numero: String, complemento: String, whatsApp: String, precoFinal: String, nomePet: String, bairro: String, cidade: String, estado: String, bdDoPet: String){
 
         //compra finalizada
         //criar um BD com a compra onde precisa ter: Bd do user, itens, bddoPet
         //enviar para o whatzapp do pet o resumo
         //Criar a área onde acessa as compras do usuário. Fazer isso em outra activity
         //val newCad: DatabaseReference = databaseReference.child("compras").push()
+
 
         val newCad: String = databaseReference.child("compras").push().key.toString()
 
@@ -5519,7 +5408,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         editor.putString("liberaServicoInicial", "1")
         editor.apply()
 
-        databaseReference.child("compras").child(newCad).child("cliente").setValue(userBD)
+        databaseReference.child("compras").child(newCad).child("cliente").setValue(MapsModels.userBD)
         databaseReference.child("compras").child(newCad).child("petshop").setValue(bdDoPet)
         databaseReference.child("compras").child(newCad).child("BuscaOuEntrega").setValue(buscaOuEntrega)
         databaseReference.child("compras").child(newCad).child("FormaPgto").setValue(formaPagamento)
@@ -5549,11 +5438,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
 
 
-        val date = GetDate()
-        val dateInMillis = ConvertDateToMillis(date)
+        val date = MapsController.GetDate()
+        val dateInMillis = MapsController.ConvertDateToMillis(date)
 
         databaseReference.child("compras").child(newCad).child("data_compra").setValue(dateInMillis.toString())
-        databaseReference.child("compras").child(newCad).child("hora_compra").setValue(GetHour())
+        databaseReference.child("compras").child(newCad).child("hora_compra").setValue(MapsController.GetHour())
 
         databaseReference.child("compras").child(newCad).child("bairro").setValue(bairro)
         databaseReference.child("compras").child(newCad).child("cidade").setValue(cidade)
@@ -5598,7 +5487,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             //fim da venda
 
             //Agora vamos salvar o valor da venda. Isso vai servir para retirar extrato depois
-            val path: String = GetMonthWithYear()
+            val path: String = MapsController.GetMonthWithYear()
             val precofinal2: String = precoFinal.replace("O valor total da sua compra é: R$", "")  //retira o texto para ficar apenas o valor
             SomaEstaVenda(bdDoPet, path, precofinal2) // aqui ele faz a soma das vendas e salva no BD
 
@@ -5710,6 +5599,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
     }
+     */
+
+    fun VendaEfetuada (buscaOuEntrega: String, formaPagamento: String, bandeira: String, endereco: String, numero: String, complemento: String, whatsApp: String, precoFinal: String, nomePet: String, bairro: String, cidade: String, estado: String, bdDoPet: String){
+
+        val produtos = MapsModels.saveVendaNoBd(this, buscaOuEntrega, formaPagamento, bandeira, endereco, numero, complemento, whatsApp, precoFinal, nomePet, bairro, cidade, estado, bdDoPet, arrayTipoCarrinho, arrayNomesCarrinho, arrayPrecoCarrinho, arrayDescCarrinho)
+
+        if (buscaOuEntrega.equals("Entrega em domicílio")){
+            openWhatsApp(whatsApp, produtos, formaPagamento, bandeira, endereco+", "+numero+" - "+complemento, precoFinal)
+        } else {
+            val enderecoWhat = "Vai buscar na loja"
+            openWhatsApp(whatsApp, produtos, formaPagamento, bandeira, enderecoWhat, precoFinal)
+        }
+
+        arrayPrecoCarrinho.clear()
+        arrayImgCarrinho.clear()
+        arrayDescCarrinho.clear()
+        arrayBDCarrinho.clear()
+        arrayNomesCarrinho.clear()
+        arrayTipoCarrinho.clear()
+
+        val layCarrinho : ConstraintLayout = findViewById(R.id.lay_carrinho)
+        layCarrinho.visibility = View.GONE
+        val layLoja: ConstraintLayout = findViewById(R.id.lay_loja)
+        layLoja.visibility = View.GONE
+
+        val checkboxDin: CheckBox = findViewById(R.id.pagamentos_cbDinheiro)
+        checkboxDin.isChecked=true //deixa o diheiro marcado como padrão para a próxima compra. Antes passava direto sem a pessoa informar
+
+        val bottomBar: ConstraintLayout = findViewById(R.id.bottomBar)
+        val imgNoBtn: ImageView = findViewById(R.id.imageView4)
+        imgNoBtn.setImageResource(R.drawable.seta_para_carrinho)
+        bottomBar.visibility = View.VISIBLE
+
+        val btnMenu: ImageView = findViewById(R.id.lay_Maps_MenuBtn)  //imageview que e o botão de menu
+        val btnLupa: Button = findViewById(R.id.btnInserirEndereco) //imagem da busca de endereço
+        btnMenu.visibility = View.VISIBLE
+        btnLupa.visibility = View.VISIBLE
+        val btnCentral: Button = findViewById(R.id.btnLocalizaNovamente)
+        btnCentral.visibility = View.VISIBLE
+        imgNoBtn.visibility = View.VISIBLE
+        btnCentral.performClick()
+        //(imgNoBtn.drawable as AnimatedVectorDrawable).start()
+
+
+    }
 
 
     //Fim dos métodos de venda
@@ -5723,8 +5657,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun queryStories(lat: Double, long: Double) {
 
         val latlong = lat + long
-        var startAtval = latlong-(0.01f*raioBusca)
-        var endAtval = latlong+(0.01f*raioBusca)
+        var startAtval = latlong-(0.01f*MapsModels.raioBusca)
+        var endAtval = latlong+(0.01f*MapsModels.raioBusca)
 
         //nova regra de ouro
         //Por conta das características da latitude e longitude, nao podemos usar o mesmo valor para startAtVal (pois fica a esquerda) e endAtVal(que fica a direita).
@@ -5735,7 +5669,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //entao basta adiconar essa diferença a startAtVal antes da busca para ele corrigir o erro. A verificar se isto também precisa ser feito para endAtAval.
 
 
-        startAtval = (dif+startAtval) //ajuste
+        startAtval = (MapsModels.dif+startAtval) //ajuste
 
         getInstance().reference.child("stories").orderByChild("latlong").startAt(startAtval).endAt(endAtval)
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -5751,7 +5685,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             //primeiro vamos apagar se o stories já não deveria mais existir
                             val dataLimite = querySnapshot.child("dataLimite").getValue().toString()
-                            val dataAgora = GetDate()
+                            val dataAgora = MapsController.GetDate()
 
 
                             val format = SimpleDateFormat("dd/MM/yyyy")
@@ -5767,7 +5701,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             } else if (date1.compareTo(date2) == 0){  //se for igual, vamos comparar as horas pra saber se excedeu
                                 val horaLimite = querySnapshot.child("horaLimite").getValue().toString()
-                                val horaAgora = GetHour()
+                                val horaAgora = MapsController.GetHour()
 
                                 val formatHora = SimpleDateFormat("hh:mm")
                                 val hora1 = formatHora.parse(horaAgora)
@@ -6185,8 +6119,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             //ajusta visualização
                             var valuesHere = "nao"
                             valuesHere = querySnapshot.child("contador").getValue().toString()
-                            contadorAnuncio = valuesHere.toInt()
-                            databaseReference.child("anuncios").child(pais).child("anuncio").child(values).child("contador").setValue(contadorAnuncio+1)
+                            MapsModels.contadorAnuncio = valuesHere.toInt()
+                            databaseReference.child("anuncios").child(pais).child("anuncio").child(values).child("contador").setValue(MapsModels.contadorAnuncio+1)
 
                             values = querySnapshot.child("anuncio").getValue().toString()
                             arrayAnuncios.add(values)
@@ -6204,7 +6138,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     } else {
 
                         //este bloco é para o anuncio proprio. Verifica a cidade do usuario e faz uma query para ver se tem anuncio nesta cidade. Se tiver, desativa o admob. Dentro desta query ele faz um clicklistener para mandar pro site do anunciante
-                        val cidadeAnuncio: String = getAddressOnlyEstadoParaAnuncioProprio(latLng) //aqui vai pegar o estado
+                        val cidadeAnuncio: String = MapsController.getAddressOnlyEstadoParaAnuncioProprio(latLng, this@MapsActivity) //aqui vai pegar o estado
                         if (cidadeAnuncio.equals("nao")){
                             //mantem anuncio adMob pois nao achou a cidade
                         } else {
@@ -6295,7 +6229,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun queryAnunciosPropriosNivelEstado(Estado: String, latLng: LatLng, arrayAnuncios: MutableList<String>) {
 
         //vamos usar cidadeFiltrada para manter o código. Mas é na verdade estado
-        val estadoFiltrado = removeSpecialCharsAndToLowerCase(Estado)
+        val estadoFiltrado = MapsController.removeSpecialCharsAndToLowerCase(Estado)
 
         val rootRef = databaseReference.child("anuncios").child(estadoFiltrado).child("anuncio")
         rootRef.orderByChild("controle").equalTo("anuncio")
@@ -6319,8 +6253,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             //ajusta visualização
                             var valuesHere = "nao"
                             valuesHere = querySnapshot.child("contador").getValue().toString()
-                            contadorAnuncio = valuesHere.toInt()
-                            databaseReference.child("anuncios").child(estadoFiltrado).child("anuncio").child(values).child("contador").setValue(contadorAnuncio+1)
+                            MapsModels.contadorAnuncio = valuesHere.toInt()
+                            databaseReference.child("anuncios").child(estadoFiltrado).child("anuncio").child(values).child("contador").setValue(MapsModels.contadorAnuncio+1)
 
                             values = querySnapshot.child("anuncio").getValue().toString()
                             arrayAnuncios.add(values)
@@ -6337,7 +6271,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     } else {
 
                         //este bloco é para o anuncio proprio. Verifica a cidade do usuario e faz uma query para ver se tem anuncio nesta cidade. Se tiver, desativa o admob. Dentro desta query ele faz um clicklistener para mandar pro site do anunciante
-                        val cidadeAnuncio: String = getAddressOnlyCidadeParaAnuncioProprio(latLng) //aqui vai pegar o estado
+                        val cidadeAnuncio: String = MapsController.getAddressOnlyCidadeParaAnuncioProprio(latLng, this@MapsActivity) //aqui vai pegar o estado
                         if (cidadeAnuncio.equals("nao")){
                             //mantem anuncio adMob pois nao achou a cidade
                         } else {
@@ -6429,7 +6363,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun queryAnunciosPropriosNivelCidade(cidade:String, arrayAnuncios: MutableList<String>) {
 
         //vamos usar cidadeFiltrada para manter o código. Mas é na verdade estado
-        val cidadeFiltrada = removeSpecialCharsAndToLowerCase(cidade)
+        val cidadeFiltrada = MapsController.removeSpecialCharsAndToLowerCase(cidade)
 
         val rootRef = databaseReference.child("anuncios").child(cidadeFiltrada).child("anuncio")
         rootRef.orderByChild("controle").equalTo("anuncio")
@@ -6453,8 +6387,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             //ajusta visualização
                             var valuesHere = "nao"
                             valuesHere = querySnapshot.child("contador").getValue().toString()
-                            contadorAnuncio = valuesHere.toInt()
-                            databaseReference.child("anuncios").child(cidadeFiltrada).child("anuncio").child(values).child("contador").setValue(contadorAnuncio+1)
+                            MapsModels.contadorAnuncio = valuesHere.toInt()
+                            databaseReference.child("anuncios").child(cidadeFiltrada).child("anuncio").child(values).child("contador").setValue(MapsModels.contadorAnuncio+1)
 
                             values = querySnapshot.child("anuncio").getValue().toString()
                             arrayAnuncios.add(values)
@@ -6537,21 +6471,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
      */
 
-    fun removeSpecialCharsAndToLowerCase(word: String): String {
-
-        var x = word.replace("á", "a")
-        x = x.replace("à", "a")
-        x = x.replace("é", "e")
-        x = x.replace("ê", "e")
-        x = x.replace("â", "")
-        x = x.replace("ó", "o")
-        x = x.replace("ô", "o")
-        x = x.replace("ú","u")
-        x = x.replace("ü", "u")
-        x = x.toLowerCase()
-
-        return x
-    }
 
     fun publicaAnuncio(arrayAnuncios: MutableList<String>){
 
@@ -6635,66 +6554,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
 
-
     //*********************************
     //Metodos de usuários
-
-    //cria e apaga o campo do usuario que está online.
-    fun updateUserStatus(state: String, img: String){
-
-        fimDeTudo() //metodo indicando qeu tudo que era importante ja foi feito. Qualquer metodo que nao seja fundamental deve ser chamado aqui
-
-        if (this@MapsActivity::lastLocation.isInitialized) {
-
-
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-
-                fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
-                return
-            } else {
-                fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-                    // Got last known location. In some rare situations this can be null.
-                    // 3
-
-                    if (location != null) {
-
-                        lastLocation = location
-
-                        val lat = lastLocation.latitude
-                        val long = lastLocation.longitude
-
-                        if (state.equals("online")) {
-                            databaseReference.child("onlineUsers").child(userBD).child("latlong")
-                                .setValue(lat + long)
-                            databaseReference.child("onlineUsers").child(userBD).child("state")
-                                .setValue(state)
-                            databaseReference.child("onlineUsers").child(userBD).child("img")
-                                .setValue(img)
-                            databaseReference.child("onlineUsers").child(userBD).child("lat")
-                                .setValue(lat)
-                            databaseReference.child("onlineUsers").child(userBD).child("long")
-                                .setValue(long)
-                        } else {
-                            databaseReference.child("onlineUsers").child(userBD).removeValue()
-                        }
-
-                    }
-                }
-            }
-
-
-        } else{
-            centralBtnApenasLocaliza()
-        }
-
-    }
 
     //Pega dados do usuário e coloca ele no mapa
     fun placeUserInMap() {
@@ -6741,10 +6602,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     val heigthPercent : Int = ((7*height)/100).toInt()
 
                     var img = "nao"
-                    if (imgDoUser.equals("nao")){
+                    if (MapsModels.imgDoUser.equals("nao")){
                         img = "https://firebasestorage.googleapis.com/v0/b/farejadorapp.appspot.com/o/imgs_sistema%2Fimgusernoimg.png?alt=media&token=8a119c04-3295-4c5a-8071-dde1fe7849ea"
                     } else {
-                        img = imgDoUser
+                        img = MapsModels.imgDoUser
                     }
 
                     //com o Glide vamos transformar a imagem que vem cmo link do storage firebase em um bitmap que iremos trabalhar
@@ -6763,7 +6624,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 )
 
                                 //no metodo abaixo ajustamos o tamanho das imagens e juntamos os dois
-                                bitmapFinal = createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
+                                bitmapFinal = MapsController.createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
 
                                 //coloca a marca com titulo
 
@@ -6802,8 +6663,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         var latlong = lat + long
 
-        var startAtval = latlong-(0.01f*raioBusca)
-        val endAtval = latlong+(0.01f*raioBusca)
+        var startAtval = latlong-(0.01f*MapsModels.raioBusca)
+        val endAtval = latlong+(0.01f*MapsModels.raioBusca)
 
         //nova regra de ouro
         //Por conta das características da latitude e longitude, nao podemos usar o mesmo valor para startAtVal (pois fica a esquerda) e endAtVal(que fica a direita).
@@ -6814,7 +6675,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //entao basta adiconar essa diferença a startAtVal antes da busca para ele corrigir o erro. A verificar se isto também precisa ser feito para endAtAval.
 
 
-        startAtval = (dif+startAtval) //ajuste
+        startAtval = (MapsModels.dif+startAtval) //ajuste
 
         getInstance().reference.child("onlineUsers").orderByChild("latlong").startAt(startAtval)
             .endAt(endAtval).limitToFirst(15)
@@ -6824,7 +6685,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     if (dataSnapshot.exists()) {
                         for (querySnapshot in dataSnapshot.children) {
 
-                            if (!querySnapshot.key.toString().equals(userBD)){
+                            if (!querySnapshot.key.toString().equals(MapsModels.userBD)){
                                 var values: String
                                 var img: String
                                 img = querySnapshot.child("img").value.toString()
@@ -6894,7 +6755,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         R.drawable.placeholder
                     )
 
-                    bitmapFinal = createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
+                    bitmapFinal = MapsController.createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
 
                     val mark1 = mMap.addMarker(MarkerOptions().position(latLng).title("petFriend!?!"+BdPetFriend+"!?!"+img+"!?!"+latLng).icon(BitmapDescriptorFactory.fromBitmap(bitmapFinal)))
                     arrayPetFriendMarker.add(mark1)
@@ -6923,11 +6784,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 if (arrayPetFriendMarker.get(cont).isVisible){
                     arrayPetFriendMarker.get(cont).isVisible=false
                     btnShowHidePetFriends.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.petfriendsnot, 0, 0)
-                    makeToast("Usuários removidos do mapa")
+                    MapsController.makeToast("Usuários removidos do mapa", this)
                 } else {
                     arrayPetFriendMarker.get(cont).isVisible=true
                     btnShowHidePetFriends.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.petfriends, 0, 0)
-                    makeToast("Usuários de volta ao mapa")
+                    MapsController.makeToast("Usuários de volta ao mapa", this)
                 }
                 cont++
             }
@@ -6937,40 +6798,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
-    //ajusta a imagem para o marker com imagem
-    private fun createUserBitmapFinalJustRound(bitmapImgUser: Bitmap?, bitmapPlaceHolder: Bitmap?): Bitmap? {
 
-        //vamos ajustar o fundo branco ao tamanho que colocamos na imagem do user
-        val display = windowManager.defaultDisplay
-        val size = Point()
-        display.getSize(size)
-        val width: Int = size.x
-        //val height: Int = size.y
-
-        val withPercent  = ((18*width)/100).toFloat()   //um pouco maior do que a imagem do user
-        val differenceAdjust = ((8*withPercent)/100).toFloat()
-
-        //ajusta ao tamanho que queremos
-        val newPlaceHolder = scaleDown(bitmapPlaceHolder!!, withPercent, true)
-
-        //agora colocamos a imagem do bolão ao fundo e a imagem do user a frente
-        val bmOverlay = Bitmap.createBitmap(newPlaceHolder!!.getWidth(), newPlaceHolder.getHeight(), newPlaceHolder.getConfig())
-        val canvas = Canvas(bmOverlay)
-        val customMatrix = Matrix()
-        customMatrix.setTranslate(differenceAdjust, differenceAdjust)
-        canvas.drawBitmap(newPlaceHolder!!, Matrix(), null)
-        canvas.drawBitmap(bitmapImgUser!!, customMatrix, null)
-
-        return bmOverlay
-
-    }
-
-    fun scaleDown(realImage: Bitmap, maxImageSize: Float, filter: Boolean): Bitmap? {
-        val ratio = Math.min(maxImageSize / realImage.width,maxImageSize / realImage.height)
-        val width = Math.round(ratio * realImage.width)
-        val height = Math.round(ratio * realImage.height)
-        return Bitmap.createScaledBitmap(realImage, width, height, filter)
-    }
 
     //metodos que foram aposentados para colocar bitmap dentro do marker
     /*
@@ -7113,22 +6941,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onDestroy() {
         super.onDestroy()
-        if (tipo.equals("autonomo")){
+        if (MapsModels.tipo.equals("autonomo")){
             updateAutonomosStatus("offline", "bla", "n")
         } else {
 
-            updateUserStatus("offline", "bla") //para apagar nao precisa saber a imagem
+            if (this@MapsActivity::lastLocation.isInitialized){
+                MapsModels.updateUserStatus("offline", "bla", lastLocation) //para apagar nao precisa saber a imagem
+            }
+
         }
     }
 
     override fun onStop() {
         super.onStop()
 
-        if (tipo.equals("autonomo")){
+        if (MapsModels.tipo.equals("autonomo")){
             updateAutonomosStatus("offline", "bla", "n")
         } else {
 
-            updateUserStatus("offline", "bla") //para apagar nao precisa saber a imagem
+            if (this@MapsActivity::lastLocation.isInitialized){
+                MapsModels.updateUserStatus("offline", "bla", lastLocation, this) //para apagar nao precisa saber a imagem
+            }
+
         }
     }
 
@@ -7141,7 +6975,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun queryGetAutonomoAditionalInfo (){
 
         ChamaDialog()
-        val rootRef = databaseReference.child("autonomos").child(userBD)
+        val rootRef = databaseReference.child("autonomos").child(MapsModels.userBD)
         rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 //TODO("Not yet implemented")
@@ -7160,16 +6994,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                     values = p0.child("plano").value.toString()
                     if (values.equals("sim")){
-                        autonomoPlanoPremium=true
+                        MapsModels.autonomoPlanoPremium=true
                     } else {
-                        autonomoPlanoPremium=false
+                        MapsModels.autonomoPlanoPremium=false
                     }
 
                     EncerraDialog()
 
                 } else {
 
-                    makeToast("Ocorreu um erro.")
+                    MapsController.makeToast("Ocorreu um erro.", this@MapsActivity)
                 }
 
 
@@ -7183,8 +7017,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         var latlong = lat + long
 
-        var startAtval = latlong-(0.01f*raioBusca)
-        val endAtval = latlong+(0.01f*raioBusca)
+        var startAtval = latlong-(0.01f*MapsModels.raioBusca)
+        val endAtval = latlong+(0.01f*MapsModels.raioBusca)
 
         //nova regra de ouro
         //Por conta das características da latitude e longitude, nao podemos usar o mesmo valor para startAtVal (pois fica a esquerda) e endAtVal(que fica a direita).
@@ -7195,7 +7029,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //entao basta adiconar essa diferença a startAtVal antes da busca para ele corrigir o erro. A verificar se isto também precisa ser feito para endAtAval.
 
 
-        startAtval = (dif+startAtval) //ajuste
+        startAtval = (MapsModels.dif+startAtval) //ajuste
 
         getInstance().reference.child("onlineAutonomos").orderByChild("latlong").startAt(startAtval)
             .endAt(endAtval).limitToFirst(10)
@@ -7205,7 +7039,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     if (dataSnapshot.exists()) {
                         for (querySnapshot in dataSnapshot.children) {
 
-                            if (!querySnapshot.key.toString().equals(userBD)){
+                            if (!querySnapshot.key.toString().equals(MapsModels.userBD)){
                                 var values: String
                                 //var img: String
                                 //img = querySnapshot.child("img").value.toString()
@@ -7260,15 +7094,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val long = lastLocation.longitude
 
         if (state.equals("online")) {
-            databaseReference.child("onlineAutonomos").child(userBD).child("latlong")
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).child("latlong")
                 .setValue(lat + long)
-            databaseReference.child("onlineAutonomos").child(userBD).child("state").setValue(state)
-            databaseReference.child("onlineAutonomos").child(userBD).child("servico").setValue(servico)
-            databaseReference.child("onlineAutonomos").child(userBD).child("lat").setValue(lat)
-            databaseReference.child("onlineAutonomos").child(userBD).child("long").setValue(long)
-            databaseReference.child("onlineAutonomos").child(userBD).child("apelido").setValue(apelido)
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).child("state").setValue(state)
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).child("servico").setValue(servico)
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).child("lat").setValue(lat)
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).child("long").setValue(long)
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).child("apelido").setValue(apelido)
         } else {
-            databaseReference.child("onlineAutonomos").child(userBD).removeValue()
+            databaseReference.child("onlineAutonomos").child(MapsModels.userBD).removeValue()
         }
     }
 
@@ -7354,11 +7188,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 if (arrayAutonomos.get(cont).isVisible){
                     arrayAutonomos.get(cont).isVisible=false
                     btnShowHideAutonomos.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.petautonomosnot, 0, 0)
-                    makeToast("Prestadores de serviço removidos do mapa")
+                    MapsController.makeToast("Prestadores de serviço removidos do mapa", this)
                 } else {
                     arrayAutonomos.get(cont).isVisible=true
                     btnShowHideAutonomos.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.petautonomos, 0, 0)
-                    makeToast("Prestadores de serviço de volta ao mapa")
+                    MapsController.makeToast("Prestadores de serviço de volta ao mapa", this)
                 }
                 cont++
             }
@@ -7621,19 +7455,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             if (call.equals("alvara")) {
 
                 val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("alvara", alvara)
-                intent.putExtra("tipo", tipo)
-                intent.putExtra("email", userMail)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("alvara", MapsModels.alvara)
+                intent.putExtra("tipo", MapsModels.tipo)
+                intent.putExtra("email", MapsModels.userMail)
                 intent.putExtra("petBD", Bd)
                 startActivity(intent)
                 finish()
             } else if (call.equals("logo")){
                 val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("alvara", alvara)
-                intent.putExtra("tipo", tipo)
-                intent.putExtra("email", userMail)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("alvara", MapsModels.alvara)
+                intent.putExtra("tipo", MapsModels.tipo)
+                intent.putExtra("email", MapsModels.userMail)
                 intent.putExtra("petBD", Bd)
                 intent.putExtra("motivo", "logo")
                 startActivity(intent)
@@ -7641,20 +7475,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             } else if (call.equals("itens")){
 
                 val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("alvara", alvara)
-                intent.putExtra("tipo", tipo)
-                intent.putExtra("email", userMail)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("alvara", MapsModels.alvara)
+                intent.putExtra("tipo", MapsModels.tipo)
+                intent.putExtra("email", MapsModels.userMail)
                 intent.putExtra("petBD", Bd)
                 intent.putExtra("motivo", "itens")
                 startActivity(intent)
                 finish()
             } else if (call.equals("raio")){
                 val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("alvara", alvara)
-                intent.putExtra("tipo", tipo)
-                intent.putExtra("email", userMail)
+                intent.putExtra("userBD", MapsModels.userBD)
+                intent.putExtra("alvara", MapsModels.alvara)
+                intent.putExtra("tipo", MapsModels.tipo)
+                intent.putExtra("email", MapsModels.userMail)
                 intent.putExtra("petBD", Bd)
                 intent.putExtra("motivo", "raio")
                 startActivity(intent)
@@ -7701,10 +7535,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
 
+    /*
     //Metodo de lembrar ao user que passou um tempo desde que comprou um item e eprguntar se quer repetir a compra
     //este método pega a data de hoje e salva um lembrete daqui a dez dias.
     fun ativarLembrete(bdDoPet: String, nomeProduto: String){
-        val dataRemember = GetfutureDate(10)
+        val dataRemember = MapsController.GetfutureDate(10)
 
         val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
         val editor = sharedPref.edit()
@@ -7715,34 +7550,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         editor.apply()
 
     }
+     */
 
     fun temLembreteHoje(){
 
-        val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
-        val editor = sharedPref.edit()
-
-        val dateToRemember  = sharedPref.getString("rememberDate", "nao")
-        if (!dateToRemember.equals("nao")){ //se nao tiver é pq nao tem lembrete. O user nao comprou ração.
-            //tem lembrete. Mas vamos ver se é a data certa pra mostrar.
-            val dataHoje = GetDate()
-            //ja temos a data de hoje e a data armazenada para lembrar.
-            //agora vamos transformar ela em um objeto Date para podermos comparar
-            val format = SimpleDateFormat("dd/MM/yyyy")
-            val date1 = format.parse(dateToRemember)
-            val date2 = format.parse(dataHoje)
-
-            if (date1.compareTo(date2) >=0){  //se for hoje ou no futuro
-
-                val bdDoPet = sharedPref.getString("rememberBdDoPEt", "nao").toString()
-                val nomeProduto = sharedPref.getString("remeberNomeProduto", "nao").toString()
-                //agora apagamos. Depois disso vamos exibir pro user e se ele comprar novamente, vai renovar o lembrete. Senão, não avisa mais.
-                sharedPref.edit().remove("rememberDate").apply()
-                sharedPref.edit().remove("rememberBdDoPEt").apply()
-                sharedPref.edit().remove("remeberNomeProduto").apply()
-
-                openPopUpRememberDate("Ração acabando?", "Percebemos que já faz um tempo desde que você comprou ração "+nomeProduto+" pela última vez. Gostaria de comprar mais na mesma loja?", true, "Sim, comprar", "Não", bdDoPet)
-            }
-
+        if (MapsController.temLembreteHoje(this)){
+            val nomeProduto = sharePrefs.getLembreteNomeProd(this)
+            val bdDoPet = sharePrefs.getLembreteBdDoPet(this)
+            openPopUpRememberDate("Ração acabando?", "Percebemos que já faz um tempo desde que você comprou ração "+nomeProduto+" pela última vez. Gostaria de comprar mais na mesma loja?", true, "Sim, comprar", "Não", bdDoPet)
         }
 
     }
@@ -7811,7 +7626,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             buttonPopupS.setOnClickListener {
 
                 ChamaDialog()
-                bdDoPet = bdDoPetInformado
+                MapsModels.bdDoPet = bdDoPetInformado
                 //este método está ajustando o botão central que muda de imagem. Dentro dele está o click da loja
                 centralBtnMarkerToSeta_MapaToLoja("user")
 
@@ -7968,7 +7783,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         snackbar.show()
 
          */
-        makeToast("Aplicativo atualizado!")
+        MapsController.makeToast("Aplicativo atualizado!", this)
     }
 
 
@@ -7990,98 +7805,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //métodos de suporte
 
     //este transforma numero comum em dinheiro
-    fun currencyTranslation(valorOriginal: String): String{
 
-        //passar o valor para string para poder ver o tamanho
-        var valorString = valorOriginal.toString()
-        valorString = valorString.trim()
-        valorString.replace("R$", "")
-        valorString.replace(".", "")
-        valorString.replace(",", "")
-
-        //na casa de menos de 100 mil
-        //90.000 - 5 casas
-        //entre 100 mil e 1 mi
-        //100.000
-        //entre 1 milhão pra cima
-        //1.000,000
-        if (valorString.length ==3){ //exemplo 002 222 012  fica 0,02 2,22 0,12
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            valorString = sb.toString()
-
-        } else if (valorString.length == 4){ // 1234  fica 12,34
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            valorString = sb.toString()
-        } else if (valorString.length==5){ //12345  fica 123,45
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            valorString = sb.toString()
-
-        } else if (valorString.length==6){ //123456  fica 1.234,56
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(1, ".")
-            valorString = sb.toString()
-
-        } else if (valorString.length==7){ //1234567  fica 12.345,67
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(2, ".")
-            valorString = sb.toString()
-
-        } else if (valorString.length==8){ //12345678  fica 123.456,78
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(3, ".")
-            valorString = sb.toString()
-
-        }  else if (valorString.length==9){ //123456789  fica 1.234.567,89
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(4, ".")
-            sb.insert(1, ".")
-            valorString = sb.toString()
-
-        }  else if (valorString.length==10){ //1234567890  fica 12.345.678,90
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(5, ".")
-            sb.insert(2, ".")
-            valorString = sb.toString()
-
-        }  else if (valorString.length==11){ //12345678901  fica 123.456.789,01
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(6, ".")
-            sb.insert(3, ".")
-            valorString = sb.toString()
-
-        }
-
-        valorString = "R$"+valorString
-        return valorString
-
-    }
 
     fun ChamaDialog() {
         window.setFlags(
