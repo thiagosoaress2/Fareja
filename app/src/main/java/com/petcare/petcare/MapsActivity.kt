@@ -71,11 +71,8 @@ import com.google.firebase.database.FirebaseDatabase.getInstance
 import com.petcare.petcare.Controller.MapsController
 import com.petcare.petcare.Models.MapsModels
 import com.petcare.petcare.Utils.fineLocationPermission
-import com.petcare.petcare.Utils.sharePrefs
+import com.petcare.petcare.Utils.mySharedPrefs
 import kotlinx.android.synthetic.main.activity_maps.*
-import java.io.IOException
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -105,6 +102,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
         }
     }
+
+    //val mySharedPrefs: mySharedPrefs = mySharedPrefs(this)
 
     lateinit var mAdView : AdView
 
@@ -158,96 +157,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        MapsModels.setupInicial()
+        /*
+        val mySharedPrefs:mySharedPrefs= mySharedPrefs(this)
+        mySharedPrefs.setValue("userBdInicial", "testando")
+        val valor = mySharedPrefs.getValue("userBdInicial")
+        Log.d("teste", "O valor é "+valor)
+         */
 
-        //animaLoad()
+        //recupera o email do usuário
+        MapsModels.userMail = intent.getStringExtra("email")
 
-        //if (!permissaoSeguindoGoogle()){ //sem autorização pede novamente
+        MapsModels.setupInicial(this@MapsActivity)
 
+        animaLoad() //vai ser removido no final da query inicial ou quando verificar que nao precisa dessa query
+
+        databaseReference = FirebaseDatabase.getInstance().reference
+        FacebookSdk.sdkInitialize(getApplicationContext())
+        checkForAppUpdate()
+        // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
+
+        MobileAds.initialize(this) {}
+        mAdView = findViewById(R.id.adView)
+        MobileAds.initialize(this, "ca-app-pub-6912617107153681~1282961500")
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
+
+
+        //tudo que tinha aqui foi movido pra onMapsReady para começar tudo junto
         if (fineLocationPermission.hasPermissions(this)==false){
             fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
-        } else {  //senao seguir com procedimentos
-
-            databaseReference = FirebaseDatabase.getInstance().reference
-
-            FacebookSdk.sdkInitialize(getApplicationContext())
-
-            //verifica se tem verso mais recente na loja
-            checkForAppUpdate()
-
-            //setUpMap()
-            //temPermissaoParaGps()
-
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-            //requestToOpenGpsLikeWaze()
-            MapsController.requestToOpenGpsLikeWaze(this)
-
-            //ChamaDialog()
-
-            databaseReference = FirebaseDatabase.getInstance().reference
-
-            //essa query não tem função, só serve para corrigir possiveis petshops emq ualquer lugar que nao tenha latlong (erro no cadastro)
-            queryPetsSemLatLong()
-
-            // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
-
-            MobileAds.initialize(this) {}
-            mAdView = findViewById(R.id.adView)
-            MobileAds.initialize(this, "ca-app-pub-6912617107153681~1282961500")
-            val adRequest = AdRequest.Builder().build()
-            mAdView.loadAd(adRequest)
-
-
-            //recupera o email do usuário
-            MapsModels.userMail = intent.getStringExtra("email")
-
-            //só entra aqui quando acaba de criar a loja e volta pra cá.
-            if (intent.getStringExtra("chamaLatLong")!=null){
-                val endereco = intent.getStringExtra("endereco")
-                val bd = intent.getStringExtra("petBD")
-                MapsController.getLatLong(endereco, bd, this)
-                //getLatLong(endereco, bd)
-
-                val toast = Toast.makeText(this@MapsActivity, "Aguarde alguns segundos, estamos configurando sua loja.", Toast.LENGTH_LONG)
-                toast.setGravity(Gravity.CENTER, 0, 0)
-                toast.show()
-            }
-
-            if (intent.getStringExtra("voltaDoUser")!=null){
-                //userMail = intent.getStringExtra("email")
-                MapsModels.userMail = intent.getStringExtra("email")
-            }
-
-
-            //aqui é para o caso dele ter entrado sem login (fazer login depois), vamos mudar o texto do botão de logout
-            //if (userMail.equals("semLogin")){
-            if (MapsModels.userMail.equals("semLogin")){
-                val btnLogout: Button = findViewById(R.id.mapsLogoutBtn)
-                btnLogout.setText("Fazer login")
-            }
-
-            //centralBtnApenasLocaliza() //clique inicial do botão central. Depois ele vai assumir outras funções
-
-            if (MapsController.isNetworkAvailable(this)) {
-                //antigamente ficava aqui queries iniciais. Não existe mais este método. tudo que havia lá foi movido para outro momento
-            } else {
-                MapsController.makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos", this)
-            }
-
-            if (fineLocationPermission.hasPermissions(this)){
-                fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            }
-
-            menuClicks()
-
-            if (isNetworkAvailable(this)) {
-                btnBuscaPorEndClick()
-            } else {
-                MapsController.makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos", this)
-            }
-
-
         }
 
     }
@@ -325,6 +263,105 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     e.printStackTrace()
                 }
             }
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+//        setUpMap()
+
+        mMap = googleMap
+
+        mMap.uiSettings.isZoomControlsEnabled = false
+        mMap.uiSettings.isMyLocationButtonEnabled = false
+
+        // centralBtnApenasLocaliza ()
+
+        //tudo que veio de onCreate
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        metodosIniciais()
+    }
+
+
+    //este método é chamado quando a app termina de carregar o mapa
+    fun metodosIniciais(){
+
+
+        //requestToOpenGpsLikeWaze()
+        MapsController.requestToOpenGpsLikeWaze(this)
+
+        //ChamaDialog()
+
+        databaseReference = FirebaseDatabase.getInstance().reference
+
+        //essa query não tem função, só serve para corrigir possiveis petshops emq ualquer lugar que nao tenha latlong (erro no cadastro)
+        queryPetsSemLatLong()
+
+        //só entra aqui quando acaba de criar a loja e volta pra cá.
+        if (intent.getStringExtra("chamaLatLong")!=null){
+            val endereco = intent.getStringExtra("endereco")
+            val bd = intent.getStringExtra("petBD")
+            MapsController.getLatLong(endereco, bd, this)
+            //getLatLong(endereco, bd)
+
+            val toast = Toast.makeText(this@MapsActivity, "Aguarde alguns segundos, estamos configurando sua loja.", Toast.LENGTH_LONG)
+            toast.setGravity(Gravity.CENTER, 0, 0)
+            toast.show()
+            metodosIniciais()
+        } else {
+
+            if (intent.getStringExtra("voltaDoUser")!=null){
+                //userMail = intent.getStringExtra("email")
+                MapsModels.userMail = intent.getStringExtra("email")
+            }
+
+
+            //aqui é para o caso dele ter entrado sem login (fazer login depois), vamos mudar o texto do botão de logout
+            //if (userMail.equals("semLogin")){
+            if (MapsModels.userMail.equals("semLogin")){
+                val btnLogout: Button = findViewById(R.id.mapsLogoutBtn)
+                btnLogout.setText("Fazer login")
+            }
+
+            //centralBtnApenasLocaliza() //clique inicial do botão central. Depois ele vai assumir outras funções
+
+            if (MapsController.isNetworkAvailable(this)) {
+                //antigamente ficava aqui queries iniciais. Não existe mais este método. tudo que havia lá foi movido para outro momento
+            } else {
+                MapsController.makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos", this)
+            }
+
+            if (fineLocationPermission.hasPermissions(this)){
+                fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            }
+
+            menuClicks()
+
+            if (isNetworkAvailable(this)) {
+                btnBuscaPorEndClick()
+            } else {
+                MapsController.makeToast("Você está sem conexão de internet. Não foi possível buscar os estabelecimentos próximos", this)
+            }
+
+            if (fineLocationPermission.hasPermissions(this)){
+                getUserLocation(MapsModels.raioUser, 0)
+            } else {
+                fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
+            }
+
+            if (MapsModels.userBD.equals("nao")) {
+                queryUserInitial()
+            } else {
+                placeUserInMap()
+
+            }
+
+
+        }
+
+
+        EncerraDialog()
+
+
     }
 
     fun montaRecyclerViewListaPet(){
@@ -853,6 +890,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
+
     //busca informações iniciais do usuario
     fun queryUserInitial() {
 
@@ -874,23 +912,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             } else {
 
                                 //carregar infos
+                                val mySharedPrefs: mySharedPrefs = mySharedPrefs(this@MapsActivity)
                                 var values: String
                                 values = querySnapshot.child("userBD").value.toString()
                                 MapsModels.userBD = values
-                                sharePrefs.setUserBdInicial(this@MapsActivity, values)
+                                mySharedPrefs.setValue("userBdInicial", values)
 
 
                                 values = querySnapshot.child("tipo").value.toString()
                                 MapsModels.tipo = values
-                                sharePrefs.setTipo(this@MapsActivity, values)
+                                mySharedPrefs.setValue("tipo", values)
 
                                 values = querySnapshot.child("avaliacoes").value.toString()
                                 val qntAval = values.toInt()
                                 if (qntAval > 0) {
                                     MapsModels.liberaServico = true
-                                    sharePrefs.setAvaliacoes(this@MapsActivity, "1")
+                                    mySharedPrefs.setValue("liberaServicoInicial", "1")
                                 } else {
-                                    sharePrefs.setAvaliacoes(this@MapsActivity, "0")
+                                    mySharedPrefs.setValue("liberaServicoInicial", "0")
                                 }
 
                                 if (this@MapsActivity::lastLocation.isInitialized) {
@@ -898,10 +937,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                     if (!querySnapshot.child("img").exists()){
                                         databaseReference.child("usuarios").child(MapsModels.userBD).child("img").setValue("nao")
                                         MapsModels.imgDoUser="nao"
-                                        sharePrefs.setImgInicial(this@MapsActivity, values)
+                                        mySharedPrefs.setValue("imgInicial", "nao")
                                     } else {
                                         MapsModels.imgDoUser = querySnapshot.child("img").value.toString()
-                                        sharePrefs.setImgInicial(this@MapsActivity, values)
+                                        mySharedPrefs.setValue("imgInicial", MapsModels.imgDoUser)
                                     }
 
                                     if (MapsModels.tipo.equals("autonomo")) {
@@ -936,8 +975,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                             //se chegou aqui ao ponto de colocar o user online, todos os metodos iniciais ja foram apliados
                                             MapsModels.updateUserStatus("online", MapsModels.imgDoUser, lastLocation, this@MapsActivity)
+                                            //placeUserInMap()
                                         }
-                                        placeUserInMap()
+                                        //placeUserInMap()
                                     }
 
                                 }
@@ -952,8 +992,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                     MapsModels.tipo = "empresario"
                                     values = querySnapshot.child("petBD").value.toString()
                                     MapsModels.petBDseForEmpresario = values
-                                    sharePrefs.setPetBdSeForEmpresarioInicial(this@MapsActivity, MapsModels.petBDseForEmpresario)
-                                    //editor.putString("petBdSeForEmpresarioInicial", MapsModels.petBDseForEmpresario)
+                                    mySharedPrefs.setValue("petBdSeForEmpresarioInicial", MapsModels.petBDseForEmpresario)
 
                                     var btn: Button
                                     btn = findViewById(R.id.menu_btn1)
@@ -1311,30 +1350,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-//        setUpMap()
-
-        mMap = googleMap
-
-        mMap.uiSettings.isZoomControlsEnabled = false
-        mMap.uiSettings.isMyLocationButtonEnabled = false
-
-
-
-        EncerraDialog()
-
-        centralBtnApenasLocaliza ()
-
-        if (fineLocationPermission.hasPermissions(this)){
-            getUserLocation(MapsModels.raioUser, 0)
-        } else {
-            fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
-        }
-
-
-    }
-
-
     //pega a posição do usuário e marca o circulo no mapa
     private fun getUserLocation(raio: Int, situacao: Int) {
 
@@ -1435,7 +1450,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                         }
 
-
+                        placeUserInMap()
                         EncerraDialog() //fecha o loading que iniciou em onCreate
                     } else {
                         //para aparelhos antigos não estava encontrando a localização
@@ -1460,218 +1475,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
 
     }
-
-    //private fun getAddress(latLng: LatLng): String {
-    /*
-    private fun getAddress(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        //val address: Address?
-        var addressText = ""
-
-        enderecoUser.clear()
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-
-
-                if (addresses[0].countryName == null){
-
-                } else {
-                    enderecoUser.add(addresses[0].countryName)
-                }
-
-                if (addresses[0].postalCode == null){
-
-                } else {
-                    enderecoUser.add(addresses[0].postalCode)
-                }
-
-                if (addresses[0].adminArea == null){ //estado
-
-                } else {
-                    enderecoUser.add(addresses[0].adminArea)
-                }
-
-                //este é diferente pq as vezes o estado vem em subadminarea e as vezes em locality. Entao ele testa
-                if (addresses[0].locality == null) {
-                    //mUserCidade = addresses[0].subAdminArea
-                    enderecoUser.add(addresses[0].subAdminArea)
-                } else {
-                    //mUserCidade = addresses[0].locality
-                    enderecoUser.add(addresses[0].locality)
-                }
-
-                if (addresses[0].subLocality == null){
-
-                } else{
-                    enderecoUser.add(addresses[0].subLocality)
-                }
-
-                if (addresses[0].subThoroughfare == null){
-
-                } else {
-                    enderecoUser.add(addresses[0].subThoroughfare)
-                }
-
-                if (addresses[0].thoroughfare == null){
-
-                } else {
-                    enderecoUser.add(addresses[0].thoroughfare)
-                }
-
-
-
-                var cont=0
-                val size = enderecoUser.size-1  //pq o tamanho conta o 0. Entãodigamos, um array de tamanho 6 vai só até 5. Ai dava erro.
-                while (cont<enderecoUser.size){
-                    addressText = addressText+" "+enderecoUser.get(size-cont).toString()
-                    cont++
-                }
-                /*
-                /*
-                array   pos 0 - cidade
-                        pos 1 - estado
-                        pos 2 - bairro
-                        pos 3 - numero Casa
-                        pos 4 - rua
-                        pos 5 - cep
-                 */
-                addressText =
-                    enderecoUser.get(4) + " nº " + enderecoUser.get(3) + ", " + enderecoUser.get(2) + ", " + enderecoUser.get(0) + " - " + enderecoUser.get(1)
-
-                 */
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return addressText
-    }
-     */
-
-    /*
-    private fun getAddressOnlyEstadoParaAnuncioProprio(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        var estado: String = "nao"
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-
-
-                if (addresses[0].adminArea == null){ //estado
-
-                } else {
-                    estado = addresses[0].adminArea
-                }
-
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return estado
-    }
-     */
-    /*
-    private fun getAddressOnlyCidadeParaAnuncioProprio(latLng: LatLng): String {
-        // 1
-        val geocoder = Geocoder(this)
-        val addresses: List<Address>?
-        var cidade: String = "nao"
-
-        try {
-            // 2
-            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
-            if (null != addresses && !addresses.isEmpty()) {
-
-
-                if (addresses[0].locality == null){
-                    cidade = addresses[0].subAdminArea
-                } else{
-                    //enderecoUser.add(addresses[0].subLocality)
-                    cidade = addresses[0].locality
-
-                }
-
-            }
-        } catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-        return cidade
-    }
-     */
-
-
-
-    /*
-    //pega um endereço e transforma em lat e long. Este método é usado uma única vez, quando o usuário cadastrou um petshop mas ainda não tem latitude e longitude ainda.
-    //OBS: Este método poderia ser transferido para o cadastro do pet se for preciso no futuro.
-    private fun getLatLong (endereco: String, petBD: String){
-
-        val geocoder = Geocoder(this)
-        //val addresses: List<Address>?
-        //val address: Address?
-        //var addressText = ""
-
-        //Geocoder coder = new Geocoder(this);
-        val address : List<Address>?
-        //GeoPoint p1 = null;
-
-        try {
-            address = geocoder.getFromLocationName(endereco,1)
-
-            if (address==null) {
-                Toast.makeText(this, "Não foi possível encontrar sua localização ainda. Aguarde", Toast.LENGTH_SHORT).show()
-                val timer = object: CountDownTimer(40000, 1000) {
-                    override fun onTick(millisUntilFinished: Long) {}
-
-                    override fun onFinish() {
-                        getLatLong(endereco, petBD)
-                    }
-                }
-                timer.start()
-            } else {
-                var location: Address = address.get(0)
-                //location.getLatitude();
-                //location.getLongitude();
-
-                databaseReference.child("petshops").child(petBD).child("lat")
-                    .setValue(location.latitude)
-                databaseReference.child("petshops").child(petBD).child("long")
-                    .setValue(location.longitude)
-                databaseReference.child("petshops").child(petBD).child("latlong")
-                    .setValue(location.latitude + location.longitude)
-
-
-                petShops.clear()
-                //getUserLocation(raioUser, 0)
-                //p1 = new GeoPoint((double) (location.getLatitude() * 1E6),
-                //(double) (location.getLongitude() * 1E6));
-                Toast.makeText(
-                    this,
-                    "Pronto. Sua loja está configurada e já aparece no mapa. Talvez seja necessário reiniciar o app para que possa ve-la",
-                    Toast.LENGTH_LONG
-                ).show()
-
-            }
-        }catch (e: IOException) {
-            Log.e("MapsActivity", e.localizedMessage)
-        }
-
-    }
-     */
 
     //esta query não tem função para o usuário. Ela está aqui para corrigir erros. Pets que por algum motivo tenham cadastro mas ainda não tenham latlong (e por isso nao aparecem na busca) serão corrigidos. Nenhuma função depende desta busca e nem precisa aparecer para o usuário os pets que forem corrigidos aqui
     fun queryPetsSemLatLong() {
@@ -1730,7 +1533,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun queryPetsNerby(lat: Double, long: Double) {
 
         MapsModels.petsNerbyWhereAlredyQueried=true
-        animaLoad() //chama animação de loading
 
         //o valor 0.01f equivale a 1 km em latlent (soma de latitude e longitude)
 
@@ -1872,10 +1674,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     }
                 })
 
-            animaLoad()
+            animaLoad() //este fica
 
         } else {
-            animaLoad()
+            animaLoad()  //este fica
             MapsController.makeToast("Você está sem internet", this)
         }
 
@@ -2367,44 +2169,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap.setOnMarkerClickListener (this)
     }
 
-
-    /*
-    //ajusta o zoom para aparecer o petshop mais distante
-    private fun calculateZoomToFit(distanceInMeter: Float) : Float {
-
-        var zoom = 0.0f
-        //teste
-        if (distanceInMeter < 400.000){
-            zoom = 18.0f
-        } else if (distanceInMeter < 550.000){
-            zoom = 16.0f
-        } else if (distanceInMeter < 1010.000 ){
-            zoom = 15.0f
-        } else if (distanceInMeter < 2020.000){
-            zoom = 13.0f
-        } else if (distanceInMeter < 3050.000){
-            zoom = 12.7f
-        } else if (distanceInMeter <= 4050.000){
-            zoom = 12.5f
-        } else if (distanceInMeter >4050.000){
-            zoom = 11.8f
-        }
-        return zoom
-
-    }
-     */
-
-    /*
-    private fun setUpMap() {
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
-            return
-        }
-    }
-
-     */
 
     //aquyi estão os cliques dos markers vindos do mapa
     override fun onMarkerClick(p0: Marker?): Boolean {
@@ -6401,7 +6165,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 )
 
                                 //no metodo abaixo ajustamos o tamanho das imagens e juntamos os dois
-                                bitmapFinal = MapsController.createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
+                                bitmapFinal = createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
 
                                 //coloca a marca com titulo
 
@@ -6426,6 +6190,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         }
 
+
+    }
+
+    //ajusta a imagem para o marker com imagem
+    fun createUserBitmapFinalJustRound(bitmapImgUser: Bitmap?, bitmapPlaceHolder: Bitmap?): Bitmap? {
+
+        //vamos ajustar o fundo branco ao tamanho que colocamos na imagem do user
+        val display = windowManager.defaultDisplay
+        val size = Point()
+        display.getSize(size)
+        val width: Int = size.x
+        //val height: Int = size.y
+
+        val withPercent  = ((18*width)/100).toFloat()   //um pouco maior do que a imagem do user
+        val differenceAdjust = ((8*withPercent)/100).toFloat()
+
+        //ajusta ao tamanho que queremos
+        val newPlaceHolder = MapsController.scaleDown(bitmapPlaceHolder!!, withPercent, true)
+
+        //agora colocamos a imagem do bolão ao fundo e a imagem do user a frente
+        val bmOverlay = Bitmap.createBitmap(newPlaceHolder!!.getWidth(), newPlaceHolder.getHeight(), newPlaceHolder.getConfig())
+        val canvas = Canvas(bmOverlay)
+        val customMatrix = Matrix()
+        customMatrix.setTranslate(differenceAdjust, differenceAdjust)
+        canvas.drawBitmap(newPlaceHolder!!, Matrix(), null)
+        canvas.drawBitmap(bitmapImgUser!!, customMatrix, null)
+
+        return bmOverlay
 
     }
 
@@ -6532,7 +6324,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         R.drawable.placeholder
                     )
 
-                    bitmapFinal = MapsController.createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
+                    bitmapFinal = createUserBitmapFinalJustRound(resource, bit)  //here we will insert the bitmap we got with the link in a placehold with white border.
 
                     val mark1 = mMap.addMarker(MarkerOptions().position(latLng).title("petFriend!?!"+BdPetFriend+"!?!"+img+"!?!"+latLng).icon(BitmapDescriptorFactory.fromBitmap(bitmapFinal)))
                     arrayPetFriendMarker.add(mark1)
@@ -7332,8 +7124,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     fun temLembreteHoje(){
 
         if (MapsController.temLembreteHoje(this)){
-            val nomeProduto = sharePrefs.getLembreteNomeProd(this)
-            val bdDoPet = sharePrefs.getLembreteBdDoPet(this)
+            val mySharedPrefs: mySharedPrefs = mySharedPrefs(this)
+
+            val nomeProduto = mySharedPrefs.getValue("remeberNomeProduto")
+            val bdDoPet = mySharedPrefs.getValue("rememberBdDoPEt")
             openPopUpRememberDate("Ração acabando?", "Percebemos que já faz um tempo desde que você comprou ração "+nomeProduto+" pela última vez. Gostaria de comprar mais na mesma loja?", true, "Sim, comprar", "Não", bdDoPet)
         }
 

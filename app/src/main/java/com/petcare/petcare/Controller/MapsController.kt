@@ -31,7 +31,7 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.petcare.petcare.MapsActivity
 import com.petcare.petcare.Models.MapsModels
-import com.petcare.petcare.Utils.sharePrefs
+import com.petcare.petcare.Utils.mySharedPrefs
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -490,34 +490,6 @@ object MapsController {
         return x
     }
 
-    //ajusta a imagem para o marker com imagem
-    fun createUserBitmapFinalJustRound(bitmapImgUser: Bitmap?, bitmapPlaceHolder: Bitmap?): Bitmap? {
-
-        //vamos ajustar o fundo branco ao tamanho que colocamos na imagem do user
-        val display = MapsActivity().windowManager.defaultDisplay
-        val size = Point()
-        display.getSize(size)
-        val width: Int = size.x
-        //val height: Int = size.y
-
-        val withPercent  = ((18*width)/100).toFloat()   //um pouco maior do que a imagem do user
-        val differenceAdjust = ((8*withPercent)/100).toFloat()
-
-        //ajusta ao tamanho que queremos
-        val newPlaceHolder = scaleDown(bitmapPlaceHolder!!, withPercent, true)
-
-        //agora colocamos a imagem do bolão ao fundo e a imagem do user a frente
-        val bmOverlay = Bitmap.createBitmap(newPlaceHolder!!.getWidth(), newPlaceHolder.getHeight(), newPlaceHolder.getConfig())
-        val canvas = Canvas(bmOverlay)
-        val customMatrix = Matrix()
-        customMatrix.setTranslate(differenceAdjust, differenceAdjust)
-        canvas.drawBitmap(newPlaceHolder!!, Matrix(), null)
-        canvas.drawBitmap(bitmapImgUser!!, customMatrix, null)
-
-        return bmOverlay
-
-    }
-
     fun scaleDown(realImage: Bitmap, maxImageSize: Float, filter: Boolean): Bitmap? {
         val ratio = Math.min(maxImageSize / realImage.width,maxImageSize / realImage.height)
         val width = Math.round(ratio * realImage.width)
@@ -527,7 +499,9 @@ object MapsController {
 
     fun temLembreteHoje(activity: Activity) : Boolean {
 
-        val dateToRemember = sharePrefs.getLembreteData(activity)
+        val mySharedPrefs: mySharedPrefs = mySharedPrefs(activity)
+
+        val dateToRemember = mySharedPrefs.getValue("rememberDate")
 
         if (!dateToRemember.equals("nao")){ //se nao tiver é pq nao tem lembrete. O user nao comprou ração.
             //tem lembrete. Mas vamos ver se é a data certa pra mostrar.
@@ -540,10 +514,8 @@ object MapsController {
 
             if (date1.compareTo(date2) >=0){  //se for hoje ou no futuro
 
-                //val bdDoPet = sharedPref.getString("rememberBdDoPEt", "nao").toString()
-                val bdDoPet = sharePrefs.getLembreteBdDoPet(activity)
-                //val nomeProduto = sharedPref.getString("remeberNomeProduto", "nao").toString()
-                val nomeProduto = sharePrefs.getLembreteNomeProd(activity)
+                //val bdDoPet = mySharedPrefs.getValue("rememberBdDoPEt")
+                //val nomeProduto = mySharedPrefs.getValue("remeberNomeProduto")
 
                 return true
             } else {

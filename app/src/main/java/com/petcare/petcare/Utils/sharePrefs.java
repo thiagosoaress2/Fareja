@@ -1,6 +1,7 @@
 package com.petcare.petcare.Utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.petcare.petcare.R;
 
@@ -8,7 +9,9 @@ public class sharePrefs {
 
     public static void setUserBdInicial(Context context, String points) {
         android.content.SharedPreferences preferences = context.getSharedPreferences(String.valueOf(R.string.sharedpreferences), context.MODE_PRIVATE);
-        preferences.edit().putString("userBdInicial", points).apply();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("userBdInicial", points);
+        editor.apply();
     }
 
     public static String getUserBdInicial(Context context) {
@@ -19,7 +22,9 @@ public class sharePrefs {
 
     public static void setTipo(Context context, String points) {
         android.content.SharedPreferences preferences = context.getSharedPreferences(String.valueOf(R.string.sharedpreferences), context.MODE_PRIVATE);
-        preferences.edit().putString("tipo", points).apply();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("tipo", points);
+        editor.apply();
     }
 
     public static String getTipo(Context context) {

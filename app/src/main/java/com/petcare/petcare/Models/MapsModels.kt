@@ -14,13 +14,10 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.Marker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.petcare.petcare.Controller.MapsController
-import com.petcare.petcare.MapsActivity
-import com.petcare.petcare.Utils.fineLocationPermission
-import com.petcare.petcare.Utils.sharePrefs
+import com.petcare.petcare.Utils.mySharedPrefs
 
 object MapsModels {
 
@@ -63,10 +60,24 @@ object MapsModels {
 
     var petsNerbyWhereAlredyQueried = false
 
-    fun setupInicial (){
+    fun setupInicial (activity: Activity){
 
         auth = FirebaseAuth.getInstance()
         databaseReference = FirebaseDatabase.getInstance().reference
+
+        val mySharedPrefs: mySharedPrefs = mySharedPrefs(activity)
+
+        userBD = mySharedPrefs.getValue("userBdInicial")
+        tipo = mySharedPrefs.getValue("tipo")
+        val liberado = mySharedPrefs.getValue("liberaServicoInicial")
+        if (liberado=="0"){
+            liberaServico = true
+        } else {
+            liberaServico = false
+        }
+        imgDoUser = mySharedPrefs.getValue("imgInicial")
+
+
     }
 
     //coloca o lat, long e latlong em um petshop sem esta informação
@@ -129,7 +140,9 @@ object MapsModels {
 
     fun saveVendaNoBd(activity: Activity, buscaOuEntrega: String, formaPagamento: String, bandeira: String, endereco: String, numero: String, complemento: String, whatsApp: String, precoFinal: String, nomePet: String, bairro: String, cidade: String, estado: String, bdDoPet: String, arrayTipoCarrinho: MutableList<String>, arrayNomesCarrinho: MutableList<String>, arrayPrecoCarrinho: MutableList<String>, arrayDescCarrinho: MutableList<String>) :String {
 
-        sharePrefs.setAvaliacoes(activity, "1")
+        val mySharedPrefs: mySharedPrefs = mySharedPrefs(activity)
+
+        mySharedPrefs.setValue("liberaServicoInicial", "1")
 
         val newCad: String = databaseReference.child("compras").push().key.toString()
 
@@ -337,7 +350,11 @@ object MapsModels {
     fun ativarLembrete(bdDoPet: String, nomeProduto: String, activity: Activity){
 
         val dataRemember = MapsController.GetfutureDate(10)
-        sharePrefs.setLembrete(activity, dataRemember, nomeProduto, bdDoPet)
+        val mySharedPrefs: mySharedPrefs = mySharedPrefs(activity)
+
+        mySharedPrefs.setValue("remeberNomeProduto", nomeProduto)
+        mySharedPrefs.setValue("rememberBdDoPEt", bdDoPet)
+        mySharedPrefs.setValue("rememberDate", dataRemember)
 
     }
 
