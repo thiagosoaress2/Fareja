@@ -39,6 +39,8 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import com.petcare.petcare.Controller.AreaLojistaController
+import com.petcare.petcare.Models.AreaLojistaModels
 import com.petcare.petcare.Utils.cameraPermissions
 import com.petcare.petcare.Utils.readFilesPermissions
 import com.petcare.petcare.Utils.writeFilesPermissions
@@ -58,6 +60,8 @@ class arealojista : AppCompatActivity() {
     private lateinit var filePath: Uri
     private var urifinal: String = "nao"
 
+
+    /*
     //controle do alvara
     private var alvaraOk = 0 //alvaraOK = 1 siginfica que o ja enviou o alvara
     private var processo = "nao"  //esta variavel vai regular se é um envio de foto normal ou de alvara
@@ -69,6 +73,8 @@ class arealojista : AppCompatActivity() {
     private var itens_venda = "nao"  //quantidade de itens da loja que está a venda
     private var inventario_size = 15  //quantidade de itens que esta loja pode vender. 15 é o padrão
     private var endereco = "nao"
+
+     */
 
     var arrayNomes: MutableList<String> = ArrayList()
     var arrayImg: MutableList<String> = ArrayList()
@@ -93,46 +99,14 @@ class arealojista : AppCompatActivity() {
 
     fun clicksIniciais () {  //sairam de onCreate para acelerar a abertura dessa Activity
 
-        userBD = intent.getStringExtra("userBD")
-        alvara = intent.getStringExtra("alvara")
-        tipo = intent.getStringExtra("tipo")
-        userMail = intent.getStringExtra("email")
-        if (tipo.equals("empresario")){
-            petBD = intent.getStringExtra("petBD")
-        } else {
-            //se o tipo nao for empresário, significa então que é o primeiro acesso dele então todos botoes ficam escondidos menos o de cadastro
-            //pode estar pendente de alvará mas ja ir trabalhando nas outras coisas da loja
-            var btn: Button
-            btn = findViewById(R.id.arealojistaIndexBtneditLayout)
-            btn.isEnabled = false
+        AreaLojistaModels.userBD = intent.getStringExtra("userBD")
+        AreaLojistaModels.alvara = intent.getStringExtra("alvara")
+        AreaLojistaModels.tipo = intent.getStringExtra("tipo")
+        AreaLojistaModels.userMail = intent.getStringExtra("email")
 
-            btn = findViewById(R.id.arealojistaIndexBtnCadProd)
-            btn.isEnabled = false
+        AreaLojistaModels.init()
 
-            btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
-            btn.isEnabled = false
-
-            btn = findViewById(R.id.arealojistaIndexBtnEntrega)
-            btn.isEnabled = false
-
-            btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
-            btn.isEnabled = false
-
-            btn = findViewById(R.id.btnPlanos)
-            btn.isEnabled = false
-
-            btn = findViewById(R.id.btnMinhasPromos)
-            btn.isEnabled = false
-
-            //retirar loja
-            btn = findViewById(R.id.btnCancelamento)
-            btn.isEnabled = false
-
-            btn = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
-            btn.isEnabled = false
-
-        }
-
+        liberaBotoesDoEmpresario()
 
         databaseReference = FirebaseDatabase.getInstance().reference
 
@@ -143,16 +117,7 @@ class arealojista : AppCompatActivity() {
             }
         }
 
-        //val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
-        //val layEditLayout : ConstraintLayout = findViewById(R.id.lay_edit_layout_loja)
-        //val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
-
-
         setupPermissions()
-
-        //layIndex.visibility = View.VISIBLE
-        //layEditLayout.visibility = View.GONE
-        //layCadEmp.visibility = View.GONE
 
         //botões iniciais
         val btnAbreEditLayout : Button = findViewById(R.id.arealojistaIndexBtneditLayout)
@@ -178,14 +143,14 @@ class arealojista : AppCompatActivity() {
             val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
 
 
-            if (tipo.equals("usuario")) {
+            if (AreaLojistaModels.tipo.equals("usuario")) {
                 layIndex.visibility = View.GONE
                 layCadEmp.visibility = View.VISIBLE
                 clicksCadastroEmpresa(true) //true significa que é um usuário cadastrando a empresa pela primeira vez.
 
             } else {
 
-                if (alvara.equals("nao")){
+                if (AreaLojistaModels.alvara.equals("nao")){
                     layIndex.visibility = View.GONE
                     val layCadEmpAlvara: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
                     layCadEmpAlvara.visibility = View.VISIBLE
@@ -237,14 +202,14 @@ class arealojista : AppCompatActivity() {
         btnFechaActivity.setOnClickListener {
             val intent = Intent(this, MapsActivity::class.java)
             //intent.putExtra("userBD", userBD)
-            intent.putExtra("email", userMail)
+            intent.putExtra("email", AreaLojistaModels.userMail)
             //intent.putExtra("alvara", alvara)
             //intent.putExtra("tipo", tipo)
-            if (!petBD.equals("nao")){
-                intent.putExtra("petBD", petBD)
+            if (!AreaLojistaModels.petBD.equals("nao")){
+                intent.putExtra("petBD", AreaLojistaModels.petBD)
             }
-            intent.putExtra("endereco", endereco)
-            if (!endereco.equals("nao")){
+            intent.putExtra("endereco", AreaLojistaModels.endereco)
+            if (!AreaLojistaModels.endereco.equals("nao")){
                 intent.putExtra("chamaLatLong", "sim")
             }
             startActivity(intent)
@@ -261,20 +226,6 @@ class arealojista : AppCompatActivity() {
             clickImpulsionamentos()
         }
 
-        if (alvara.equals("nao") && tipo.equals("empresario")){
-            //btnAbreEditLayout.isEnabled = false reforma 2
-            //significa que ele já começou o cadastro mas nao enviou o alvará
-            btnCadastrarEmpreendimento.setText("Enviar alvará pendente")
-            //este procedimento nos outros botões já estão sendo feitos acima. Verificar
-        } else if (alvara.contains("http")) {
-            //significa que que já enviou alvará e aí mudamos o texto do botão
-            btnCadastrarEmpreendimento.setText("Atualizar informações")
-        } else {
-            //significa que é a primeira vez que o usuário entra ou ainda nem começou seu cadastro
-            btnCadastrarEmpreendimento.setText("Cadastrar empresa")
-        }
-
-
         btnCancelamento.setOnClickListener {
             ClicksCancelamento()
         }
@@ -283,7 +234,7 @@ class arealojista : AppCompatActivity() {
         btnGerarRelatorios.setOnClickListener {
             ChamaDialog()
             ChamaDialog()
-            val rootRef = databaseReference.child("petshops").child(petBD)
+            val rootRef = databaseReference.child("petshops").child(AreaLojistaModels.petBD)
             rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
                     //TODO("Not yet implemented")
@@ -303,8 +254,8 @@ class arealojista : AppCompatActivity() {
 
                         //abrir nova activity se for plano premium
                         val intent = Intent(this@arealojista, relatorio::class.java)
-                        intent.putExtra("userBD", userBD)
-                        intent.putExtra("petBD", petBD)
+                        intent.putExtra("userBD", AreaLojistaModels.userBD)
+                        intent.putExtra("petBD", AreaLojistaModels.petBD)
                         startActivity(intent)
 
                     }
@@ -327,8 +278,69 @@ class arealojista : AppCompatActivity() {
             }
         }
 
+        checkAlvara()
+
 
     } //tudo que havia no onCreate
+
+    fun liberaBotoesDoEmpresario (){
+
+        if (AreaLojistaModels.tipo.equals("empresario")){
+            AreaLojistaModels.petBD = intent.getStringExtra("petBD")
+        } else {
+            //se o tipo nao for empresário, significa então que é o primeiro acesso dele então todos botoes ficam escondidos menos o de cadastro
+            //pode estar pendente de alvará mas ja ir trabalhando nas outras coisas da loja
+            var btn: Button
+            btn = findViewById(R.id.arealojistaIndexBtneditLayout)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnCadProd)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnEntrega)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.btnPlanos)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.btnMinhasPromos)
+            btn.isEnabled = false
+
+            //retirar loja
+            btn = findViewById(R.id.btnCancelamento)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
+            btn.isEnabled = false
+
+        }
+
+    }
+
+    fun checkAlvara (){
+
+        val btnCadastrarEmpreendimento : Button = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
+
+        if (AreaLojistaModels.alvara.equals("nao") && AreaLojistaModels.tipo.equals("empresario")){
+            //btnAbreEditLayout.isEnabled = false reforma 2
+            //significa que ele já começou o cadastro mas nao enviou o alvará
+            btnCadastrarEmpreendimento.setText("Enviar alvará pendente")
+            //este procedimento nos outros botões já estão sendo feitos acima. Verificar
+        } else if (AreaLojistaModels.alvara.contains("http")) {
+            //significa que que já enviou alvará e aí mudamos o texto do botão
+            btnCadastrarEmpreendimento.setText("Atualizar informações")
+        } else {
+            //significa que é a primeira vez que o usuário entra ou ainda nem começou seu cadastro
+            btnCadastrarEmpreendimento.setText("Cadastrar empresa")
+        }
+
+    }
 
     fun clickImpulsionamentos (){
 
@@ -428,18 +440,18 @@ class arealojista : AppCompatActivity() {
                 btnConfirma.setOnClickListener {
 
                     //estes dados tem que mudar somente depois do pagamento do boleto.
-                    databaseReference.child("petshops").child(petBD).child("plano").setValue("pendenteDeUpGrade")
-                    databaseReference.child("petshops").child(petBD).child("impulsixonamentos").setValue("nao")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("plano").setValue("pendenteDeUpGrade")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("impulsixonamentos").setValue("nao")
                     //databaseReference.child("petshops").child(petBD).child("tamanho_inventario").setValue("50")
 
-                    databaseReference.child("pedidoDeUpGrade").child(petBD).child("email").setValue(userMail)
+                    databaseReference.child("pedidoDeUpGrade").child(AreaLojistaModels.petBD).child("email").setValue(AreaLojistaModels.userMail)
                     if (!etEmail.text.isEmpty()){
-                        databaseReference.child("pedidoDeUpGrade").child(petBD).child("emailAlternativo").setValue(userMail)
+                        databaseReference.child("pedidoDeUpGrade").child(AreaLojistaModels.petBD).child("emailAlternativo").setValue(AreaLojistaModels.userMail)
                     }
-                    databaseReference.child("pedidoDeUpGrade").child(petBD).child("bd").setValue(petBD)
-                    databaseReference.child("pedidoDeUpGrade").child(petBD).child("data").setValue(GetDate())
-                    databaseReference.child("pedidoDeUpGrade").child(petBD).child("situacao").setValue("pendente")
-                    databaseReference.child("pedidoDeUpGrade").child(petBD).child("nome").setValue(nomePet)
+                    databaseReference.child("pedidoDeUpGrade").child(AreaLojistaModels.petBD).child("bd").setValue(AreaLojistaModels.petBD)
+                    databaseReference.child("pedidoDeUpGrade").child(AreaLojistaModels.petBD).child("data").setValue(AreaLojistaController.GetDate())
+                    databaseReference.child("pedidoDeUpGrade").child(AreaLojistaModels.petBD).child("situacao").setValue("pendente")
+                    databaseReference.child("pedidoDeUpGrade").child(AreaLojistaModels.petBD).child("nome").setValue(nomePet)
 
 
                     Toast.makeText(
@@ -460,14 +472,14 @@ class arealojista : AppCompatActivity() {
                 txt.setText("Olá, toda mudança é importante.\nGostariamos de lembrar que ao mudar de plano você perderá funcionalidades. A capacidade da loja será reduzida, você não poderá colocar produtos em destaque para promoção e sua loja não aparecerá em destaque no mapa. \n\nSe ainda assim você quiser voltar ao plano básico, clique em confirmar abaixo. ")
                 val btnConfirma : Button = findViewById(R.id.layPlanos_btnConfirmaBas)
                 btnConfirma.setOnClickListener {
-                    databaseReference.child("petshops").child(petBD).child("plano").setValue("basico")
-                    databaseReference.child("petshops").child(petBD).child("tamanho_inventario").setValue("10")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("plano").setValue("basico")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("tamanho_inventario").setValue("10")
                     Toast.makeText(this, "As mudanças foram salvas. Seu plano agora é o básico gratuito", Toast.LENGTH_SHORT).show()
 
-                    databaseReference.child("pedidoDeDowngrade").child(petBD).child("email").setValue(userMail)
-                    databaseReference.child("pedidoDeDowngrade").child(petBD).child("bd").setValue(petBD)
-                    databaseReference.child("pedidoDeDowngrade").child(petBD).child("data").setValue(GetDate())
-                    databaseReference.child("pedidoDeDowngrade").child(petBD).child("situacao").setValue("pendente")
+                    databaseReference.child("pedidoDeDowngrade").child(AreaLojistaModels.petBD).child("email").setValue(AreaLojistaModels.userMail)
+                    databaseReference.child("pedidoDeDowngrade").child(AreaLojistaModels.petBD).child("bd").setValue(AreaLojistaModels.petBD)
+                    databaseReference.child("pedidoDeDowngrade").child(AreaLojistaModels.petBD).child("data").setValue(AreaLojistaController.GetDate())
+                    databaseReference.child("pedidoDeDowngrade").child(AreaLojistaModels.petBD).child("situacao").setValue("pendente")
 
                     btnVoltar.performClick()
                 }
@@ -479,7 +491,7 @@ class arealojista : AppCompatActivity() {
         }
 
         ChamaDialog()
-        val rootRef = databaseReference.child("petshops").child(petBD)
+        val rootRef = databaseReference.child("petshops").child(AreaLojistaModels.petBD)
         rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 //TODO("Not yet implemented")
@@ -542,7 +554,7 @@ class arealojista : AppCompatActivity() {
 
             var eT: EditText
 
-            val rootRef = databaseReference.child("petshops").child(petBD)
+            val rootRef = databaseReference.child("petshops").child(AreaLojistaModels.petBD)
             rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
                     //TODO("Not yet implemented")
@@ -673,7 +685,7 @@ class arealojista : AppCompatActivity() {
                 )
             } else {
                 //ChamaDialog()
-                processo="alvara"
+                AreaLojistaModels.processo="alvara"
                 takePictureFromCamera()
             }
 
@@ -744,7 +756,7 @@ class arealojista : AppCompatActivity() {
                 if (eNovo) { //se for novo, vai criar todos os campos no BD
                     //registrar criando o path do usuario. Vai ficar faltando o alvará que será feito na próxima página.
                     val newCad: DatabaseReference = databaseReference.child("petshops").push()
-                    petBD = newCad.key.toString()
+                    AreaLojistaModels.petBD = newCad.key.toString()
                     newCad.child("nome").setValue(mEtNome.text.toString())
                     newCad.child("telefone").setValue(mEtTel.text.toString())
                     newCad.child("logradouro").setValue(mEtLogradouro.text.toString())
@@ -752,9 +764,9 @@ class arealojista : AppCompatActivity() {
                     newCad.child("bairro").setValue(mEtBairro.text.toString())
                     newCad.child("cidade").setValue(mEtCidade.text.toString())
                     newCad.child("estado").setValue(estadoSelecionado)
-                    newCad.child("emailCriador").setValue(userMail.toString())
+                    newCad.child("emailCriador").setValue(AreaLojistaModels.userMail.toString())
 
-                    endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
+                    AreaLojistaModels.endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
                     // neste formato address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
 
                     //só salvou até aqui não sei porque
@@ -768,12 +780,12 @@ class arealojista : AppCompatActivity() {
                     newCad.child("plano").setValue("basico")
                     newCad.child("impulsionamentos").setValue("nao") //vai ser sim quando tiver um impulsionamento ativo e nao quando nao estiver.Vai controlar apenas um por vez
 
-                    newCad.child("bd").setValue(petBD)
+                    newCad.child("bd").setValue(AreaLojistaModels.petBD)
                     newCad.child("alvara").setValue("nao")
                     newCad.child("lat").setValue("nao")
                     newCad.child("long").setValue("nao")
                     newCad.child("latlong").setValue("nao")
-                    newCad.child("BDdoDono").setValue(userBD)
+                    newCad.child("BDdoDono").setValue(AreaLojistaModels.userBD)
                     newCad.child("entrega").setValue("nao")
                     newCad.child("raio_entrega").setValue("nao")
 
@@ -800,12 +812,12 @@ class arealojista : AppCompatActivity() {
                     newCad.child("itens_venda").setValue(0) //quantidade de produtos para vender.
                     newCad.child("tamanho_inventario").setValue(15) //Limite de usuário padrão
 
-                    databaseReference.child("usuarios").child(userBD).child("tipo").setValue("empresario")
-                    databaseReference.child("usuarios").child(userBD).child("petBD").setValue(petBD)
+                    databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("tipo").setValue("empresario")
+                    databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("petBD").setValue(AreaLojistaModels.petBD)
                     val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
                     val editor = sharedPref.edit()
                     editor.putString("tipoInicial", "empresario")
-                    editor.putString("petBdSeForEmpresarioInicial", petBD)
+                    editor.putString("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
                     editor.apply()
 
                     val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
@@ -820,62 +832,62 @@ class arealojista : AppCompatActivity() {
 
                     var apagaLatLong = 0  //se o user tiver mudado alguma informação do endereço, vamos apagar seus dados de latitude, longitude e latlong pois sua localização do mapa mudou.
                     if(!mNome.equals(mEtNome.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("nome")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("nome")
                             .setValue(mEtNome.text.toString())
                     }
 
                     if(!mTel.equals(mEtTel.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("telefone")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("telefone")
                             .setValue(mEtTel.text.toString())
                     }
                     if(!mLogradouro.equals(mEtLogradouro.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("logradouro")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("logradouro")
                             .setValue(mEtLogradouro.text.toString())
                         apagaLatLong=1
                     }
                     if(!mNumero.equals(mEtNumero.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("numero")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("numero")
                             .setValue(mEtNumero.text.toString())
                         apagaLatLong=1
                     }
                     if(!mBairro.equals(mEtBairro.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("bairro")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("bairro")
                             .setValue(mEtBairro.text.toString())
                         apagaLatLong=1
                     }
                     if(!mCidade.equals(mEtCidade.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("cidade")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cidade")
                             .setValue(mEtCidade.text.toString())
                         apagaLatLong=1
                     }
 
                     //estado salvamos sempre
-                    databaseReference.child("petshops").child(petBD).child("estado").setValue(estadoSelecionado)
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("estado").setValue(estadoSelecionado)
 
                     if(!mDddTel.equals(mEtTelDdd.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("dddTel")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("dddTel")
                             .setValue(mEtTelDdd.text.toString())
                     }
 
                     if(!mDddCel.equals(mEtCelDdd.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("dddCel")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("dddCel")
                             .setValue(mEtCelDdd.text.toString())
                     }
 
                     if(!mCel.equals(mEtCel.text.toString())) {
-                        databaseReference.child("petshops").child(petBD).child("cel")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cel")
                             .setValue(mEtCel.text.toString())
                     }
 
                     //se alterou alguma info do endereço, zerar estas informações. Assim, no MapsActivity, será identificaod por algum usuário automáticamente e pegará o novo latlong.
                     if (apagaLatLong==1){
-                        databaseReference.child("petshops").child(petBD).child("lat").setValue("nao")
-                        databaseReference.child("petshops").child(petBD).child("long").setValue("nao")
-                        databaseReference.child("petshops").child(petBD).child("latlong").setValue("nao")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("lat").setValue("nao")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("long").setValue("nao")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("latlong").setValue("nao")
                     }
 
 
-                    endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
+                    AreaLojistaModels.endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
 
                     val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
                     val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
@@ -891,7 +903,7 @@ class arealojista : AppCompatActivity() {
         val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
         btnFinalizaCad.setOnClickListener {
 
-            if (!alvara.equals("nao")){
+            if (!AreaLojistaModels.alvara.equals("nao")){
                 val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
                 layCad2.visibility = View.GONE
                 val layIndexAreaLoja: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
@@ -899,13 +911,13 @@ class arealojista : AppCompatActivity() {
 
                 val intent = Intent(this, MapsActivity::class.java)
                 //intent.putExtra("userBD", userBD)
-                intent.putExtra("email", userMail)
+                intent.putExtra("email", AreaLojistaModels.userMail)
                 //intent.putExtra("alvara", alvara)
                 //intent.putExtra("tipo", tipo)
-                if (!petBD.equals("nao")){
-                    intent.putExtra("petBD", petBD)
+                if (!AreaLojistaModels.petBD.equals("nao")){
+                    intent.putExtra("petBD", AreaLojistaModels.petBD)
                 }
-                intent.putExtra("endereco", endereco)
+                intent.putExtra("endereco", AreaLojistaModels.endereco)
                 intent.putExtra("chamaLatLong", "sim")
                 startActivity(intent)
                 finish()
@@ -953,13 +965,13 @@ class arealojista : AppCompatActivity() {
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         // Save the user's current game state
 
-        savedInstanceState.putString("alvaraOk", alvaraOk.toString())
-        savedInstanceState.putString("processo", processo)
-        savedInstanceState.putString("petBD", petBD)
-        savedInstanceState.putString("userMail", userMail)
-        savedInstanceState.putString("userBD", userBD)
-        savedInstanceState.putString("alvara", alvara)
-        savedInstanceState.putString("tipo", tipo)
+        savedInstanceState.putString("alvaraOk", AreaLojistaModels.alvaraOk.toString())
+        savedInstanceState.putString("processo", AreaLojistaModels.processo)
+        savedInstanceState.putString("petBD", AreaLojistaModels.petBD)
+        savedInstanceState.putString("userMail", AreaLojistaModels.userMail)
+        savedInstanceState.putString("userBD", AreaLojistaModels.userBD)
+        savedInstanceState.putString("alvara", AreaLojistaModels.alvara)
+        savedInstanceState.putString("tipo", AreaLojistaModels.tipo)
 
         //savedInstanceState.putInt(PLAYER_LEVEL, mCurrentLevel)
 
@@ -976,28 +988,28 @@ class arealojista : AppCompatActivity() {
         val nome = savedInstanceState.getString("nome")
         val desc = savedInstanceState.getString("desc")
 
-        savedInstanceState.putString("alvaraOk", alvaraOk.toString())
-        savedInstanceState.putString("processo", processo)
-        savedInstanceState.putString("petBD", petBD)
-        savedInstanceState.putString("userMail", userMail)
-        savedInstanceState.putString("userBD", userBD)
-        savedInstanceState.putString("alvara", alvara)
-        savedInstanceState.putString("tipo", tipo)
+        savedInstanceState.putString("alvaraOk", AreaLojistaModels.alvaraOk.toString())
+        savedInstanceState.putString("processo", AreaLojistaModels.processo)
+        savedInstanceState.putString("petBD", AreaLojistaModels.petBD)
+        savedInstanceState.putString("userMail", AreaLojistaModels.userMail)
+        savedInstanceState.putString("userBD", AreaLojistaModels.userBD)
+        savedInstanceState.putString("alvara", AreaLojistaModels.alvara)
+        savedInstanceState.putString("tipo", AreaLojistaModels.tipo)
 
         val x = savedInstanceState.getString("alvaraOk").toString()
-        alvaraOk = x.toInt()
-        processo = savedInstanceState.getString("processo").toString()
-        petBD = savedInstanceState.getString("petBD").toString()
-        userMail = savedInstanceState.getString("userMail").toString()
-        userBD = savedInstanceState.getString("userBD").toString()
-        alvara = savedInstanceState.getString("alvara").toString()
-        tipo = savedInstanceState.getString("tipo").toString()
+        AreaLojistaModels.alvaraOk = x.toInt()
+        AreaLojistaModels.processo = savedInstanceState.getString("processo").toString()
+        AreaLojistaModels.petBD = savedInstanceState.getString("petBD").toString()
+        AreaLojistaModels.userMail = savedInstanceState.getString("userMail").toString()
+        AreaLojistaModels.userBD = savedInstanceState.getString("userBD").toString()
+        AreaLojistaModels.alvara = savedInstanceState.getString("alvara").toString()
+        AreaLojistaModels.tipo = savedInstanceState.getString("tipo").toString()
 
         val layIndex: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
         val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
         val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
 
-        Log.d("teste", "entrou em onRestoreInstanceStete() e o valor de alvara é "+alvara)
+        Log.d("teste", "entrou em onRestoreInstanceStete() e o valor de alvara é "+AreaLojistaModels.alvara)
         Toast.makeText(this, "Um erro ocorreu. Tentando recuperar os dados.", Toast.LENGTH_SHORT).show()
         clicksCadastroEmpresa(false)
 
@@ -1021,13 +1033,13 @@ class arealojista : AppCompatActivity() {
             //recuperar dados depois, e nome é a variável que guardei.
         val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
         val editor = sharedPref.edit()
-        editor.putString("alvaraOk", alvaraOk.toString())
-        editor.putString("processo", processo)
-        editor.putString("petBD", petBD)
-        editor.putString("userMail", userMail)
-        editor.putString("userBD", userBD)
-        editor.putString("alvara", alvara)
-        editor.putString("tipo", tipo)
+        editor.putString("alvaraOk", AreaLojistaModels.alvaraOk.toString())
+        editor.putString("processo", AreaLojistaModels.processo)
+        editor.putString("petBD", AreaLojistaModels.petBD)
+        editor.putString("userMail", AreaLojistaModels.userMail)
+        editor.putString("userBD", AreaLojistaModels.userBD)
+        editor.putString("alvara", AreaLojistaModels.alvara)
+        editor.putString("tipo", AreaLojistaModels.tipo)
         editor.putString("alvaraProblem", "sim")
         editor.apply()
 
@@ -1102,7 +1114,7 @@ class arealojista : AppCompatActivity() {
 
         val btnChangeLogo : Button = findViewById(R.id.lay_edit_layout_loja_logoChangeBtn)
         btnChangeLogo.setOnClickListener {
-            processo="logo"
+            AreaLojistaModels.processo="logo"
             takePictureFromGallery()
         }
 
@@ -1113,10 +1125,44 @@ class arealojista : AppCompatActivity() {
     //prepara os cliques dos botões do cadastro de produtos
     fun clicksCadNovosProdutos (){
 
-        if (itens_venda.equals("nao")){ //se for diferente de nao é pq já fez a query antes.
+        if (AreaLojistaModels.itens_venda.equals("nao")){ //se for diferente de nao é pq já fez a query antes.
             queryProdutosDoPet()
         }
         atualizaProdutos()
+
+        //metodos do cadastro proprio de produtos
+        //primeiro carregar os dados no array
+        val list_of_nomes = AreaLojistaModels.getAllItems()
+        val list_of_images = AreaLojistaModels.getAllImages()
+        val list_of_desc = AreaLojistaModels.getAllDesc()
+        val list_of_precos = AreaLojistaModels.getAllPrecos()
+
+        //chame aqui pelo adaptador que criamos, com o nome dado e o construtor
+        var adapter: produtosDoBancoRecyclerAdapter = produtosDoBancoRecyclerAdapter(this, list_of_nomes, list_of_images, list_of_desc, list_of_precos)
+        //chame a recyclerview
+        var recyclerView: RecyclerView = findViewById(R.id.cadProd_RecyclerView)
+        //define o tipo de layout (linerr, grid)
+        var linearLayoutManager: LinearLayoutManager = LinearLayoutManager(this)
+        //coloca o adapter na recycleview
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = linearLayoutManager
+        // Notify the adapter for data change.
+        adapter.notifyDataSetChanged()
+
+        recyclerView.addOnItemTouchListener(RecyclerTouchListener(this, recyclerView!!, object: ClickListener{
+            override fun onClick(view: View, position: Int) {
+                Log.d("teste", list_of_nomes.get(position))
+                //Toast.makeText(this@MainActivity, !! aNome.get(position).toString(), Toast.LENGTH_SHORT).show()
+            }
+            override fun onLongClick(view: View?, position: Int) {
+
+            }
+        }))
+
+
+
+
+
         ExibeEscondePreview("n", "n", "n", "n")
 
         val btnNovaImagem : Button = findViewById(R.id.cadNovoProd_btnEnviarImagem)
@@ -1129,7 +1175,7 @@ class arealojista : AppCompatActivity() {
         //so colocar o currencyTextWatcher se o campo estiver vazio. Se for R$0,00 é pq o user saiu e voltou. Evitando travar
 
         if (etPreco.text.toString().isEmpty()){
-            CurrencyWatcherNew(etPreco)
+            AreaLojistaController.CurrencyWatcherNew(etPreco)
         } else {
 
         }
@@ -1245,7 +1291,7 @@ class arealojista : AppCompatActivity() {
                 etPreco.requestFocus()
                 //etPreco.setError("informe um valor ao produto")
                 Toast.makeText(this, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
-            } else if (itens_venda.toInt()>=inventario_size){ //caso já tenha atingido o limite.
+            } else if (AreaLojistaModels.itens_venda.toInt()>=AreaLojistaModels.inventario_size){ //caso já tenha atingido o limite.
                 hideKeyboard()
                 openPopUp2("Limite atingido", "Você atingiu o limite de itens a venda. Você pode expandir a quantidade pagando uma pequena taxa ou apagar itens antigos.", false, "aa", "bb", "aa")
 
@@ -1257,7 +1303,7 @@ class arealojista : AppCompatActivity() {
                 val scrollView: ScrollView = findViewById(R.id.scrollCadProd)
                 val max = scrollView.scrollY
                 scrollView.scrollY=max
-                processo = "cadNovoProd"
+                AreaLojistaModels.processo = "cadNovoProd"
                 openPopUp2("Envio de imagem", "Selecione o modo de envio da imagem:", true, "Tirar foto", "foto do celular", "fotoNovoProd")
             }
         }
@@ -1282,7 +1328,7 @@ class arealojista : AppCompatActivity() {
             arrayBD.clear()
         }
 
-        if (itens_venda.equals("nao")){ //se for diferente de nao é pq já fez a query antes.
+        if (AreaLojistaModels.itens_venda.equals("nao")){ //se for diferente de nao é pq já fez a query antes.
             queryProdutosDoPet()
         }
 
@@ -1336,14 +1382,14 @@ class arealojista : AppCompatActivity() {
         var valorEntrega = "nao"
 
         if (etValorEntrega.text.toString().isEmpty()){
-            CurrencyWatcherNew(etValorEntrega)
+            AreaLojistaController.CurrencyWatcherNew(etValorEntrega)
         } else {
 
         }
 
 
         ChamaDialog()
-        val rootRef = databaseReference.child("petshops").child(petBD)
+        val rootRef = databaseReference.child("petshops").child(AreaLojistaModels.petBD)
         rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 //TODO("Not yet implemented")
@@ -1440,11 +1486,11 @@ class arealojista : AppCompatActivity() {
         btnSalvar.setOnClickListener {
 
             if (cbNaoEntrega.isChecked){
-                databaseReference.child("petshops").child(petBD).child("entrega").setValue("nao")
-                databaseReference.child("petshops").child(petBD).child("servicos").child("entrega").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("entrega").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("entrega").setValue("nao")
             } else if (cbGratuita.isChecked){
-                databaseReference.child("petshops").child(petBD).child("entrega").setValue("gratis")
-                databaseReference.child("petshops").child(petBD).child("servicos").child("entrega").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("entrega").setValue("gratis")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("entrega").setValue("sim")
             } else if (etValorEntrega.text.isEmpty() || etValorEntrega.text.equals("R$0,00")){
                 etValorEntrega.requestFocus()
                 etValorEntrega.setError("Informe um valor")
@@ -1452,8 +1498,8 @@ class arealojista : AppCompatActivity() {
                 var str:String = etValorEntrega.text.toString().replace("R$", "")
                 str = str.replace(",", "").trim()
                 str = str.replace(".", "").trim()
-                databaseReference.child("petshops").child(petBD).child("entrega").setValue(str)
-                databaseReference.child("petshops").child(petBD).child("servicos").child("entrega").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("entrega").setValue(str)
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("entrega").setValue("sim")
             }
             layEntrega.visibility = View.GONE
 
@@ -1463,7 +1509,7 @@ class arealojista : AppCompatActivity() {
                 if (distanciaEmInt >= 60){
                     Toast.makeText(this, "Distância muito grande. A informação não foi salva", Toast.LENGTH_SHORT).show()
                 } else {
-                    databaseReference.child("petshops").child(petBD).child("raio_entrega").setValue(etDistancia.text.toString())
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("raio_entrega").setValue(etDistancia.text.toString())
                 }
 
             }
@@ -1525,11 +1571,11 @@ class arealojista : AppCompatActivity() {
 
             var aceitaCartao = false
             if (cbCredito.isChecked){
-                databaseReference.child("petshops").child(petBD).child("aceita_credito").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("aceita_credito").setValue("sim")
                 aceitaCartao = true
             }
             if (cbDebito.isChecked){
-                databaseReference.child("petshops").child(petBD).child("aceita_debito").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("aceita_debito").setValue("sim")
                 aceitaCartao = true
             }
 
@@ -1539,19 +1585,19 @@ class arealojista : AppCompatActivity() {
                 checkBox = findViewById(R.id.pagamentos_cbElo)
 
                 if (checkBox.isChecked){
-                    databaseReference.child("petshops").child(petBD).child("cartoes").child("elo").setValue("sim")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cartoes").child("elo").setValue("sim")
                 }
                 checkBox = findViewById(R.id.pagamentos_cbMaster)
                 if (checkBox.isChecked){
-                    databaseReference.child("petshops").child(petBD).child("cartoes").child("master").setValue("sim")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cartoes").child("master").setValue("sim")
                 }
                 checkBox = findViewById(R.id.pagamentos_cbVisa)
                 if (checkBox.isChecked){
-                    databaseReference.child("petshops").child(petBD).child("cartoes").child("visa").setValue("sim")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cartoes").child("visa").setValue("sim")
                 }
                 checkBox = findViewById(R.id.pagamentos_cbOutros)
                 if (checkBox.isChecked){
-                    databaseReference.child("petshops").child(petBD).child("cartoes").child("outros").setValue("sim")
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cartoes").child("outros").setValue("sim")
                 }
             }
 
@@ -1563,7 +1609,7 @@ class arealojista : AppCompatActivity() {
 
         ChamaDialog()
         //este é o primeiro passo: Vamos pegar os dados prévios do user
-        val rootRef = databaseReference.child("petshops").child(petBD)
+        val rootRef = databaseReference.child("petshops").child(AreaLojistaModels.petBD)
         rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 //TODO("Not yet implemented")
@@ -1683,7 +1729,7 @@ class arealojista : AppCompatActivity() {
                         ChamaDialog()
                         val arrayInfos: MutableList<String> = ArrayList()
 
-                        FirebaseDatabase.getInstance().reference.child("petshops").child(petBD).child("produtos").orderByChild("controle").equalTo("item")
+                        FirebaseDatabase.getInstance().reference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").orderByChild("controle").equalTo("item")
                             .addValueEventListener(object : ValueEventListener {
                                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                                     for (querySnapshot in dataSnapshot.children) {
@@ -1730,15 +1776,15 @@ class arealojista : AppCompatActivity() {
                             cont++
                         }
 
-                        databaseReference.child("petshops").child(petBD).removeValue()
-                        databaseReference.child("Baixas").child(petBD).child("motivo").setValue(layCancela_etMotivo.text.toString())
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).removeValue()
+                        databaseReference.child("Baixas").child(AreaLojistaModels.petBD).child("motivo").setValue(layCancela_etMotivo.text.toString())
                         if (!etSugestao.text.isEmpty()){
-                            databaseReference.child("Baixas").child(petBD).child("sugestao").setValue(etSugestao.text.toString())
+                            databaseReference.child("Baixas").child(AreaLojistaModels.petBD).child("sugestao").setValue(etSugestao.text.toString())
                         }
                         var teste: String
-                        teste = databaseReference.child("Baixas").child(petBD).child("motivo").toString()
+                        teste = databaseReference.child("Baixas").child(AreaLojistaModels.petBD).child("motivo").toString()
                         Log.d("teste", "o valor é "+teste)
-                        databaseReference.child("usuarios").child(userBD).child("tipo").setValue("usuario")
+                        databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("tipo").setValue("usuario")
                         Toast.makeText(this, "Toda informação da sua empresa foi removida", Toast.LENGTH_SHORT).show()
                         finish()
 
@@ -1867,7 +1913,7 @@ class arealojista : AppCompatActivity() {
             }
         })
 
-        CurrencyWatcherNew(etPreco)
+        AreaLojistaController.CurrencyWatcherNew(etPreco)
 
         etNome.setText(nome)
         if (desc.equals("nao")){
@@ -1885,15 +1931,15 @@ class arealojista : AppCompatActivity() {
 
             if (!nome.equals(etNome.text.toString())){
                 //databaseReference.child("petshops").child(petBD).child("produtos").child(bd).child("nome").setValue(etNome.text)
-                databaseReference.child("petshops").child(petBD).child("produtos").child(bd).child("nome").setValue(etNome.text.toString())
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").child(bd).child("nome").setValue(etNome.text.toString())
                 arrayNomes.add(posicao, etNome.text.toString())
             }
             if (!desc.equals(etDesc.text.toString())){
-                databaseReference.child("petshops").child(petBD).child("produtos").child(bd).child("desc").setValue(etDesc.text.toString())
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").child(bd).child("desc").setValue(etDesc.text.toString())
                 arrayDesc.add(posicao, etDesc.text.toString())
 
             } else if (etDesc.text.isEmpty()){
-                databaseReference.child("petshops").child(petBD).child("produtos").child(bd).child("desc").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").child(bd).child("desc").setValue("nao")
                 arrayDesc.add(posicao, "nao")
             }
 
@@ -1901,8 +1947,8 @@ class arealojista : AppCompatActivity() {
                 var str:String = etPreco.text.toString().replace("R$", "")
                 str = str.replace(",", "").trim()
                 str = str.replace(".", "").trim()
-                databaseReference.child("petshops").child(petBD).child("produtos").child(bd).child("preco").setValue(str)
-                arrayPreco.add(posicao, currencyTranslation(str))
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").child(bd).child("preco").setValue(str)
+                arrayPreco.add(posicao, AreaLojistaController.currencyTranslation(str))
             }
 
         }
@@ -1930,7 +1976,7 @@ class arealojista : AppCompatActivity() {
         str = str.replace(".", "").trim()
 
 
-        val newCad: DatabaseReference = databaseReference.child("petshops").child(petBD).child("produtos").push()
+        val newCad: DatabaseReference = databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").push()
 
         btnCadFinalizar.setOnClickListener {
 
@@ -1939,7 +1985,7 @@ class arealojista : AppCompatActivity() {
             str = str.replace(".", "").trim()
 
             //petBD = newCad.key.toString()
-            var nome = PrimeiraLetraMaiuscula(etNome.text.toString())
+            var nome = AreaLojistaController.PrimeiraLetraMaiuscula(etNome.text.toString())
 
             //newCad.child("nome").setValue(etNome.text.toString())
             newCad.child("nome").setValue(nome)
@@ -1973,8 +2019,8 @@ class arealojista : AppCompatActivity() {
             }
 
 
-            itens_venda = (itens_venda.toInt()+1).toString()
-            databaseReference.child("petshops").child(petBD).child("itens_venda").setValue(itens_venda)
+            AreaLojistaModels.itens_venda = (AreaLojistaModels.itens_venda.toInt()+1).toString()
+            databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("itens_venda").setValue(AreaLojistaModels.itens_venda)
             atualizaProdutos()
 
             etNome.setText("")
@@ -2030,12 +2076,6 @@ class arealojista : AppCompatActivity() {
 
     }
 
-    fun PrimeiraLetraMaiuscula (text: String) : String {
-        val sb: java.lang.StringBuilder = java.lang.StringBuilder(text)
-        sb.setCharAt(0, Character.toUpperCase(sb[0]))
-        return sb.toString()
-    }
-
     //exibe o preview no cadastro do produto
     fun ExibeEscondePreview(linkImg: String, nome: String, desc: String, preco: String ){
 
@@ -2054,7 +2094,7 @@ class arealojista : AppCompatActivity() {
         Log.d("teste", "o valor de linkImg é:"+linkImg)
 
         tvNome.setText(nome)
-        val precoEditado = currencyTranslation(preco)
+        val precoEditado = AreaLojistaController.currencyTranslation(preco)
         tvPreco.setText(precoEditado)
         if (desc.isEmpty()){
             tvDesc.setText("")
@@ -2079,7 +2119,7 @@ class arealojista : AppCompatActivity() {
 
         ChamaDialog()
 
-        FirebaseDatabase.getInstance().reference.child("petshops").child(petBD).child("produtos").orderByChild("controle").equalTo("item")
+        FirebaseDatabase.getInstance().reference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").orderByChild("controle").equalTo("item")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     for (querySnapshot in dataSnapshot.children) {
@@ -2090,7 +2130,7 @@ class arealojista : AppCompatActivity() {
                             //createUser()
                         } else {
 
-                            Log.d("teste", "entrou aqui na quary normal. petBD é "+petBD)
+                            Log.d("teste", "entrou aqui na quary normal. petBD é "+AreaLojistaModels.petBD)
 
                             //carregar infos
                             var values: String
@@ -2102,7 +2142,7 @@ class arealojista : AppCompatActivity() {
                             arrayDesc.add(values)
                             values = querySnapshot.child("preco").getValue().toString()
 
-                            val precoProv = currencyTranslation(values)
+                            val precoProv = AreaLojistaController.currencyTranslation(values)
 
                             arrayPreco.add(precoProv)
                             values = querySnapshot.child("img").getValue().toString()
@@ -2131,7 +2171,7 @@ class arealojista : AppCompatActivity() {
     //se o usuario for empresário, pega aqui informações do petshop dele
     fun queryProdutosDoPet() {
 
-        FirebaseDatabase.getInstance().reference.child("petshops").orderByChild("BDdoDono").equalTo(userBD)
+        FirebaseDatabase.getInstance().reference.child("petshops").orderByChild("BDdoDono").equalTo(AreaLojistaModels.userBD)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     for (querySnapshot in dataSnapshot.children) {
@@ -2146,9 +2186,9 @@ class arealojista : AppCompatActivity() {
                             var values: String
                             //abrir aqui a tela de gerenciamento do usuario
                             values = querySnapshot.child("itens_venda").getValue().toString()
-                            itens_venda = values
+                            AreaLojistaModels.itens_venda = values
                             values = querySnapshot.child("tamanho_inventario").getValue().toString()
-                            inventario_size = values.toInt()
+                            AreaLojistaModels.inventario_size = values.toInt()
 
                             atualizaProdutos()
 
@@ -2171,14 +2211,14 @@ class arealojista : AppCompatActivity() {
     fun atualizaProdutos (){
 
         val tvItens : TextView = findViewById(R.id.cadNovoProd_tvItens)
-        tvItens.setText("Itens: "+itens_venda+"/"+inventario_size)
+        tvItens.setText("Itens: "+AreaLojistaModels.itens_venda+"/"+AreaLojistaModels.inventario_size)
 
     }
 
     //QueryPet para pegar as informações necessárias para editar layout
     fun queryPetLayoutEdit() {
 
-        FirebaseDatabase.getInstance().reference.child("petshops").orderByChild("BDdoDono").equalTo(userBD)
+        FirebaseDatabase.getInstance().reference.child("petshops").orderByChild("BDdoDono").equalTo(AreaLojistaModels.userBD)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     for (querySnapshot in dataSnapshot.children) {
@@ -2303,45 +2343,45 @@ class arealojista : AppCompatActivity() {
 
             Toast.makeText(this, "Informações salvas", Toast.LENGTH_SHORT).show()
             if (cbBanhoTosa.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("banhoTosa").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("banhoTosa").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("banhoTosa").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("banhoTosa").setValue("nao")
             }
 
             if (cbFarmacia.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("farmacia").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("farmacia").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("farmacia").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("farmacia").setValue("nao")
             }
 
             if (cbVet.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("veterinario").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("veterinario").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("veterinario").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("veterinario").setValue("nao")
             }
 
             if (cbHospedagem.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("hospedagem").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("hospedagem").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("hospedagem").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("hospedagem").setValue("nao")
             }
 
             if (cb24Hrs.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("24hrs").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("24hrs").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("24hrs").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("24hrs").setValue("nao")
             }
 
             if (cbVetAtendDom.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("vetAtendDom").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("vetAtendDom").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("vetAtendDom").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("vetAtendDom").setValue("nao")
             }
 
             if (cbEntrega.isChecked){
-                databaseReference.child("petshops").child(petBD).child("servicos").child("entrega").setValue("sim")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("entrega").setValue("sim")
             } else {
-                databaseReference.child("petshops").child(petBD).child("servicos").child("entrega").setValue("nao")
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("servicos").child("entrega").setValue("nao")
             }
 
         }
@@ -2411,7 +2451,7 @@ class arealojista : AppCompatActivity() {
         //neste exemplo queremos que caiba em um banner de 100x400
         //é alterando o tamanho aqui que o tamanho total da imagem cresce ao final**************************************
         var imageNova: Bitmap = image
-        if (processo.equals("alvara")){
+        if (AreaLojistaModels.processo.equals("alvara")){
             imageNova = calculateInSizeSampleToFitImageView(image, 1000, 1000)
         }
         /* tirei o banner. Para voltar é só buscar aqui
@@ -2420,7 +2460,7 @@ class arealojista : AppCompatActivity() {
             val imageviewBanne:ImageView = findViewById(R.id.lay_edit_layout_loja_bannerImgView)
             imageviewBanne.setImageBitmap(imageNova)
         }*/
-        else if (processo.equals("logo")){
+        else if (AreaLojistaModels.processo.equals("logo")){
 
             imageNova = calculateInSizeSampleToFitImageView(image, 500, 500)
             val imageviewLogo:ImageView = findViewById(R.id.lay_edit_layout_loja_logoImageView)
@@ -2428,7 +2468,7 @@ class arealojista : AppCompatActivity() {
             val txtlogo: TextView = findViewById(R.id.textView24)
             txtlogo.visibility = View.GONE
 
-        } else if (processo.equals("cadNovoProd")){
+        } else if (AreaLojistaModels.processo.equals("cadNovoProd")){
             imageNova = calculateInSizeSampleToFitImageView(image, 200, 200)
         }
 
@@ -2455,7 +2495,7 @@ class arealojista : AppCompatActivity() {
 
         val tempUri: Uri = getImageUri(this, imageNova)
         filePath = tempUri
-        if (processo.equals("alvara")){
+        if (AreaLojistaModels.processo.equals("alvara")){
             uploadImageToAlvara()
         } else {
 
@@ -2625,7 +2665,7 @@ class arealojista : AppCompatActivity() {
     fun uploadImageToAlvara(){
         mFireBaseStorage = FirebaseStorage.getInstance()
         mphotoStorageReference = mFireBaseStorage.reference
-        mphotoStorageReference = mFireBaseStorage.getReference().child(petBD).child("alvara").child("alvara")
+        mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("alvara").child("alvara")
 
         val bmp: Bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath)
         val baos: ByteArrayOutputStream = ByteArrayOutputStream()
@@ -2655,9 +2695,9 @@ class arealojista : AppCompatActivity() {
 
                 EncerraDialog()
 
-                    databaseReference.child("petshops").child(petBD).child("alvara").setValue(urifinal)
-                    alvaraOk=1
-                    alvara="sim"
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("alvara").setValue(urifinal)
+                    AreaLojistaModels.alvaraOk=1
+                    AreaLojistaModels.alvara="sim"
                     Toast.makeText(this, "O alvará foi enviado com sucesso.", Toast.LENGTH_SHORT).show()
                     loadImage(Glide.with(this), urifinal, findViewById(R.id.cadEmpIvPreview))
                     val layPraFechar2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
@@ -2667,7 +2707,7 @@ class arealojista : AppCompatActivity() {
                     val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
                     btnFinalizaCad.setOnClickListener {
 
-                        if (!alvara.equals("nao")) {
+                        if (!AreaLojistaModels.alvara.equals("nao")) {
                             val layCad2: ConstraintLayout =
                                 findViewById(R.id.lay_cadastrarEmpreendimento2)
                             layCad2.visibility = View.GONE
@@ -2677,13 +2717,13 @@ class arealojista : AppCompatActivity() {
 
                             val intent = Intent(this, MapsActivity::class.java)
                             //intent.putExtra("userBD", userBD)
-                            intent.putExtra("email", userMail)
+                            intent.putExtra("email", AreaLojistaModels.userMail)
                             //intent.putExtra("alvara", alvara)
                             //intent.putExtra("tipo", tipo)
-                            if (!petBD.equals("nao")) {
-                                intent.putExtra("petBD", petBD)
+                            if (!AreaLojistaModels.petBD.equals("nao")) {
+                                intent.putExtra("petBD", AreaLojistaModels.petBD)
                             }
-                            intent.putExtra("endereco", endereco)
+                            intent.putExtra("endereco", AreaLojistaModels.endereco)
                             intent.putExtra("chamaLatLong", "sim")
                             startActivity(intent)
                             finish()
@@ -2734,22 +2774,22 @@ class arealojista : AppCompatActivity() {
 
         mFireBaseStorage = FirebaseStorage.getInstance()
         mphotoStorageReference = mFireBaseStorage.reference
-        mphotoStorageReference = mFireBaseStorage.getReference().child(petBD).child("alvara").child("alvara")
+        mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("alvara").child("alvara")
 
         //ficaram aqui os códigos, mas na verdade agora o alvará é feito num processo proprio chamado uploadImageAlvara.
-        Log.d("teste", "o valor de processo é "+processo)
+        Log.d("teste", "o valor de processo é "+AreaLojistaModels.processo)
 
-        if (processo.equals("alvara")){
+        if (AreaLojistaModels.processo.equals("alvara")){
 
-            mphotoStorageReference = mFireBaseStorage.getReference().child(petBD).child("alvara").child("alvara")
-        } else if (processo.equals("banner")){
-            mphotoStorageReference = mFireBaseStorage.getReference().child(petBD).child("banner").child("banner")
-        } else if (processo.equals("logo")){
+            mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("alvara").child("alvara")
+        } else if (AreaLojistaModels.processo.equals("banner")){
+            mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("banner").child("banner")
+        } else if (AreaLojistaModels.processo.equals("logo")){
             Toast.makeText(this, "Ajustando imagem", Toast.LENGTH_SHORT).show()
-            mphotoStorageReference = mFireBaseStorage.getReference().child(petBD).child("logo").child("logo")
-        } else if (processo.equals("cadNovoProd")){
+            mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("logo").child("logo")
+        } else if (AreaLojistaModels.processo.equals("cadNovoProd")){
             val etNome: EditText = findViewById(R.id.cadNovoProd_nome)
-            mphotoStorageReference = mFireBaseStorage.getReference().child(petBD).child("produtos").child("img_"+etNome.text.toString())
+            mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("produtos").child("img_"+etNome.text.toString())
         }
 
         Log.d("teste", "mphotostorage é "+mphotoStorageReference.toString())
@@ -2780,10 +2820,10 @@ class arealojista : AppCompatActivity() {
                 urifinal = downloadUri.toString()
 
                 EncerraDialog()
-                if (processo.equals("alvara")){
-                    databaseReference.child("petshops").child(petBD).child("alvara").setValue(urifinal)
-                    alvaraOk=1
-                    alvara="sim"
+                if (AreaLojistaModels.processo.equals("alvara")){
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("alvara").setValue(urifinal)
+                    AreaLojistaModels.alvaraOk=1
+                    AreaLojistaModels.alvara="sim"
                     Toast.makeText(this, "O alvará foi enviado com sucesso.", Toast.LENGTH_SHORT).show()
                     loadImage(Glide.with(this), urifinal, findViewById(R.id.cadEmpIvPreview))
                     val layPraFechar2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
@@ -2793,7 +2833,7 @@ class arealojista : AppCompatActivity() {
                     val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
                     btnFinalizaCad.setOnClickListener {
 
-                        if (!alvara.equals("nao")) {
+                        if (!AreaLojistaModels.alvara.equals("nao")) {
                             val layCad2: ConstraintLayout =
                                 findViewById(R.id.lay_cadastrarEmpreendimento2)
                             layCad2.visibility = View.GONE
@@ -2803,13 +2843,13 @@ class arealojista : AppCompatActivity() {
 
                             val intent = Intent(this, MapsActivity::class.java)
                             //intent.putExtra("userBD", userBD)
-                            intent.putExtra("email", userMail)
+                            intent.putExtra("email", AreaLojistaModels.userMail)
                             //intent.putExtra("alvara", alvara)
                             //intent.putExtra("tipo", tipo)
-                            if (!petBD.equals("nao")) {
-                                intent.putExtra("petBD", petBD)
+                            if (!AreaLojistaModels.petBD.equals("nao")) {
+                                intent.putExtra("petBD", AreaLojistaModels.petBD)
                             }
-                            intent.putExtra("endereco", endereco)
+                            intent.putExtra("endereco", AreaLojistaModels.endereco)
                             intent.putExtra("chamaLatLong", "sim")
                             startActivity(intent)
                             finish()
@@ -2840,21 +2880,21 @@ class arealojista : AppCompatActivity() {
                     }
 
                 }
-                if (processo.equals("banner")){
+                if (AreaLojistaModels.processo.equals("banner")){
 
                     //val imageView: ImageView = findViewById(R.id.lay_edit_layout_loja_bannerImgView)
                     //Glide.with(this@arealojista).load(urifinal).into(imageView)  //agora a imagem é colocada diretamente no método de compressimage
                     //imageView.visibility = View.VISIBLE
-                    databaseReference.child("petshops").child(petBD).child("banner").setValue(urifinal)
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("banner").setValue(urifinal)
                 }
-                if (processo.equals("logo")){
+                if (AreaLojistaModels.processo.equals("logo")){
 
                     val imageView: ImageView = findViewById(R.id.lay_edit_layout_loja_logoImageView)
                     Glide.with(this@arealojista).load(urifinal).apply(RequestOptions.circleCropTransform()).into(imageView)
                     imageView.visibility = View.VISIBLE
-                    databaseReference.child("petshops").child(petBD).child("logo").setValue(urifinal)
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("logo").setValue(urifinal)
                 }
-                if (processo.equals("cadNovoProd")){
+                if (AreaLojistaModels.processo.equals("cadNovoProd")){
                     cadNovoProdFinal(urifinal)
                 }
 
@@ -3168,7 +3208,7 @@ class arealojista : AppCompatActivity() {
                     //failed to delete
                 }
 
-                databaseReference.child("petshops").child(petBD).child("produtos").child(bd).removeValue()
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").child(bd).removeValue()
                 Toast.makeText(this, "O item foi apagado", Toast.LENGTH_SHORT).show()
 
                 popupWindow.dismiss()
@@ -3179,8 +3219,8 @@ class arealojista : AppCompatActivity() {
                 val adapter = recycleview.adapter
                 val layoutmanager = recycleview.layoutManager
 
-                itens_venda = ((itens_venda).toInt()-1).toString()
-                databaseReference.child("petshops").child(petBD).child("itens_venda").setValue(itens_venda)
+                AreaLojistaModels.itens_venda = ((AreaLojistaModels.itens_venda).toInt()-1).toString()
+                databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("itens_venda").setValue(AreaLojistaModels.itens_venda)
 
                 arrayBD.removeAt(posicao)
                 arrayImg.removeAt(posicao)
@@ -3254,7 +3294,7 @@ class arealojista : AppCompatActivity() {
     fun queryimpulsionamentosAtivos() {
 
 
-        FirebaseDatabase.getInstance().reference.child("impulsionamentos").orderByChild("pet").equalTo(petBD)
+        FirebaseDatabase.getInstance().reference.child("impulsionamentos").orderByChild("pet").equalTo(AreaLojistaModels.petBD)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
 
@@ -3304,7 +3344,7 @@ class arealojista : AppCompatActivity() {
                                         databaseReference.child("impulsionamentos").child(values).removeValue()
 
                                         //aqui libera o petshop para novos
-                                        databaseReference.child("petshops").child(petBD).child("impulsionamentos").child("nao")
+                                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("impulsionamentos").child("nao")
 
                                         openPopUp("Pronto", "Este impulsionamento foi cancelado e você já pode fazer novos", false, "n", "n", "n")
 
@@ -3348,6 +3388,7 @@ class arealojista : AppCompatActivity() {
 
 
     //Máscara de edição de texto
+    /*
     fun CurrencyWatcherNew( editText:EditText) {
 
         editText.addTextChangedListener(object : TextWatcher {
@@ -3517,104 +3558,8 @@ class arealojista : AppCompatActivity() {
         })
     }
 
-    //corrige o valor informado pelo usuário ou pelo BD em dinheiro
-    /*
-    você chama este método assim:
-    val valFormatado = currencyTranslation(IntAntigo)
+
      */
-    //este transforma numero comum em dinheiro
-    fun currencyTranslation(valorOriginal: String): String{
-
-        //passar o valor para string para poder ver o tamanho
-        var valorString = valorOriginal.toString()
-        valorString = valorString.trim()
-        valorString.replace("R$", "")
-        valorString.replace(".", "")
-        valorString.replace(",", "")
-
-        //na casa de menos de 100 mil
-        //90.000 - 5 casas
-        //entre 100 mil e 1 mi
-        //100.000
-        //entre 1 milhão pra cima
-        //1.000,000
-        if (valorString.length ==3){ //exemplo 002 222 012  fica 0,02 2,22 0,12
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            valorString = sb.toString()
-
-        } else if (valorString.length == 4){ // 1234  fica 12,34
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            valorString = sb.toString()
-        } else if (valorString.length==5){ //12345  fica 123,45
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            valorString = sb.toString()
-
-        } else if (valorString.length==6){ //123456  fica 1.234,56
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(1, ".")
-            valorString = sb.toString()
-
-        } else if (valorString.length==7){ //1234567  fica 12.345,67
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(2, ".")
-            valorString = sb.toString()
-
-        } else if (valorString.length==8){ //12345678  fica 123.456,78
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(3, ".")
-            valorString = sb.toString()
-
-        }  else if (valorString.length==9){ //123456789  fica 1.234.567,89
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(4, ".")
-            sb.insert(1, ".")
-            valorString = sb.toString()
-
-        }  else if (valorString.length==10){ //1234567890  fica 12.345.678,90
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(5, ".")
-            sb.insert(2, ".")
-            valorString = sb.toString()
-
-        }  else if (valorString.length==11){ //12345678901  fica 123.456.789,01
-
-            val sb: StringBuilder = StringBuilder(valorString)
-            //coloca o ponto no lugar certo
-            sb.insert(valorString.length - 2, ",")
-            sb.insert(6, ".")
-            sb.insert(3, ".")
-            valorString = sb.toString()
-
-        }
-
-        valorString = "R$"+valorString
-        return valorString
-
-    }
 
     private fun setupPermissions() {
 
@@ -3807,13 +3752,7 @@ class arealojista : AppCompatActivity() {
          */
     }
 
-    private fun GetDate () : String {
 
-        val sdf = SimpleDateFormat("dd/MM/yyyy")
-        val currentDate = sdf.format(Date())
-
-        return currentDate
-    }
 
     fun ChamaDialog() {
         window.setFlags(

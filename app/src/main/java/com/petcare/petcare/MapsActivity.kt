@@ -169,8 +169,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         MapsModels.setupInicial(this@MapsActivity)
 
-        animaLoad() //vai ser removido no final da query inicial ou quando verificar que nao precisa dessa query
-
         databaseReference = FirebaseDatabase.getInstance().reference
         FacebookSdk.sdkInitialize(getApplicationContext())
         checkForAppUpdate()
@@ -281,7 +279,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         metodosIniciais()
     }
 
-
     //este método é chamado quando a app termina de carregar o mapa
     fun metodosIniciais(){
 
@@ -352,12 +349,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 queryUserInitial()
             } else {
                 placeUserInMap()
-
             }
 
 
         }
 
+
+        centralBtnApenasLocaliza ()
 
         EncerraDialog()
 
@@ -1547,7 +1545,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         if (isNetworkAvailable(this)) {
             //getInstance().reference.child("petshops").orderByChild("latlong").startAt(latlong - (0.01f * raio)).endAt(latlong + (0.01f * raio))
-
+            animaLoad()
             //nova regra de ouro
             //Por conta das características da latitude e longitude, nao podemos usar o mesmo valor para startAtVal (pois fica a esquerda) e endAtVal(que fica a direita).
             //O que ocorre é que itens que ficam a esquerda acumulam a soma de valores negativos de latitude e longitude. Já os que ficam em endVal pegam o valor negativo da longitude mas as vezes pega positivo de latitude. Isso dava resulltado no final.
@@ -1630,18 +1628,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                             EncerraDialog()
                             //openPopUp("Que pena", "Não existem clinicas ou petshops perto de você. Vamos aumentar o raio da busca?", false, "n", "n","n")
-                            if (MapsModels.raioBusca <= 10.0) {
+                            if (MapsModels.raioBusca < 10.0) {
 
-                                if (MapsModels.raioBusca == 3.2) {
-                                    //showToast()
-                                }
                                 //ChamaDialog()
                                 //val km = (raioBusca * 10).toInt()
                                 MapsModels.raioBusca = MapsModels.raioBusca + 5.0
                                 MapsModels.raioUser = MapsModels.raioUser + 7000
                                 //ao chamar aqui coloca os petshops no mapa.
                                 MapsModels.petsNerbyWhereAlredyQueried=false
-                                getUserLocation(MapsModels.raioUser, 1)
+                                //getUserLocation(MapsModels.raioUser, 1)
+                          //      animaLoad()
+                                queryPetsNerby(lat, long)
 
                             } else {
                                 openPopUp(
@@ -1652,6 +1649,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                     "n",
                                     "n"
                                 )
+
+                                //animaLoad()
                             }
 
                         }
@@ -2306,7 +2305,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //aqui ele apenas centraliza a tela. Não faz mais nada, nao muda imagem. NADA
     fun centralBtnApenasLocaliza () {
         val btnCentral: Button = findViewById(R.id.btnLocalizaNovamente)
-        btnCentral.setOnClickListener { null }
+        //btnCentral.setOnClickListener { null }
         btnCentral.setOnClickListener {
 
 
