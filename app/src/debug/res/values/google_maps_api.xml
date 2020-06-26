@@ -22,7 +22,7 @@
 
     -->
   <!--  <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyA0UzpnQwOmTKZRXhH4C3uzfYAJRtnJxXE</string> -->
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyA0UzpnQwOmTKZRXhH4C3uzfYAJRtnJxXE</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">4B:95:50:3B:55:C9:E6:63:50:DD:E9:5D:64:67:84:12:8E:6E:DF:23</string>
   <!-- Esta é a versão de testes  <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyA0UzpnQwOmTKZRXhH4C3uzfYAJRtnJxXE</string> -->
    <!-- Esta é a versão Release <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">4B:95:50:3B:55:C9:E6:63:50:DD:E9:5D:64:67:84:12:8E:6E:DF:23</string> -->
 

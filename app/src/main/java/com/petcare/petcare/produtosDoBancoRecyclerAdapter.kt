@@ -11,9 +11,11 @@ import com.bumptech.glide.Glide
 
 //obs: O nome apos class tem que ser rigorosamente igual ao que vc deu
 //ao adapter, cuidado com letra maiuscula
-class produtosDoBancoRecyclerAdapter(private var context: Context, private var arrayNome:MutableList<String>, private var arrayImg:MutableList<Int>, private var arrayPreco:MutableList<String>, private var arrayDesc:MutableList<String>): RecyclerView.Adapter<produtosDoBancoRecyclerAdapter.ViewHolder>() {
+class produtosDoBancoRecyclerAdapter(private var context: Context, private var arrayNome:MutableList<String>, private var arrayImg:MutableList<Int>): RecyclerView.Adapter<produtosDoBancoRecyclerAdapter.ViewHolder>() {
+
     override fun getItemCount(): Int {
         return arrayNome.size;
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

@@ -1,6 +1,5 @@
 package com.petcare.petcare.Models
 
-import android.media.Image
 import android.net.Uri
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -39,8 +38,28 @@ object AreaLojistaModels {
     fun getAllItems() : MutableList<String> {
 
         val items: MutableList<String> = ArrayList()
-        items.add("Bravecto")
-        items.add("Braveco2")
+        items.add("Bravecto Cães até 4,5 kg")
+        items.add("Bravecto Cães de 4,5 a 10 kg")
+        items.add("Bravecto Cães de 10 a 20 kg")
+        items.add("Bravecto Cães de 20Kg a 40Kg")
+        items.add("Bravecto Cães de 40 a 56 kg")
+        items.add("Golden Fórmula Cães Adultos Frango e Arroz - 15kg")
+        items.add("Golden Fórmula Cães Adultos Frango e Carne - 15kg")
+        items.add("Golden Cães Filhotes Raças Grandes Frango e Arroz - 15kg")
+        //aqui é a parte nova adição de 25/06/2020
+        items.add("Ração Golden Duo para Gatos Adultos Sabor Cordeiro e Salmão")
+        items.add("Ração Golden para Gatos Adultos Castrados Sabor Salmão")
+        items.add("Ração Golden Gatos Filhotes Sabor Frango")
+        items.add("Ração Golden para Gatos Adultos Castrados Sabor Frango")
+        items.add("Ração Golden para Gatos Adultos Sabor Carne")
+        items.add("Ração Golden para Gatos Adultos Castrados Sabor Carne")
+        items.add("Ração Golden Seleção Natural para Gatos Filhotes Sabor Frango e Arroz")
+        items.add("Ração Golden para Gatos Adultos Castrados Seleção Natural Abóbora")
+        items.add("Ração Golden para Gatos Adultos Sabor Frango")
+        items.add("Ração Golden para Gatos Adultos Sabor Salmão")
+        items.add("Ração Golden Seleção Natural para Gatos Adultos Sabor Frango")
+        items.add("Ração Golden para Gatos Sênior Castrados sabor Frango")
+
         return items
 
     }
@@ -48,8 +67,28 @@ object AreaLojistaModels {
     fun getAllImages(): MutableList<Int>{
 
         val images: MutableList<Int> = ArrayList()
-        images.add(R.drawable.banco_bravecto)
-        images.add(R.drawable.banco_bravecto)
+        images.add(R.drawable.banco_bravectoate45)
+        images.add(R.drawable.banco_bravecto45a10)
+        images.add(R.drawable.banco_bravecto10a20)
+        images.add(R.drawable.banco_bravecto20a40)
+        images.add(R.drawable.banco_bravecto46a56)
+        images.add(R.drawable.banco_goldenformulaespecialadultosfrangoearroz)
+        images.add(R.drawable.banco_goldenformulaespecialadultosfrangoecarne)
+        images.add(R.drawable.banco_goldencaesfilhotesracasgrandesfrangoearroz15kg)
+        //novas de 25/06
+        images.add(R.drawable.banco_goldenduo)
+        images.add(R.drawable.banco_goldengatossalmaocastrado)
+        images.add(R.drawable.banco_goldengatosfrangofilhotes)
+        images.add(R.drawable.banco_goldengatosfrangocastrados)
+        images.add(R.drawable.banco_goldengatoscarneadultos)
+        images.add(R.drawable.banco_goldengatoscarnecastrados)
+        images.add(R.drawable.banco_goldenselecaonaturalfilhotesfrango)
+        images.add(R.drawable.banco_goldenselecaonaturalcastradosabobora)
+        images.add(R.drawable.banco_goldengatosfrangoadultos)
+        images.add(R.drawable.banco_goldengatosadultossalmao)
+        images.add(R.drawable.banco_goldengatosselecaonaturalfrangoearrozadultos)
+        images.add(R.drawable.banco_goldengatoscastradosfrango)
+
 
         return images
     }
@@ -57,17 +96,67 @@ object AreaLojistaModels {
     fun getAllDesc(): MutableList<String>{
 
         val items: MutableList<String> = ArrayList()
-        items.add("Descrição bravecto 1")
-        items.add("Desc brav 2")
+        items.add("Antipulgas e Carrapatos Bravecto MSD para Cães até 4,5 kg")
+        items.add("Antipulgas e Carrapatos Bravecto MSD para Cães de 4,5 a 10 kg")
+        items.add("Antipulgas e Carrapatos Bravecto MSD para Cães de 10 a 20 kg")
+        items.add("Antipulgas e Carrapatos Bravecto MSD para Cães de 20Kg a 40Kg")
+        items.add("Antipulgas e Carrapatos Bravecto MSD para Cães de 40 a 56 kg")
+        items.add("Ração Golden  Fórmula para Cães Adultos Sabor Frango e Arroz - 15kg")
+        items.add("Ração Golden  Fórmula para Cães Adultos Sabor Frango e Carne - 15kg")
+        items.add("Ração Golden Cães Filhotes Raças Grandes Sabor Frango e Arroz - 15kg")
+
+        //novos 25/06
+        items.add("Ração Golden Duo para Gatos Adultos Sabor Cordeiro e Salmão")
+        items.add("Ração Golden para Gatos Adultos Castrados Sabor Salmão")
+        items.add("Ração Golden Gatos Filhotes Sabor Frango")
+        items.add("Ração Golden para Gatos Adultos Castrados Sabor Frango")
+        items.add("Ração Golden para Gatos Adultos Sabor Carne")
+        items.add("Ração Golden para Gatos Adultos Castrados Sabor Carne")
+        items.add("Ração Golden Seleção Natural para Gatos Filhotes Sabor Frango e Arroz")
+        items.add("Ração Golden para Gatos Adultos Castrados Seleção Natural Abóbora")
+        items.add("Ração Golden para Gatos Adultos Sabor Frango")
+        items.add("Ração Golden para Gatos Adultos Sabor Salmão")
+        items.add("Ração Golden Seleção Natural para Gatos Adultos Sabor Frango")
+        items.add("Ração Golden para Gatos Sênior Castrados sabor Frango")
+
         return items
 
     }
 
-    fun getAllPrecos(): MutableList<String>{
 
+    fun getAllTipos(): MutableList<String>{
+
+        /*
+        tipo="racao"
+        tipo="servicos"
+        tipo="acessorios"
+        tipo="estetica"
+        tipo="remedios"
+         */
         val items: MutableList<String> = ArrayList()
-        items.add("R$15,00")
-        items.add("R$25,00")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+
+        //25/06
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+        items.add("racao")
+
         return items
 
     }

@@ -1519,7 +1519,7 @@
             android:drawableLeft="@drawable/ic_settings_black_24dp"
             android:fontFamily="@font/bahnschrift"
             android:paddingStart="10dp"
-            android:text="    Área do roprietário"
+            android:text="    Área do proprietário"
             android:textAlignment="textStart"
             android:textAllCaps="false"
             android:textColor="@color/azulEscuro"

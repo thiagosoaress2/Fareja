@@ -42,11 +42,11 @@ import com.google.firebase.storage.UploadTask
 import com.petcare.petcare.Controller.AreaLojistaController
 import com.petcare.petcare.Models.AreaLojistaModels
 import com.petcare.petcare.Utils.cameraPermissions
+import com.petcare.petcare.Utils.mySharedPrefs
 import com.petcare.petcare.Utils.readFilesPermissions
 import com.petcare.petcare.Utils.writeFilesPermissions
 import kotlinx.android.synthetic.main.activity_arealojista.*
 import java.io.*
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -59,22 +59,6 @@ class arealojista : AppCompatActivity() {
     //envio de imagem
     private lateinit var filePath: Uri
     private var urifinal: String = "nao"
-
-
-    /*
-    //controle do alvara
-    private var alvaraOk = 0 //alvaraOK = 1 siginfica que o ja enviou o alvara
-    private var processo = "nao"  //esta variavel vai regular se é um envio de foto normal ou de alvara
-    private var petBD = "nao"
-    private var userMail = "nao"
-    private var userBD = "nao"
-    private var alvara = "nao"
-    private var tipo = "usuario"
-    private var itens_venda = "nao"  //quantidade de itens da loja que está a venda
-    private var inventario_size = 15  //quantidade de itens que esta loja pode vender. 15 é o padrão
-    private var endereco = "nao"
-
-     */
 
     var arrayNomes: MutableList<String> = ArrayList()
     var arrayImg: MutableList<String> = ArrayList()
@@ -287,6 +271,9 @@ class arealojista : AppCompatActivity() {
 
         if (AreaLojistaModels.tipo.equals("empresario")){
             AreaLojistaModels.petBD = intent.getStringExtra("petBD")
+
+
+
         } else {
             //se o tipo nao for empresário, significa então que é o primeiro acesso dele então todos botoes ficam escondidos menos o de cadastro
             //pode estar pendente de alvará mas ja ir trabalhando nas outras coisas da loja
@@ -332,12 +319,106 @@ class arealojista : AppCompatActivity() {
             //significa que ele já começou o cadastro mas nao enviou o alvará
             btnCadastrarEmpreendimento.setText("Enviar alvará pendente")
             //este procedimento nos outros botões já estão sendo feitos acima. Verificar
-        } else if (AreaLojistaModels.alvara.contains("http")) {
+
+
+            var btn: Button
+            btn = findViewById(R.id.arealojistaIndexBtneditLayout)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnCadProd)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnEntrega)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.btnPlanos)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.btnMinhasPromos)
+            btn.isEnabled = false
+
+            //retirar loja
+            btn = findViewById(R.id.btnCancelamento)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
+            btn.isEnabled = false
+
+
+        } else if (!AreaLojistaModels.alvara.equals("nao") && AreaLojistaModels.tipo.equals("empresario")) {
             //significa que que já enviou alvará e aí mudamos o texto do botão
             btnCadastrarEmpreendimento.setText("Atualizar informações")
+
+            var btn: Button
+            btn = findViewById(R.id.arealojistaIndexBtneditLayout)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.arealojistaIndexBtnCadProd)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.arealojistaIndexBtnEntrega)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.btnPlanos)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.btnMinhasPromos)
+            btn.isEnabled = true
+
+            //retirar loja
+            btn = findViewById(R.id.btnCancelamento)
+            btn.isEnabled = true
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
+            btn.isEnabled = true
+
+
         } else {
             //significa que é a primeira vez que o usuário entra ou ainda nem começou seu cadastro
             btnCadastrarEmpreendimento.setText("Cadastrar empresa")
+
+            var btn: Button
+            btn = findViewById(R.id.arealojistaIndexBtneditLayout)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnCadProd)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnEntrega)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.btnPlanos)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.btnMinhasPromos)
+            btn.isEnabled = false
+
+            //retirar loja
+            btn = findViewById(R.id.btnCancelamento)
+            btn.isEnabled = false
+
+            btn = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
+            btn.isEnabled = false
+
+
         }
 
     }
@@ -753,6 +834,8 @@ class arealojista : AppCompatActivity() {
                 EncerraDialog()
             } else {
 
+                btnProximo.isEnabled=false
+
                 if (eNovo) { //se for novo, vai criar todos os campos no BD
                     //registrar criando o path do usuario. Vai ficar faltando o alvará que será feito na próxima página.
                     val newCad: DatabaseReference = databaseReference.child("petshops").push()
@@ -814,11 +897,16 @@ class arealojista : AppCompatActivity() {
 
                     databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("tipo").setValue("empresario")
                     databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("petBD").setValue(AreaLojistaModels.petBD)
-                    val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
-                    val editor = sharedPref.edit()
-                    editor.putString("tipoInicial", "empresario")
-                    editor.putString("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
-                    editor.apply()
+                    //val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
+                    //val editor = sharedPref.edit()
+
+                    val mySharedPrefs: mySharedPrefs = mySharedPrefs(this)
+                    mySharedPrefs.setValue("tipo", "empresario")
+                    AreaLojistaModels.tipo = "empresario"
+                    //editor.putString("tipo", "empresario")
+                    //editor.putString("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
+                    mySharedPrefs.setValue("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
+                    //editor.apply()
 
                     val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
                     val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
@@ -900,6 +988,9 @@ class arealojista : AppCompatActivity() {
             }
         }
 
+        btnProximo.isEnabled=true //Libera ele. Pois quando aperta ele na primeira vez trava pra evitar de criar dois pets. Mas se o user voltar aqui na mesma sessão estaria enable=false. Entao liberamos
+
+        /*
         val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
         btnFinalizaCad.setOnClickListener {
 
@@ -952,6 +1043,8 @@ class arealojista : AppCompatActivity() {
                 layIndexAreaLoja.visibility = View.VISIBLE
             }
         }
+
+         */
 
         val btnWhatAppHelp: Button = findViewById(R.id.cadEmpEtCel_help)
         btnWhatAppHelp.setOnClickListener {
@@ -1122,7 +1215,57 @@ class arealojista : AppCompatActivity() {
     }
 
 
-    //prepara os cliques dos botões do cadastro de produtos
+    fun uploadImafeFromBanco(bitmap: Bitmap, newCad: DatabaseReference, nomeProd:String) {
+
+        mFireBaseStorage = FirebaseStorage.getInstance()
+        mphotoStorageReference = mFireBaseStorage.reference
+        //mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("alvara").child("alvara")
+
+        mphotoStorageReference = mFireBaseStorage.getReference().child(AreaLojistaModels.petBD).child("produtos").child("img_"+nomeProd)
+
+        //get the uri from the bitmap
+        val tempUri: Uri = getImageUri(this, bitmap)
+        //transform the new compressed bmp in filepath uri
+        filePath = tempUri
+
+        val bmp: Bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath)
+        val baos: ByteArrayOutputStream = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.JPEG, 55, baos)
+
+        //var file = Uri.fromFile(bitmap)
+        var uploadTask = mphotoStorageReference.putFile(filePath)
+
+        val urlTask = uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                    EncerraDialog()
+                    Toast.makeText(this, "Ocorreu um erro", Toast.LENGTH_SHORT).show()
+                }
+            }
+            return@Continuation mphotoStorageReference.downloadUrl
+        }).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+                urifinal = downloadUri.toString()
+
+                newCad.child("img").setValue(urifinal)
+
+                EncerraDialog()
+
+            } else {
+                // Handle failures
+                EncerraDialog()
+                Toast.makeText(this, "um erro ocorreu no envio da imagem.", Toast.LENGTH_SHORT).show()
+                // ...
+            }
+        }.addOnFailureListener {
+            // Uh-oh, an error occurred.
+        }
+
+
+    }
+
     fun clicksCadNovosProdutos (){
 
         if (AreaLojistaModels.itens_venda.equals("nao")){ //se for diferente de nao é pq já fez a query antes.
@@ -1130,17 +1273,22 @@ class arealojista : AppCompatActivity() {
         }
         atualizaProdutos()
 
+
+        //todo procedimento abaixo é para cadastro de produtos pré-fabricados num banco de dados interno do app
+
         //metodos do cadastro proprio de produtos
         //primeiro carregar os dados no array
-        val list_of_nomes = AreaLojistaModels.getAllItems()
-        val list_of_images = AreaLojistaModels.getAllImages()
-        val list_of_desc = AreaLojistaModels.getAllDesc()
-        val list_of_precos = AreaLojistaModels.getAllPrecos()
+        //var list_of_nomes = AreaLojistaModels.getAllItems()
+
+        var list_of_nomes = AreaLojistaModels.getAllItems()
+        var list_of_images = AreaLojistaModels.getAllImages()
+        var list_of_desc = AreaLojistaModels.getAllDesc()
+        var list_of_tipo = AreaLojistaModels.getAllTipos()
 
         //chame aqui pelo adaptador que criamos, com o nome dado e o construtor
-        var adapter: produtosDoBancoRecyclerAdapter = produtosDoBancoRecyclerAdapter(this, list_of_nomes, list_of_images, list_of_desc, list_of_precos)
+        val adapter: produtosDoBancoRecyclerAdapter = produtosDoBancoRecyclerAdapter(this, list_of_nomes, list_of_images)
         //chame a recyclerview
-        var recyclerView: RecyclerView = findViewById(R.id.cadProd_RecyclerView)
+        val recyclerView: RecyclerView = findViewById(R.id.cadProd_RecyclerView)
         //define o tipo de layout (linerr, grid)
         var linearLayoutManager: LinearLayoutManager = LinearLayoutManager(this)
         //coloca o adapter na recycleview
@@ -1149,18 +1297,147 @@ class arealojista : AppCompatActivity() {
         // Notify the adapter for data change.
         adapter.notifyDataSetChanged()
 
+
+
+        val etPrecoBanco: EditText = findViewById(R.id.etSearchEngine)
+
+        //s: CharSequence, start: Int,  count: Int, after: Int
+        //parte de filtragem
+        etPrecoBanco.addTextChangedListener(object : TextWatcher {
+            var changed: Boolean = false
+
+            override fun afterTextChanged(p0: Editable?) {
+                changed = false
+
+
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, start: Int,count: Int, after: Int) {
+                changed=false
+
+                /*
+                   list_of_nomes = AreaLojistaModels.getAllItems()
+                   list_of_images = AreaLojistaModels.getAllImages()
+                   list_of_desc = AreaLojistaModels.getAllDesc()
+                   list_of_tipo = AreaLojistaModels.getAllTipos()
+                    adapter.notifyDataSetChanged()
+
+
+                 */
+
+            }
+
+            @SuppressLint("SetTextI18n")
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+                if (!changed) {
+                    changed = true
+
+                    var cont=0
+                    while (cont<list_of_nomes.size){
+                        if (list_of_nomes.get(cont).contains(p0.toString())){
+                            //arrayIndexes.add(cont)
+                            //do nothing
+                        } else {
+                            list_of_nomes.removeAt(cont)
+                            list_of_images.removeAt(cont)
+                            list_of_desc.removeAt(cont)
+                            list_of_tipo.removeAt(cont)
+                        }
+                        cont++
+                    }
+                    adapter.notifyDataSetChanged()
+
+                    if (p0!!.length==0){
+
+                            list_of_nomes = AreaLojistaModels.getAllItems()
+                            list_of_images = AreaLojistaModels.getAllImages()
+                            list_of_desc = AreaLojistaModels.getAllDesc()
+                            list_of_tipo = AreaLojistaModels.getAllTipos()
+                            ExibeEscondePreview("n", "n", "n", "n")
+                            clicksCadNovosProdutos()
+                    }
+
+
+                }
+
+
+            }
+        })
+
+
+
         recyclerView.addOnItemTouchListener(RecyclerTouchListener(this, recyclerView!!, object: ClickListener{
             override fun onClick(view: View, position: Int) {
-                Log.d("teste", list_of_nomes.get(position))
-                //Toast.makeText(this@MainActivity, !! aNome.get(position).toString(), Toast.LENGTH_SHORT).show()
+
+                val pop: ConstraintLayout= findViewById(R.id.cadProdDoBanco_PopUp)
+                pop.visibility = View.VISIBLE
+
+                //val etPreco: EditText = findViewById(R.id.cadProdDoBanco_Preco)
+                AreaLojistaController.CurrencyWatcherNew(etPrecoBanco)
+
+                val btnFechar: Button = findViewById(R.id.cadProdDoBanco_btnFechar)
+                btnFechar.setOnClickListener { pop.visibility = View.GONE }
+
+                val tvNome: TextView = findViewById(R.id.cadProdDoBanco_etNome)
+                val img: ImageView = findViewById(R.id.cadProdDoBanco_img)
+
+                tvNome.setText(list_of_nomes.get(position))
+                Glide.with(this@arealojista).load("").placeholder(list_of_images.get(position)).into(img)
+
+                val btnCad: Button = findViewById(R.id.cadProdDoBanco_btnCad)
+                btnCad.setOnClickListener {
+                    btnCad.isEnabled=false
+                    if (etPrecoBanco.text.isEmpty()){
+                        etPrecoBanco.setError("Informe o preço")
+                        btnCad.isEnabled = true
+                    } else if (etPrecoBanco.text.equals("R$0,00")){
+                        etPrecoBanco.requestFocus()
+                        //etPreco.setError("informe um valor ao produto")
+                        Toast.makeText(this@arealojista, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
+                    } else if (etPrecoBanco.text.equals("R$00,0")){
+                        etPrecoBanco.requestFocus()
+                        //etPreco.setError("informe um valor ao produto")
+                        Toast.makeText(this@arealojista, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
+                    } else if (AreaLojistaModels.itens_venda.toInt()>=AreaLojistaModels.inventario_size){ //caso já tenha atingido o limite.
+                        hideKeyboard()
+                        openPopUp2("Limite atingido", "Você atingiu o limite de itens. Você pode expandir a quantidade pagando uma pequena taxa ou apagar itens antigos.", false, "aa", "bb", "aa")
+
+                    } else {
+
+                        var str:String = etPrecoBanco.text.toString().replace("R$", "")
+                        str = str.replace(",", "").trim()
+                        str = str.replace(".", "").trim()
+
+                        val newCad: DatabaseReference = databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").push()
+
+                        val bm = BitmapFactory.decodeResource(this@arealojista.getResources(), list_of_images.get(position)) //conver o drawable em um bitmap
+                        uploadImafeFromBanco(bm, newCad, list_of_nomes.get(position))
+
+                        newCad.child("nome").setValue(list_of_nomes.get(position))
+                        newCad.child("desc").setValue(list_of_desc.get(position))
+                        newCad.child("preco").setValue(str)
+                        ///newCad.child("img").setValue(link) tem q fazer upload
+                        newCad.child("controle").setValue("item")
+                        newCad.child("tipo").setValue(list_of_tipo.get(position))
+
+                        AreaLojistaModels.itens_venda = (AreaLojistaModels.itens_venda.toInt()+1).toString()
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("itens_venda").setValue(AreaLojistaModels.itens_venda)
+                        atualizaProdutos()
+                        btnFechar.performClick()
+                        Toast.makeText(this@arealojista, "Produto cadastrado!", Toast.LENGTH_SHORT).show()
+
+                        btnCad.isEnabled = true
+                    }
+
+
+                }
+
             }
             override fun onLongClick(view: View?, position: Int) {
 
             }
         }))
-
-
-
 
 
         ExibeEscondePreview("n", "n", "n", "n")
@@ -1179,22 +1456,6 @@ class arealojista : AppCompatActivity() {
         } else {
 
         }
-        /*
-        if (etPreco.equals("R$0,00")){
-
-        } else {
-            CurrencyWatcherNew(etPreco)
-        }
-
-         */
-
-
-        /*
-        E antes de gravar no Bd o resultado do editText retire os simbolos
-        var str:String = etEditedCurrency.text.toString().replace("R$", "")
-        str = str.replace(",", "").trim()
-        str = str.replace(".", "").trim()
-         */
 
         btnFechar.setOnClickListener {
             val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
@@ -1311,6 +1572,317 @@ class arealojista : AppCompatActivity() {
 
     }
 
+    /*
+    //prepara os cliques dos botões do cadastro de produtos
+    fun clicksCadNovosProdutos (){
+
+        if (AreaLojistaModels.itens_venda.equals("nao")){ //se for diferente de nao é pq já fez a query antes.
+            queryProdutosDoPet()
+        }
+        atualizaProdutos()
+
+
+        //todo procedimento abaixo é para cadastro de produtos pré-fabricados num banco de dados interno do app
+
+        //metodos do cadastro proprio de produtos
+        //primeiro carregar os dados no array
+        //var list_of_nomes = AreaLojistaModels.getAllItems()
+
+        var list_of_nomes = AreaLojistaModels.getAllItems()
+        var list_of_images = AreaLojistaModels.getAllImages()
+        var list_of_desc = AreaLojistaModels.getAllDesc()
+        var list_of_tipo = AreaLojistaModels.getAllTipos()
+
+        //chame aqui pelo adaptador que criamos, com o nome dado e o construtor
+        val adapter: produtosDoBancoRecyclerAdapter = produtosDoBancoRecyclerAdapter(this, list_of_nomes, list_of_images)
+        //chame a recyclerview
+        val recyclerView: RecyclerView = findViewById(R.id.cadProd_RecyclerView)
+        //define o tipo de layout (linerr, grid)
+        var linearLayoutManager: LinearLayoutManager = LinearLayoutManager(this)
+        //coloca o adapter na recycleview
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = linearLayoutManager
+        // Notify the adapter for data change.
+        adapter.notifyDataSetChanged()
+
+
+        val etPrecoBanco: EditText = findViewById(R.id.etSearchEngine)
+
+        //s: CharSequence, start: Int,  count: Int, after: Int
+        //parte de filtragem
+        etPrecoBanco.addTextChangedListener(object : TextWatcher {
+            var changed: Boolean = false
+
+            override fun afterTextChanged(p0: Editable?) {
+                changed = false
+
+                if (p0!!.length==0) {
+                    list_of_nomes = AreaLojistaModels.getAllItems()
+                    list_of_images = AreaLojistaModels.getAllImages()
+                    list_of_desc = AreaLojistaModels.getAllDesc()
+                    list_of_tipo = AreaLojistaModels.getAllTipos()
+                    adapter.notifyDataSetChanged()
+                }
+
+
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, start: Int,count: Int, after: Int) {
+                changed=false
+
+                /*
+                   list_of_nomes = AreaLojistaModels.getAllItems()
+                   list_of_images = AreaLojistaModels.getAllImages()
+                   list_of_desc = AreaLojistaModels.getAllDesc()
+                   list_of_tipo = AreaLojistaModels.getAllTipos()
+                    adapter.notifyDataSetChanged()
+
+
+                 */
+
+            }
+
+            @SuppressLint("SetTextI18n")
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+                if (!changed) {
+                    changed = true
+
+                    var cont=0
+                        while (cont<list_of_nomes.size){
+                            if (list_of_nomes.get(cont).contains(p0.toString())){
+                                //arrayIndexes.add(cont)
+                                //do nothing
+                            } else {
+                                list_of_nomes.removeAt(cont)
+                                list_of_images.removeAt(cont)
+                                list_of_desc.removeAt(cont)
+                                list_of_tipo.removeAt(cont)
+                            }
+                            cont++
+                        }
+                        adapter.notifyDataSetChanged()
+
+
+
+                }
+
+
+            }
+        })
+
+
+
+        recyclerView.addOnItemTouchListener(RecyclerTouchListener(this, recyclerView!!, object: ClickListener{
+            override fun onClick(view: View, position: Int) {
+
+                val pop: ConstraintLayout= findViewById(R.id.cadProdDoBanco_PopUp)
+                pop.visibility = View.VISIBLE
+
+                //val etPreco: EditText = findViewById(R.id.cadProdDoBanco_Preco)
+                AreaLojistaController.CurrencyWatcherNew(etPrecoBanco)
+
+                val btnFechar: Button = findViewById(R.id.cadProdDoBanco_btnFechar)
+                btnFechar.setOnClickListener { pop.visibility = View.GONE }
+
+                val tvNome: TextView = findViewById(R.id.cadProdDoBanco_etNome)
+                val img: ImageView = findViewById(R.id.cadProdDoBanco_img)
+
+                tvNome.setText(list_of_nomes.get(position))
+                Glide.with(this@arealojista).load("").placeholder(list_of_images.get(position)).into(img)
+
+                val btnCad: Button = findViewById(R.id.cadProdDoBanco_btnCad)
+                btnCad.setOnClickListener {
+                    btnCad.isEnabled=false
+                    if (etPrecoBanco.text.isEmpty()){
+                        etPrecoBanco.setError("Informe o preço")
+                        btnCad.isEnabled = true
+                    } else if (etPrecoBanco.text.equals("R$0,00")){
+                        etPrecoBanco.requestFocus()
+                        //etPreco.setError("informe um valor ao produto")
+                        Toast.makeText(this@arealojista, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
+                    } else if (etPrecoBanco.text.equals("R$00,0")){
+                        etPrecoBanco.requestFocus()
+                        //etPreco.setError("informe um valor ao produto")
+                        Toast.makeText(this@arealojista, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
+                    } else if (AreaLojistaModels.itens_venda.toInt()>=AreaLojistaModels.inventario_size){ //caso já tenha atingido o limite.
+                        hideKeyboard()
+                        openPopUp2("Limite atingido", "Você atingiu o limite de itens. Você pode expandir a quantidade pagando uma pequena taxa ou apagar itens antigos.", false, "aa", "bb", "aa")
+
+                    } else {
+
+                        var str:String = etPrecoBanco.text.toString().replace("R$", "")
+                        str = str.replace(",", "").trim()
+                        str = str.replace(".", "").trim()
+
+                        val newCad: DatabaseReference = databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("produtos").push()
+
+                        val bm = BitmapFactory.decodeResource(this@arealojista.getResources(), list_of_images.get(position)) //conver o drawable em um bitmap
+                        uploadImafeFromBanco(bm, newCad, list_of_nomes.get(position))
+
+                        newCad.child("nome").setValue(list_of_nomes.get(position))
+                        newCad.child("desc").setValue(list_of_desc.get(position))
+                        newCad.child("preco").setValue(str)
+                        ///newCad.child("img").setValue(link) tem q fazer upload
+                        newCad.child("controle").setValue("item")
+                        newCad.child("tipo").setValue(list_of_tipo.get(position))
+
+                        AreaLojistaModels.itens_venda = (AreaLojistaModels.itens_venda.toInt()+1).toString()
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("itens_venda").setValue(AreaLojistaModels.itens_venda)
+                        atualizaProdutos()
+                        btnFechar.performClick()
+                        Toast.makeText(this@arealojista, "Produto cadastrado!", Toast.LENGTH_SHORT).show()
+
+                        btnCad.isEnabled = true
+                    }
+
+
+                }
+
+            }
+            override fun onLongClick(view: View?, position: Int) {
+
+            }
+        }))
+
+
+
+
+
+        ExibeEscondePreview("n", "n", "n", "n")
+
+        val btnNovaImagem : Button = findViewById(R.id.cadNovoProd_btnEnviarImagem)
+        val etPreco : EditText = findViewById(R.id.cadNovoProd_preco)
+        val btnFechar: Button = findViewById(R.id.cadNovoProd_Fechar)
+        val etNome: EditText = findViewById(R.id.cadNovoProd_nome)
+        //val etDesc: EditText = findViewById(R.id.cadNovoProd_descric)
+
+        etPreco.setInputType(InputType.TYPE_CLASS_NUMBER)
+        //so colocar o currencyTextWatcher se o campo estiver vazio. Se for R$0,00 é pq o user saiu e voltou. Evitando travar
+
+        if (etPreco.text.toString().isEmpty()){
+            AreaLojistaController.CurrencyWatcherNew(etPreco)
+        } else {
+
+        }
+
+        btnFechar.setOnClickListener {
+            val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+            val layCadProd : ConstraintLayout = findViewById(R.id.layCadProdutos)
+
+            layIndex.visibility = View.VISIBLE
+            layCadProd.visibility = View.GONE
+
+            //limpando tudo
+            findViewById<EditText>(R.id.cadNovoProd_nome).setText("")
+            findViewById<EditText>(R.id.cadNovoProd_descric).setText("")
+            //etPreco.removeTextChangedListener(CurrencyWatcherNew(etPreco))
+            findViewById<ImageView>(R.id.cadNovoProd_laySample_imgView).setImageResource(0)
+            findViewById<Button>(R.id.cadNovoProd_help).setOnClickListener { null }
+            findViewById<Button>(R.id.cadNovoProd_btnEnviarImagem).setOnClickListener { null }
+            findViewById<Button>(R.id.cadNovoProd_btnCadastrar).setOnClickListener { null }
+            btnFechar.setOnClickListener { null }
+            clicksCadNovosProdutos()
+
+
+
+
+        }
+
+        //radio buttons
+        val rRacao: RadioButton = findViewById(R.id.cadProd_radioBtnRacoes)
+        val rServ: RadioButton = findViewById(R.id.cadProd_radioBtnServicos)
+        val rAcess: RadioButton = findViewById(R.id.cadProd_radioBtnAcessorios)
+        val rEstet: RadioButton = findViewById(R.id.cadProd_radioBtnEstetica)
+        val rRemed: RadioButton = findViewById(R.id.cadProd_radioBtnRemedios)
+
+        var tipo = "nao"
+        rRacao.setOnClickListener {
+            rServ.isChecked=false
+            rAcess.isChecked=false
+            rEstet.isChecked=false
+            rRemed.isChecked=false
+            tipo="racao"
+            hideKeyboard()
+        }
+
+        rServ.setOnClickListener {
+            rRacao.isChecked=false
+            rAcess.isChecked=false
+            rEstet.isChecked=false
+            rRemed.isChecked=false
+            tipo="servicos"
+            hideKeyboard()
+        }
+
+        rAcess.setOnClickListener {
+            rServ.isChecked=false
+            rRacao.isChecked=false
+            rEstet.isChecked=false
+            rRemed.isChecked=false
+            tipo="acessorios"
+            hideKeyboard()
+        }
+        rEstet.setOnClickListener {
+            rServ.isChecked=false
+            rAcess.isChecked=false
+            rRacao.isChecked=false
+            rRemed.isChecked=false
+            tipo="estetica"
+            hideKeyboard()
+        }
+        rRemed.setOnClickListener {
+            rServ.isChecked=false
+            rAcess.isChecked=false
+            rEstet.isChecked=false
+            rRacao.isChecked=false
+            tipo="remedios"
+            hideKeyboard()
+        }
+
+        //btn help
+        val btnHelp : Button = findViewById(R.id.cadNovoProd_help)
+        btnHelp.setOnClickListener {
+            openPopUp("Dica", "Dê preferência para fotos com fundo branco. Elas darão destaque melhor ao seu produto e deixará a imagem da sua loja muito melhor para o cliente.", false, "n", "n", "n")
+        }
+
+        btnNovaImagem.setOnClickListener {
+            if (etNome.text.isEmpty()){
+                etNome.requestFocus()
+                etNome.setError("Informe o nome do produto primeiro")
+            } else if (etPreco.text.isEmpty()){
+                etPreco.requestFocus()
+                etPreco.setError("Informe o preço do produto primeiro")
+            } else if (etPreco.text.equals("R$0,00")){
+                etPreco.requestFocus()
+                //etPreco.setError("informe um valor ao produto")
+                Toast.makeText(this, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
+            } else if (etPreco.text.equals("R$00,0")){
+                etPreco.requestFocus()
+                //etPreco.setError("informe um valor ao produto")
+                Toast.makeText(this, "informe um valor ao produto", Toast.LENGTH_SHORT).show()
+            } else if (AreaLojistaModels.itens_venda.toInt()>=AreaLojistaModels.inventario_size){ //caso já tenha atingido o limite.
+                hideKeyboard()
+                openPopUp2("Limite atingido", "Você atingiu o limite de itens a venda. Você pode expandir a quantidade pagando uma pequena taxa ou apagar itens antigos.", false, "aa", "bb", "aa")
+
+            } else if (tipo=="nao"){
+                Toast.makeText(this, "Informe o tipo de produto que você está cadastrando", Toast.LENGTH_SHORT).show()
+            } else {
+                hideKeyboard()
+                //rola pro final para exibir o botão
+                val scrollView: ScrollView = findViewById(R.id.scrollCadProd)
+                val max = scrollView.scrollY
+                scrollView.scrollY=max
+                AreaLojistaModels.processo = "cadNovoProd"
+                openPopUp2("Envio de imagem", "Selecione o modo de envio da imagem:", true, "Tirar foto", "foto do celular", "fotoNovoProd")
+            }
+        }
+
+
+    }
+
+
+     */
     //prepara os cliques e monta a recycleview
     fun ClicksGerenciaProdutos () {
 
@@ -2091,8 +2663,6 @@ class arealojista : AppCompatActivity() {
             imgPrev.visibility = View.GONE
         }
 
-        Log.d("teste", "o valor de linkImg é:"+linkImg)
-
         tvNome.setText(nome)
         val precoEditado = AreaLojistaController.currencyTranslation(preco)
         tvPreco.setText(precoEditado)
@@ -2703,54 +3273,30 @@ class arealojista : AppCompatActivity() {
                     val layPraFechar2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
                     layPraFechar2.visibility = View.VISIBLE
 
+                    val mySharedPrefs: mySharedPrefs = mySharedPrefs(this)
+                    mySharedPrefs.setValue("tipo", "empresario")
+                    AreaLojistaModels.tipo = "empresario"
+
+
+                    liberaBotoesDoEmpresario ()
+                    checkAlvara ()
+
 
                     val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
+                    btnFinalizaCad.isEnabled = true
                     btnFinalizaCad.setOnClickListener {
 
-                        if (!AreaLojistaModels.alvara.equals("nao")) {
-                            val layCad2: ConstraintLayout =
-                                findViewById(R.id.lay_cadastrarEmpreendimento2)
-                            layCad2.visibility = View.GONE
-                            val layIndexAreaLoja: ConstraintLayout =
-                                findViewById(R.id.lay_arealojista_index)
-                            layIndexAreaLoja.visibility = View.VISIBLE
+                        val layCad2: ConstraintLayout =
+                            findViewById(R.id.lay_cadastrarEmpreendimento2)
+                        layCad2.visibility = View.GONE
+                        val layIndexAreaLoja: ConstraintLayout =
+                            findViewById(R.id.lay_arealojista_index)
+                        layIndexAreaLoja.visibility = View.VISIBLE
 
-                            val intent = Intent(this, MapsActivity::class.java)
-                            //intent.putExtra("userBD", userBD)
-                            intent.putExtra("email", AreaLojistaModels.userMail)
-                            //intent.putExtra("alvara", alvara)
-                            //intent.putExtra("tipo", tipo)
-                            if (!AreaLojistaModels.petBD.equals("nao")) {
-                                intent.putExtra("petBD", AreaLojistaModels.petBD)
-                            }
-                            intent.putExtra("endereco", AreaLojistaModels.endereco)
-                            intent.putExtra("chamaLatLong", "sim")
-                            startActivity(intent)
-                            finish()
+                        openPopUp("Muito bem!", "Vamos cadastrar seu primeiro produto? Demora menos de 30 segundos.", false, "n", "n", "n")
+                        val btnCadProd: Button = findViewById(R.id.arealojistaIndexBtnCadProd)
+                        btnCadProd.performClick()
 
-                            /* não faz mais isso. Agora encerra e manda direto pra mapsActivity para pegar latLong
-                            //habilita os botões
-                            var btn: Button
-                            btn = findViewById(R.id.arealojistaIndexBtneditLayout)
-                            btn.isEnabled = true
-
-                            btn = findViewById(R.id.arealojistaIndexBtnCadProd)
-                            btn.isEnabled = true
-
-                            btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
-                            btn.isEnabled = true
-
-                            btn = findViewById(R.id.arealojistaIndexBtnEntrega)
-                            btn.isEnabled = true
-
-                            btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
-                            btn.isEnabled = true
-
-                            btn = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
-                            btn.setText("Atualizar informações")
-
-                             */
-                        }
                     }
 
             } else {

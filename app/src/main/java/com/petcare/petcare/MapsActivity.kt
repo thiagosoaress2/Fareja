@@ -349,6 +349,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 queryUserInitial()
             } else {
                 placeUserInMap()
+                if (!MapsModels.userBD.equals("usuario")){
+                    //se for autonomo ou proprietário vai fazer query para pegar os dados
+                    queryUserInitial()
+                }
+
             }
 
 
@@ -892,7 +897,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //busca informações iniciais do usuario
     fun queryUserInitial() {
 
-        if (MapsModels.userBD.equals("nao")) {
 
             Log.d("teste", "entrou na query mesmo assim")
 
@@ -930,55 +934,55 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                     mySharedPrefs.setValue("liberaServicoInicial", "0")
                                 }
 
-                                if (this@MapsActivity::lastLocation.isInitialized) {
 
-                                    if (!querySnapshot.child("img").exists()){
-                                        databaseReference.child("usuarios").child(MapsModels.userBD).child("img").setValue("nao")
-                                        MapsModels.imgDoUser="nao"
-                                        mySharedPrefs.setValue("imgInicial", "nao")
-                                    } else {
-                                        MapsModels.imgDoUser = querySnapshot.child("img").value.toString()
-                                        mySharedPrefs.setValue("imgInicial", MapsModels.imgDoUser)
-                                    }
 
-                                    if (MapsModels.tipo.equals("autonomo")) {
+                                if (!querySnapshot.child("img").exists()){
+                                    databaseReference.child("usuarios").child(MapsModels.userBD).child("img").setValue("nao")
+                                    MapsModels.imgDoUser="nao"
+                                    mySharedPrefs.setValue("imgInicial", "nao")
+                                } else {
+                                    MapsModels.imgDoUser = querySnapshot.child("img").value.toString()
+                                    mySharedPrefs.setValue("imgInicial", MapsModels.imgDoUser)
+                                }
 
-                                        val sit = querySnapshot.child("situacao").value.toString()
+                                if (MapsModels.tipo.equals("autonomo")) {
 
-                                        if (sit.equals("analise")) {  //se estiver em analise nao vamos exibi-lo
+                                    val sit = querySnapshot.child("situacao").value.toString()
+
+                                    if (sit.equals("analise")) {  //se estiver em analise nao vamos exibi-lo
                                             //do nothing
-                                            MapsController.makeToast("Seu pedido ainda está em análise. Você ainda não aparece no mapa.", this@MapsActivity)
-                                        } else {
+                                        MapsController.makeToast("Seu pedido ainda está em análise. Você ainda não aparece no mapa.", this@MapsActivity)
+                                    } else {
 
-                                            val servico =
+                                        val servico =
                                                 querySnapshot.child("servico").value.toString()
 
-                                            values = querySnapshot.child("apelido").value.toString()
+                                        values = querySnapshot.child("apelido").value.toString()
 
-                                            liberaBotoesAutonomo()
-                                            MapsModels.updateAutonomosStatus("online", servico, values, lastLocation)
-                                            queryGetAutonomoAditionalInfo()
-                                            if (this@MapsActivity::lastLocation.isInitialized){
-                                                MapsModels.updateUserStatus("offline", "bla", lastLocation, this@MapsActivity)
-                                            }
-                                            fimDeTudo()
-                                            val btn: Button = findViewById(R.id.menu_btnMinhasVendas)
-                                            btn.visibility = View.VISIBLE
-                                            findViewById<Button>(R.id.menu_btnAutonomo).setText("Editar informações de prestação de serviço")
-
-                                        }
-                                    } else {
+                                        liberaBotoesAutonomo()
+                                        MapsModels.updateAutonomosStatus("online", servico, values, lastLocation)
+                                        queryGetAutonomoAditionalInfo()
                                         if (this@MapsActivity::lastLocation.isInitialized){
-                                            fimDeTudo()
+                                                MapsModels.updateUserStatus("offline", "bla", lastLocation, this@MapsActivity)
+                                        }
+                                        fimDeTudo()
+                                        val btn: Button = findViewById(R.id.menu_btnMinhasVendas)
+                                        btn.visibility = View.VISIBLE
+                                        findViewById<Button>(R.id.menu_btnAutonomo).setText("Editar informações de prestação de serviço")
+
+                                    }
+                                } else {
+                                    if (this@MapsActivity::lastLocation.isInitialized){
+                                        fimDeTudo()
 
                                             //se chegou aqui ao ponto de colocar o user online, todos os metodos iniciais ja foram apliados
                                             MapsModels.updateUserStatus("online", MapsModels.imgDoUser, lastLocation, this@MapsActivity)
                                             //placeUserInMap()
-                                        }
-                                        //placeUserInMap()
                                     }
-
+                                        //placeUserInMap()
                                 }
+
+
 
                                 findUsersNerby(lastLocation.latitude, lastLocation.longitude)
                                 findAutonomosNerby(lastLocation.latitude, lastLocation.longitude)
@@ -1022,7 +1026,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     }
                 })
 
-        }
+
 
     }
 

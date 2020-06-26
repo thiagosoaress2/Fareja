@@ -546,7 +546,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content">
 
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -642,7 +642,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
+                    android:layout_marginTop="24dp"
                     android:layout_marginEnd="24dp"
+                    android:layout_marginBottom="24dp"
                     android:background="@drawable/ic_btnazul"
                     android:fontFamily="@font/bahnschrift"
                     android:text="Próxima página"
@@ -868,6 +870,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="24dp"
             android:background="@drawable/ic_btnazulclaro"
+            android:enabled="false"
             android:fontFamily="@font/colombia"
             android:text="Finalizar cadastro"
             android:textColor="#ffffff"
@@ -909,8 +912,10 @@
                     android:elevation="20dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0">
 
                     <TextView
                         android:id="@+id/cadNovoProd_tvItens"
@@ -928,21 +933,38 @@
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/constraintLayout41"
                         android:layout_width="match_parent"
-                        android:layout_height="250dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_height="350dp"
+                        android:layout_marginTop="16dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/cadNovoProd_tvItens">
 
                         <TextView
                             android:id="@+id/textView116"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
                             android:layout_marginTop="4dp"
-                            android:text="Busque produtos pré-cadastrados"
+                            android:layout_marginEnd="8dp"
+                            android:text="Produtos pré-cadastrados. Basta clicar para adicionar."
+                            android:textAlignment="center"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
+
+                        <EditText
+                            android:id="@+id/etSearchEngine"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="32dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="32dp"
+                            android:ems="10"
+                            android:inputType="textPersonName"
+                            android:hint="Digite aqui para buscar"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView116" />
 
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/cadProd_RecyclerView"
@@ -952,7 +974,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/textView116" />
+                            app:layout_constraintTop_toBottomOf="@+id/etSearchEngine" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <EditText
@@ -965,6 +987,110 @@
                         android:ems="10"
                         android:hint="Nome do produto"
                         android:inputType="textPersonName"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView117" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/cadProdDoBanco_PopUp"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:background="#ffffff"
+                        android:elevation="10dp"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/textView119"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="24dp"
+                            android:fontFamily="@font/colombia"
+                            android:text="Quase pronto"
+                            android:textColor="@color/azulEscuro"
+                            android:textSize="16sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <EditText
+                            android:id="@+id/cadProdDoBanco_Preco"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:ems="10"
+                            android:hint="Informe o preço"
+                            android:inputType="number|textPersonName"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView119" />
+
+                        <TextView
+                            android:id="@+id/cadProdDoBanco_etNome"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="24dp"
+                            android:text="TextView"
+                            android:textAlignment="center"
+                            android:textColor="@color/azulClaro"
+                            android:textSize="25sp"
+
+                            app:layout_constraintEnd_toEndOf="@+id/cadProdDoBanco_Preco"
+                            app:layout_constraintStart_toStartOf="@+id/cadProdDoBanco_Preco"
+                            app:layout_constraintTop_toBottomOf="@+id/cadProdDoBanco_Preco" />
+
+                        <ImageView
+                            android:id="@+id/cadProdDoBanco_img"
+                            android:layout_width="130dp"
+                            android:layout_height="130dp"
+                            android:layout_marginTop="16dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/cadProdDoBanco_etNome"
+                            tools:srcCompat="@tools:sample/avatars" />
+
+                        <Button
+                            android:id="@+id/cadProdDoBanco_btnCad"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="32dp"
+                            android:background="@drawable/ic_btnazul"
+                            android:padding="10dp"
+                            android:text="Cadastrar"
+                            android:textAllCaps="false"
+                            android:textColor="#ffffff"
+                            android:textSize="18sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/cadProdDoBanco_img" />
+
+                        <Button
+                            android:id="@+id/cadProdDoBanco_btnFechar"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/ic_close"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <TextView
+                        android:id="@+id/textView117"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginEnd="4dp"
+                        android:text="Não encontrou o produto? Então cadastre ele"
+                        android:textAlignment="center"
+                        android:textColor="@color/azulClaro"
+                        android:textSize="20sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/constraintLayout41" />
