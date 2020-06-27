@@ -60,6 +60,14 @@ object AreaLojistaModels {
         items.add("Ração Golden Seleção Natural para Gatos Adultos Sabor Frango")
         items.add("Ração Golden para Gatos Sênior Castrados sabor Frango")
 
+        items.add("Gaviz V Omeprazol 10mg Strip")
+        items.add("Gaviz 20mg Omeprazol Strip")
+        items.add("Drontal para Gatos")
+        items.add("Biosan Flora Probiótico B12 Pet")
+        items.add("Herbalvet Desinfetante Ourofino T.A")
+        items.add("Alergovet Coveli para Cães e Gatos Até 15kg")
+        items.add("Alergovet Coveli para Cães e Gatos Acima de 15kg")
+
         return items
 
     }
@@ -87,7 +95,14 @@ object AreaLojistaModels {
         images.add(R.drawable.banco_goldengatosfrangoadultos)
         images.add(R.drawable.banco_goldengatosadultossalmao)
         images.add(R.drawable.banco_goldengatosselecaonaturalfrangoearrozadultos)
-        images.add(R.drawable.banco_goldengatoscastradosfrango)
+
+        images.add(R.drawable.banco_gavizomeprazol10mg)
+        images.add(R.drawable.banco_gavizomeprazol20mg)
+        images.add(R.drawable.banco_drontalgatos)
+        images.add(R.drawable.banco_biosan)
+        images.add(R.drawable.banco_herbalvet)
+        images.add(R.drawable.banco_alergovetate15)
+        images.add(R.drawable.banco_alergovetacima15)
 
 
         return images
@@ -117,7 +132,14 @@ object AreaLojistaModels {
         items.add("Ração Golden para Gatos Adultos Sabor Frango")
         items.add("Ração Golden para Gatos Adultos Sabor Salmão")
         items.add("Ração Golden Seleção Natural para Gatos Adultos Sabor Frango")
-        items.add("Ração Golden para Gatos Sênior Castrados sabor Frango")
+
+        items.add("Gaviz V Omeprazol 10mg Strip com 10 Comprimidos")
+        items.add("Gaviz 20mg Omeprazol Strip - 10 comprimidos")
+        items.add("Drontal para Gatos - 4 comprimidos")
+        items.add("Biosan Flora Probiótico B12 Pet 14 g")
+        items.add("Herbalvet Desinfetante Ourofino T.A - 1L")
+        items.add("Alergovet Coveli para Cães e Gatos Até 15kg - 10 Comprimidos")
+        items.add("Alergovet Coveli para Cães e Gatos Acima de 15kg - 10 Comprimidos")
 
         return items
 
@@ -156,6 +178,14 @@ object AreaLojistaModels {
         items.add("racao")
         items.add("racao")
         items.add("racao")
+
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
+        items.add("remedios")
 
         return items
 
