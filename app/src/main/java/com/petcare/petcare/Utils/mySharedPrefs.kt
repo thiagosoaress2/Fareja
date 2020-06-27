@@ -26,7 +26,6 @@ class mySharedPrefs (val context: Context) {
     fun clearSharedPreference() {
 
         val editor: SharedPreferences.Editor = sharedPref.edit()
-
         editor.clear()
         editor.apply()
     }

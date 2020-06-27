@@ -3,7 +3,6 @@ package com.petcare.petcare
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.*
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
@@ -24,7 +23,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -71,12 +69,27 @@ class arealojista : AppCompatActivity() {
     private val WRITE_PERMISSION_CODE = 102
 
 
+    //to do
+    //remover o alvará
+    //dar um jeito de impedir de criar 2 pets em cad novo empreendimento
+
     //no Oncreate ele prepara os cliques dos primeiros botões
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_arealojista)
 
-        clicksIniciais() //tudp que ocorria aqui foi movido para clicksIniciais () para aumentar velocidade da abertura desta activity
+        if (cameraPermissions.hasPermissions(this) && readFilesPermissions.hasPermissions(this) && writeFilesPermissions.hasPermissions(this)){
+            clicksIniciais() //tudp que ocorria aqui foi movido para clicksIniciais () para aumentar velocidade da abertura desta activity
+        } else {
+            setupPermissions()
+            val intent = intent
+            finish()
+            startActivity(intent)
+
+
+        }
+
+
 
     }
 
@@ -120,6 +133,9 @@ class arealojista : AppCompatActivity() {
 
         }
 
+        /*
+        ATENÇÃO. VOU COLOCAR JUNTOS AQUI TODOS OS BACKUPS DE FUNÇÕES QUE DE UMA FORMA OU DE OUTRA PRECISEI ALTERAR PARA TIRAR A VERIFICAÇÃO DE ALVARÁ
+
         val btnCadastrarEmpreendimento : Button = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
         btnCadastrarEmpreendimento.setOnClickListener {
 
@@ -147,6 +163,494 @@ class arealojista : AppCompatActivity() {
                 }
             }
 
+
+        }
+
+
+        fun clicksCadastroEmpresa (eNovo: Boolean) {
+
+        var mLogradouro="nao"
+        var mNumero = "nao"
+        var mBairro = "nao"
+        var mCidade = "nao"
+        var mNome = "nao"
+        var mDddTel = "nao"
+        var mTel = "nao"
+        var mDddCel = "nao"
+        var mCel = "nao"
+
+        val btnVoltar : Button = findViewById(R.id.layCadProd_btnVoltar)
+        btnVoltar.setOnClickListener {
+            val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+            val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+
+            hideKeyboard()
+            layIndex.visibility = View.VISIBLE
+            layCadEmp.visibility = View.GONE
+
+        }
+
+
+        if (!eNovo){ //se nao for um usuário novo, carrega os dados já preenchidos nos campos
+
+            ChamaDialog()
+
+            var eT: EditText
+
+            val rootRef = databaseReference.child("petshops").child(AreaLojistaModels.petBD)
+            rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {
+                    //TODO("Not yet implemented")
+                    EncerraDialog()
+                }
+
+                override fun onDataChange(p0: DataSnapshot) {
+                    //TODO("Not yet implemented")
+                    var values: String
+                    values = p0.child("nome").value.toString()
+                    eT = findViewById(R.id.cadEmpEtNome)
+                    eT.setText(values)
+                    mNome=values
+                    values = p0.child("telefone").value.toString()
+                    eT = findViewById(R.id.cadEmpEtTel)
+                    eT.setText(values)
+                    mTel=values
+                    values = p0.child("logradouro").value.toString()
+                    eT = findViewById(R.id.cadEmpEtLogradouro)
+                    mLogradouro=values
+                    eT.setText(values)
+                    values = p0.child("numero").value.toString()
+                    eT = findViewById(R.id.cadEmpEtNumero)
+                    eT.setText(values)
+                    mNumero=values
+                    values = p0.child("bairro").value.toString()
+                    eT = findViewById(R.id.cadEmpEtBairro)
+                    eT.setText(values)
+                    mBairro=values
+                    values = p0.child("cidade").value.toString()
+                    eT = findViewById(R.id.cadEmpEtCidade)
+                    eT.setText(values)
+                    mCidade=values
+                    values = p0.child("dddTel").value.toString()
+                    eT = findViewById(R.id.cadEmpEtTel_ddd)
+                    eT.setText(values)
+                    mDddTel=values
+                    values = p0.child("dddCel").value.toString()
+                    eT = findViewById(R.id.cadEmpEtCel_ddd)
+                    eT.setText(values)
+                    mDddCel=values
+                    values = p0.child("cel").value.toString()
+                    eT = findViewById(R.id.cadEmpEtCel)
+                    eT.setText(values)
+                    mCel=values
+
+
+                    EncerraDialog()
+                }
+
+            })
+        }
+
+        //setUpPermissionCamera()
+
+        var list_of_items = arrayOf(
+            "Selecione Estado",
+            "RJ",
+            "AC",
+            "AL",
+            "AP",
+            "AM",
+            "BA",
+            "CE",
+            "DF",
+            "ES",
+            "GO",
+            "MA",
+            "MT",
+            "MS",
+            "MG",
+            "PA",
+            "PB",
+            "PR",
+            "PE",
+            "PI",
+            "RJ",
+            "RN",
+            "RS",
+            "RO",
+            "RR",
+            "SC",
+            "SP",
+            "SE",
+            "TO"
+        )
+
+        var estadoSelecionado = "Selecione Estado"
+        val spinnerEstado: Spinner = findViewById(R.id.spinnerEstado)
+        //Adapter for spinner
+        spinnerEstado.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, list_of_items)
+
+        //item selected listener for spinner
+        spinnerEstado.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                hideKeyboard()
+            }
+
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                hideKeyboard()
+                estadoSelecionado = list_of_items[position]
+
+            }
+        }
+
+
+        val btnAjudaSendAlvara:Button = findViewById(R.id.cadEmpBtnSendalvaraHelp)
+        btnAjudaSendAlvara.setOnClickListener {
+            openPopUp("Por que é importante para nós uma foto do alvará?", "A imagem do seu alvará não será pública. Nós exigimos uma foto deste documento para ajudar a garantir a segurança de todos na nossa comunidade. O envio de uma foto do alvará nos ajuda a previnir fraudes e golpes contra nossos usuários.", false, "sim", "nao", "alvaraHelp")
+        }
+
+        val btnSendAlvara:Button = findViewById(R.id.cadEmpBtnSendAlvara)
+        btnSendAlvara.setOnClickListener {
+            //takePicture(1)
+            //verifica se o usuario deu as permissões. O resultado disto sai no método override onRequestPermissionResult logo abaixo do onCreate.
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permissões não concedidas. Impossível prosseguir", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    0
+                )
+            } else {
+                //ChamaDialog()
+                AreaLojistaModels.processo="alvara"
+                takePictureFromCamera()
+            }
+
+        }
+
+        val btnProximo:Button = findViewById(R.id.cadEmpProximo)
+        btnProximo.setOnClickListener {
+            ChamaDialog()
+
+            hideKeyboard()
+
+            var mEtNome: EditText = findViewById(R.id.cadEmpEtNome)
+            var mEtTelDdd : EditText = findViewById(R.id.cadEmpEtTel_ddd) //falta fazer
+            var mEtTel: EditText = findViewById(R.id.cadEmpEtTel)
+            var mEtLogradouro: EditText = findViewById(R.id.cadEmpEtLogradouro)
+            var mEtNumero: EditText = findViewById(R.id.cadEmpEtNumero)
+            var mEtBairro: EditText = findViewById(R.id.cadEmpEtBairro)
+            var mEtCidade: EditText = findViewById(R.id.cadEmpEtCidade)
+            var mEtCelDdd : EditText = findViewById(R.id.cadEmpEtCel_ddd) //falta fazer
+            var mEtCel : EditText = findViewById(R.id.cadEmpEtCel) //falta fazer
+
+
+            //verificações dos ettexts e se o alvara=1
+            if (mEtNome.text.isEmpty()){
+                mEtNome.requestFocus()
+                mEtNome.setError("Informe o nome")
+                EncerraDialog()
+            } else if (mEtTel.text.isEmpty()){
+                mEtTel.requestFocus()
+                mEtTel.setError("Informe o telefone de contato")
+                EncerraDialog()
+            } else if (mEtLogradouro.text.isEmpty()){
+                mEtLogradouro.requestFocus()
+                mEtLogradouro.setError("Informe o logradouro")
+                EncerraDialog()
+            } else if (mEtNumero.text.isEmpty()){
+                mEtNumero.requestFocus()
+                mEtNumero.setError("Informe o número do endereço")
+                EncerraDialog()
+            } else if (mEtBairro.text.isEmpty()){
+                mEtBairro.requestFocus()
+                mEtBairro.setError("Informe o bairro")
+                EncerraDialog()
+            } else if (mEtCidade.text.isEmpty()) {
+                mEtCidade.requestFocus()
+                mEtCidade.setError("Informe a cidade")
+                EncerraDialog()
+                //} else if (alvaraOk==0){
+                // Toast.makeText(this, "Você precisa enviar a foto do alvará", Toast.LENGTH_SHORT).show()
+            } else if (mEtTelDdd.text.isEmpty() || mEtTelDdd.text.length != 2) {
+                mEtTelDdd.requestFocus()
+                mEtTelDdd.setError("!")
+                EncerraDialog()
+            } else if (mEtCelDdd.text.isEmpty() || mEtCelDdd.text.length != 2) {
+                mEtCelDdd.requestFocus()
+                mEtCelDdd.setError("!")
+                EncerraDialog()
+            } else if (mEtCel.text.isEmpty()){
+                mEtCel.requestFocus()
+                mEtCel.setError("!")
+                EncerraDialog()
+            } else if (estadoSelecionado.equals("Selecione Estado")){
+                Toast.makeText(this, "Selecione o Estado antes de prosseguir.", Toast.LENGTH_SHORT).show()
+                spinnerEstado.requestFocus()
+                EncerraDialog()
+            } else {
+
+                btnProximo.isEnabled=false
+
+                if (eNovo) { //se for novo, vai criar todos os campos no BD
+                    //registrar criando o path do usuario. Vai ficar faltando o alvará que será feito na próxima página.
+                    val newCad: DatabaseReference = databaseReference.child("petshops").push()
+                    AreaLojistaModels.petBD = newCad.key.toString()
+                    newCad.child("nome").setValue(mEtNome.text.toString())
+                    newCad.child("telefone").setValue(mEtTel.text.toString())
+                    newCad.child("logradouro").setValue(mEtLogradouro.text.toString())
+                    newCad.child("numero").setValue(mEtNumero.text.toString())
+                    newCad.child("bairro").setValue(mEtBairro.text.toString())
+                    newCad.child("cidade").setValue(mEtCidade.text.toString())
+                    newCad.child("estado").setValue(estadoSelecionado)
+                    newCad.child("emailCriador").setValue(AreaLojistaModels.userMail.toString())
+
+                    AreaLojistaModels.endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
+                    // neste formato address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
+
+                    //só salvou até aqui não sei porque
+                    newCad.child("dddTel").setValue(mEtTelDdd.text.toString())
+                    newCad.child("dddCel").setValue(mEtCelDdd.text.toString())
+                    newCad.child("cel").setValue(mEtCel.text.toString())
+
+                    newCad.child("visitas").setValue(0)
+
+                    //especiais
+                    newCad.child("plano").setValue("basico")
+                    newCad.child("impulsionamentos").setValue("nao") //vai ser sim quando tiver um impulsionamento ativo e nao quando nao estiver.Vai controlar apenas um por vez
+
+                    newCad.child("bd").setValue(AreaLojistaModels.petBD)
+                    newCad.child("alvara").setValue("nao")
+                    newCad.child("lat").setValue("nao")
+                    newCad.child("long").setValue("nao")
+                    newCad.child("latlong").setValue("nao")
+                    newCad.child("BDdoDono").setValue(AreaLojistaModels.userBD)
+                    newCad.child("entrega").setValue("nao")
+                    newCad.child("raio_entrega").setValue("nao")
+
+                    newCad.child("aceita_credito").setValue("nao")
+                    newCad.child("aceita_debito").setValue("nao")
+                    newCad.child("cartoes").child("master").setValue("nao")
+                    newCad.child("cartoes").child("visa").setValue("nao")
+                    newCad.child("cartoes").child("elo").setValue("nao")
+                    newCad.child("cartoes").child("outros").setValue("nao")
+
+                    //parte delayout
+                    newCad.child("banner").setValue("nao")
+                    newCad.child("logo").setValue("nao")
+
+                    newCad.child("servicos").child("24hrs").setValue("nao")
+                    newCad.child("servicos").child("banhoTosa").setValue("nao")
+                    newCad.child("servicos").child("entrega").setValue("nao")
+                    newCad.child("servicos").child("farmacia").setValue("nao")
+                    newCad.child("servicos").child("hospedagem").setValue("nao")
+                    newCad.child("servicos").child("vetAtendDom").setValue("nao")
+                    newCad.child("servicos").child("veterinario").setValue("nao")
+
+
+                    newCad.child("itens_venda").setValue(0) //quantidade de produtos para vender.
+                    newCad.child("tamanho_inventario").setValue(15) //Limite de usuário padrão
+
+                    databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("tipo").setValue("empresario")
+                    databaseReference.child("usuarios").child(AreaLojistaModels.userBD).child("petBD").setValue(AreaLojistaModels.petBD)
+                    //val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
+                    //val editor = sharedPref.edit()
+
+                    val mySharedPrefs: mySharedPrefs = mySharedPrefs(this)
+                    mySharedPrefs.setValue("tipo", "empresario")
+                    AreaLojistaModels.tipo = "empresario"
+                    //editor.putString("tipo", "empresario")
+                    //editor.putString("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
+                    mySharedPrefs.setValue("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
+                    //editor.apply()
+
+                    val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+                    val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
+
+                    layCad1.visibility = View.GONE
+                    layCad2.visibility = View.VISIBLE
+
+                    EncerraDialog()
+                } else {
+                    //se for usuário existente, vai apenas atualizar alguns datos. Primeiro pega os dados, preenche os etdText
+
+                    var apagaLatLong = 0  //se o user tiver mudado alguma informação do endereço, vamos apagar seus dados de latitude, longitude e latlong pois sua localização do mapa mudou.
+                    if(!mNome.equals(mEtNome.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("nome")
+                            .setValue(mEtNome.text.toString())
+                    }
+
+                    if(!mTel.equals(mEtTel.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("telefone")
+                            .setValue(mEtTel.text.toString())
+                    }
+                    if(!mLogradouro.equals(mEtLogradouro.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("logradouro")
+                            .setValue(mEtLogradouro.text.toString())
+                        apagaLatLong=1
+                    }
+                    if(!mNumero.equals(mEtNumero.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("numero")
+                            .setValue(mEtNumero.text.toString())
+                        apagaLatLong=1
+                    }
+                    if(!mBairro.equals(mEtBairro.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("bairro")
+                            .setValue(mEtBairro.text.toString())
+                        apagaLatLong=1
+                    }
+                    if(!mCidade.equals(mEtCidade.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cidade")
+                            .setValue(mEtCidade.text.toString())
+                        apagaLatLong=1
+                    }
+
+                    //estado salvamos sempre
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("estado").setValue(estadoSelecionado)
+
+                    if(!mDddTel.equals(mEtTelDdd.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("dddTel")
+                            .setValue(mEtTelDdd.text.toString())
+                    }
+
+                    if(!mDddCel.equals(mEtCelDdd.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("dddCel")
+                            .setValue(mEtCelDdd.text.toString())
+                    }
+
+                    if(!mCel.equals(mEtCel.text.toString())) {
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("cel")
+                            .setValue(mEtCel.text.toString())
+                    }
+
+                    //se alterou alguma info do endereço, zerar estas informações. Assim, no MapsActivity, será identificaod por algum usuário automáticamente e pegará o novo latlong.
+                    if (apagaLatLong==1){
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("lat").setValue("nao")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("long").setValue("nao")
+                        databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("latlong").setValue("nao")
+                    }
+
+
+                    AreaLojistaModels.endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
+
+                    val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+                    val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
+                    layCad1.visibility = View.GONE
+                    layCad2.visibility = View.VISIBLE
+
+                    EncerraDialog()
+
+                }
+            }
+        }
+
+        btnProximo.isEnabled=true //Libera ele. Pois quando aperta ele na primeira vez trava pra evitar de criar dois pets. Mas se o user voltar aqui na mesma sessão estaria enable=false. Entao liberamos
+
+        /*
+        val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
+        btnFinalizaCad.setOnClickListener {
+
+            if (!AreaLojistaModels.alvara.equals("nao")){
+                val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
+                layCad2.visibility = View.GONE
+                val layIndexAreaLoja: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+                layIndexAreaLoja.visibility = View.VISIBLE
+
+                val intent = Intent(this, MapsActivity::class.java)
+                //intent.putExtra("userBD", userBD)
+                intent.putExtra("email", AreaLojistaModels.userMail)
+                //intent.putExtra("alvara", alvara)
+                //intent.putExtra("tipo", tipo)
+                if (!AreaLojistaModels.petBD.equals("nao")){
+                    intent.putExtra("petBD", AreaLojistaModels.petBD)
+                }
+                intent.putExtra("endereco", AreaLojistaModels.endereco)
+                intent.putExtra("chamaLatLong", "sim")
+                startActivity(intent)
+                finish()
+
+                /* não faz mais isso. Agora encerra e manda direto pra mapsActivity para pegar latLong
+                //habilita os botões
+                var btn: Button
+                btn = findViewById(R.id.arealojistaIndexBtneditLayout)
+                btn.isEnabled = true
+
+                btn = findViewById(R.id.arealojistaIndexBtnCadProd)
+                btn.isEnabled = true
+
+                btn = findViewById(R.id.arealojistaIndexBtnGerenciaProd)
+                btn.isEnabled = true
+
+                btn = findViewById(R.id.arealojistaIndexBtnEntrega)
+                btn.isEnabled = true
+
+                btn = findViewById(R.id.arealojistaIndexBtnFormaPagamento)
+                btn.isEnabled = true
+
+                btn = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
+                btn.setText("Atualizar informações")
+
+                 */
+            } else {
+                openPopUp("Atenção", "Seu alvará ainda não foi enviado. Sua loja ainda não aparece para os cliente. Isto ocorrerá somente quando o alvará for recebido.", false, "n", "m", "n")
+                val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
+                layCad2.visibility = View.GONE
+                val layIndexAreaLoja: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+                layIndexAreaLoja.visibility = View.VISIBLE
+            }
+        }
+
+         */
+
+        val btnWhatAppHelp: Button = findViewById(R.id.cadEmpEtCel_help)
+        btnWhatAppHelp.setOnClickListener {
+            openPopUp("Ajuda", "O número do WhatsApp é importante pois será por ele que as compras serão avisadas e os contatos com o cliente também serão feitos. Após cada compra, um resumo é enviado ao número cadastrado. Isto facilita o contato entre cliente e lojista.", false, "n", "n", "n")
+        }
+
+    }
+
+
+         */
+
+        val btnCadastrarEmpreendimento : Button = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
+        btnCadastrarEmpreendimento.setOnClickListener {
+
+            val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+            val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+
+
+            if (AreaLojistaModels.tipo.equals("usuario")) {
+                layIndex.visibility = View.GONE
+                layCadEmp.visibility = View.VISIBLE
+                clicksCadastroEmpresa(true) //true significa que é um usuário cadastrando a empresa pela primeira vez.
+
+            } else {
+
+                clicksCadastroEmpresa(false) //true significa que é um usuário cadastrando a empresa pela primeira vez.
+                layIndex.visibility = View.GONE
+                layCadEmp.visibility = View.VISIBLE
+
+                /*
+                if (AreaLojistaModels.alvara.equals("nao")){
+                    layIndex.visibility = View.GONE
+                    val layCadEmpAlvara: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
+                    layCadEmpAlvara.visibility = View.VISIBLE
+                    Toast.makeText(this, "Você precisa finalizar seu cadastro enviando uma foto do alvará.", Toast.LENGTH_SHORT).show()
+                    clicksCadastroEmpresa(false)
+                } else {
+                    layIndex.visibility = View.GONE
+                    layCadEmp.visibility = View.VISIBLE
+                    clicksCadastroEmpresa(false) //true significa que é um usuário cadastrando a empresa pela primeira vez.
+                }
+
+                 */
+            }
 
         }
 
@@ -262,7 +766,7 @@ class arealojista : AppCompatActivity() {
             }
         }
 
-        checkAlvara()
+        //checkAlvara()
 
 
     } //tudo que havia no onCreate
@@ -747,30 +1251,11 @@ class arealojista : AppCompatActivity() {
             }
         }
 
-
-        val btnAjudaSendAlvara:Button = findViewById(R.id.cadEmpBtnSendalvaraHelp)
-        btnAjudaSendAlvara.setOnClickListener {
-            openPopUp("Por que é importante para nós uma foto do alvará?", "A imagem do seu alvará não será pública. Nós exigimos uma foto deste documento para ajudar a garantir a segurança de todos na nossa comunidade. O envio de uma foto do alvará nos ajuda a previnir fraudes e golpes contra nossos usuários.", false, "sim", "nao", "alvaraHelp")
+        val btnWhatAppHelp: Button = findViewById(R.id.cadEmpEtCel_help)
+        btnWhatAppHelp.setOnClickListener {
+            openPopUp("Ajuda", "O número do WhatsApp é importante pois será por ele que as compras serão avisadas e os contatos com o cliente também serão feitos. Após cada compra, um resumo é enviado ao número cadastrado. Isto facilita o contato entre cliente e lojista.", false, "n", "n", "n")
         }
 
-        val btnSendAlvara:Button = findViewById(R.id.cadEmpBtnSendAlvara)
-        btnSendAlvara.setOnClickListener {
-            //takePicture(1)
-            //verifica se o usuario deu as permissões. O resultado disto sai no método override onRequestPermissionResult logo abaixo do onCreate.
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permissões não concedidas. Impossível prosseguir", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    0
-                )
-            } else {
-                //ChamaDialog()
-                AreaLojistaModels.processo="alvara"
-                takePictureFromCamera()
-            }
-
-        }
 
         val btnProximo:Button = findViewById(R.id.cadEmpProximo)
         btnProximo.setOnClickListener {
@@ -908,11 +1393,27 @@ class arealojista : AppCompatActivity() {
                     mySharedPrefs.setValue("petBdSeForEmpresarioInicial", AreaLojistaModels.petBD)
                     //editor.apply()
 
-                    val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+
+                    //esta parte entrou por ultimo quando retiramos a obrigatoriedade do alvará
+                    databaseReference.child("petshops").child(AreaLojistaModels.petBD).child("alvara").setValue(urifinal)
+                    AreaLojistaModels.alvaraOk=1
+                    AreaLojistaModels.alvara="pendente"  //vamos declarar alvara pendente para todos pets que fizerem cadastro sem necessidade. Assim no futuro se quisermos voltar, basta que questionemos todos os "pendente"
+
+                    mySharedPrefs.setValue("tipo", "empresario")
+                    AreaLojistaModels.tipo = "empresario"
+
+                    val layCad1: Button = findViewById(R.id.lay_cadastrarEmpreendimento)
                     val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
 
                     layCad1.visibility = View.GONE
                     layCad2.visibility = View.VISIBLE
+
+                    liberaBotoesDoEmpresario ()
+                    //checkAlvara ()  nao fazemos mais esta checkagem
+
+                    openPopUp("Muito bem!", "Vamos cadastrar seu primeiro produto? Demora menos de 30 segundos.", false, "n", "n", "n")
+                    val btnCadProd: Button = findViewById(R.id.arealojistaIndexBtnCadProd)
+                    btnCadProd.performClick()
 
                     EncerraDialog()
                 } else {
@@ -1046,13 +1547,36 @@ class arealojista : AppCompatActivity() {
 
          */
 
-        val btnWhatAppHelp: Button = findViewById(R.id.cadEmpEtCel_help)
-        btnWhatAppHelp.setOnClickListener {
-            openPopUp("Ajuda", "O número do WhatsApp é importante pois será por ele que as compras serão avisadas e os contatos com o cliente também serão feitos. Após cada compra, um resumo é enviado ao número cadastrado. Isto facilita o contato entre cliente e lojista.", false, "n", "n", "n")
+        /*  Estes dois métodos perderam o sentido quando removemos o alvará do cadastro. Se for voltar depois basta ressucitar aqui. Aliás, todos os métodos originais deste procedimiento estão guardados aqui em um comentário
+
+        val btnAjudaSendAlvara:Button = findViewById(R.id.cadEmpBtnSendalvaraHelp)
+        btnAjudaSendAlvara.setOnClickListener {
+            openPopUp("Por que é importante para nós uma foto do alvará?", "A imagem do seu alvará não será pública. Nós exigimos uma foto deste documento para ajudar a garantir a segurança de todos na nossa comunidade. O envio de uma foto do alvará nos ajuda a previnir fraudes e golpes contra nossos usuários.", false, "sim", "nao", "alvaraHelp")
         }
 
-    }
+         */
+        /*
+        val btnSendAlvara:Button = findViewById(R.id.cadEmpBtnSendAlvara)
+        btnSendAlvara.setOnClickListener {
+            //takePicture(1)
+            //verifica se o usuario deu as permissões. O resultado disto sai no método override onRequestPermissionResult logo abaixo do onCreate.
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permissões não concedidas. Impossível prosseguir", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    0
+                )
+            } else {
+                //ChamaDialog()
+                AreaLojistaModels.processo="alvara"
+                takePictureFromCamera()
+            }
 
+        }
+         */
+
+    }
 
     //Neste método salvamos tudo que iremos precisar depois
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
@@ -1072,8 +1596,7 @@ class arealojista : AppCompatActivity() {
         super.onSaveInstanceState(savedInstanceState)
     }
 
-//aqui recuperamos tudo.
-
+    //aqui recuperamos tudo.
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         // Always call the superclass so it can restore the view hierarchy
         super.onRestoreInstanceState(savedInstanceState)

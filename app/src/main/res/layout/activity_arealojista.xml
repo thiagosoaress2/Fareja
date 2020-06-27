@@ -536,7 +536,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="gone">
+        tools:visibility="visible">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -647,7 +647,7 @@
                     android:layout_marginBottom="24dp"
                     android:background="@drawable/ic_btnazul"
                     android:fontFamily="@font/bahnschrift"
-                    android:text="Próxima página"
+                    android:text="Finalizar cadastro"
                     android:textColor="#ffffff"
                     android:textSize="22sp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -889,7 +889,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
+        tools:visibility="gone">
 
         <ScrollView
             android:id="@+id/scrollCadProd"
@@ -960,8 +960,8 @@
                             android:layout_marginTop="8dp"
                             android:layout_marginEnd="32dp"
                             android:ems="10"
-                            android:inputType="textPersonName"
                             android:hint="Digite aqui para buscar"
+                            android:inputType="textPersonName"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@+id/textView116" />

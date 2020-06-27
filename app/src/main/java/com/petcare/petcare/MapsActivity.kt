@@ -70,8 +70,7 @@ import com.google.firebase.database.*
 import com.google.firebase.database.FirebaseDatabase.getInstance
 import com.petcare.petcare.Controller.MapsController
 import com.petcare.petcare.Models.MapsModels
-import com.petcare.petcare.Utils.fineLocationPermission
-import com.petcare.petcare.Utils.mySharedPrefs
+import com.petcare.petcare.Utils.*
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -88,6 +87,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     //ADICIONAR AS PERMISSOES EM TODAS ACTIVITIES NVOAS QUE USAM CAMERA E FOOT
 
     private val FINE_LOCATION_CODE = 721
+
+    private val CAMERA_PERMISSION_CODE = 100
+    private val READ_PERMISSION_CODE = 101
+    private val WRITE_PERMISSION_CODE = 102
+
 
     //upadte automático
     private val appUpdateManager: AppUpdateManager by lazy { AppUpdateManagerFactory.create(this) }
@@ -345,14 +349,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 fineLocationPermission.checkPermission(this, FINE_LOCATION_CODE)
             }
 
-            if (MapsModels.userBD.equals("nao")) {
-                queryUserInitial()
-            } else {
-                placeUserInMap()
-                if (!MapsModels.userBD.equals("usuario")){
-                    //se for autonomo ou proprietário vai fazer query para pegar os dados
+            if (fineLocationPermission.hasPermissions(this)){
+
+                if (MapsModels.userBD.equals("nao")) {
                     queryUserInitial()
+                } else {
+                    placeUserInMap()
+                    if (!MapsModels.userBD.equals("usuario")){
+                        //se for autonomo ou proprietário vai fazer query para pegar os dados
+                        queryUserInitial()
+                    }
+
                 }
+
 
             }
 
@@ -778,6 +787,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val btnLogout: Button = findViewById(R.id.mapsLogoutBtn)
         btnLogout.setOnClickListener {
             btnMenu.performClick()
+            val mySharedPrefs: mySharedPrefs = mySharedPrefs(this)
+            mySharedPrefs.clearSharedPreference()
             logout()
         }
 
@@ -799,18 +810,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         val btnProprietario:Button = findViewById(R.id.menu_btn1)
         btnProprietario.setOnClickListener {
-            if (MapsModels.userBD!="nao" || MapsModels.userBD==null){
-                btnMenu.performClick()
-                val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", MapsModels.userBD)
-                intent.putExtra("alvara", MapsModels.alvara)
-                intent.putExtra("tipo", MapsModels.tipo)
-                intent.putExtra("email", MapsModels.userMail)
-                if (!MapsModels.petBDseForEmpresario.equals("nao")){
-                    intent.putExtra("petBD", MapsModels.petBDseForEmpresario)
+            if (MapsModels.userBD!="nao"){
+
+
+                //vamos testar as permissões já aqui para não dar erro depois dentro da classe
+                if (cameraPermissions.hasPermissions(this)){
+                    //proceed with code
+
+                    btnMenu.performClick()
+                    val intent = Intent(this, arealojista::class.java)
+                    intent.putExtra("userBD", MapsModels.userBD)
+                    intent.putExtra("alvara", MapsModels.alvara)
+                    intent.putExtra("tipo", MapsModels.tipo)
+                    intent.putExtra("email", MapsModels.userMail)
+                    if (!MapsModels.petBDseForEmpresario.equals("nao")){
+                        intent.putExtra("petBD", MapsModels.petBDseForEmpresario)
+                    }
+                    startActivity(intent)
+                    finish()
+
+                } else {
+                    cameraPermissions.requestPermission(this, CAMERA_PERMISSION_CODE)
+                    //writeFilesPermissions.requestPermission(this, WRITE_PERMISSION_CODE)
+                    //readFilesPermissions.requestPermission(this, READ_PERMISSION_CODE)
                 }
-                startActivity(intent)
-                finish()
 
             } else {
                 Toast.makeText(this, "Aguarde, suas informações ainda não foram carregadas. Isto depende de sua conexão com a internet.", Toast.LENGTH_SHORT).show()
@@ -5550,8 +5573,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
      */
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode==FINE_LOCATION_CODE){
 
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
@@ -5580,6 +5602,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
 
         }
+        if (requestCode==CAMERA_PERMISSION_CODE){
+            cameraPermissions.handlePermissionsResult(requestCode, permissions, grantResults, CAMERA_PERMISSION_CODE)
+            readFilesPermissions.requestPermission(this, READ_PERMISSION_CODE)
+        }
+        if (requestCode==READ_PERMISSION_CODE){
+            readFilesPermissions.handlePermissionsResult(requestCode, permissions, grantResults, READ_PERMISSION_CODE)
+            writeFilesPermissions.requestPermission(this, WRITE_PERMISSION_CODE)
+        }
+        if (requestCode==WRITE_PERMISSION_CODE){
+            writeFilesPermissions.handlePermissionsResult(requestCode, permissions, grantResults, WRITE_PERMISSION_CODE)
+        }
+
 
     }
 
