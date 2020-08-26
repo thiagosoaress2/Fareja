@@ -14,6 +14,26 @@ class userClass {
     var plano = "nao"
     var imgDoUser = "nao"
 
+    fun simpleUser(email: String, tipo: String, userBd: String, imgdoUser: String){
+        this.userMail = email;
+        this.tipo = tipo;
+        this.userBD = userBd;
+        this.imgDoUser = imgdoUser;
+
+    }
+
+    fun empresarioUser(email: String, tipo: String, userBd: String, petBd: String, bdDoPet: String, plano: String, imgdoUser: String){
+        this.userMail = email;
+        this.tipo = tipo;
+        this.userBD = userBd;
+        this.imgDoUser = imgdoUser;
+        this.petBDseForEmpresario = petBd;
+        this.bdDoPet = bdDoPet;
+        this.plano = plano;
+        this.imgDoUser = imgdoUser;
+
+    }
+
     // member function
     fun getUserInfo() : MutableList<String> {
 

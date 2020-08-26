@@ -31,6 +31,7 @@ import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.petcare.petcare.Controller.MainController
 import com.petcare.petcare.Models.MainModels
+import com.petcare.petcare.Utils.userClass
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_maps.*
 
