@@ -164,7 +164,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/donation_progressBar">
+            app:layout_constraintTop_toTopOf="parent">
 
             <Button
                 android:id="@+id/btnShowHideLista"
@@ -191,7 +191,7 @@
                 android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:visibility="gone" />
+                tools:visibility="visible" />
 
             <Button
                 android:id="@+id/btnShowHidePetFriends"
@@ -217,31 +217,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_logo" />
-
-        <Button
-            android:id="@+id/donation_helpBtn"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/ic_botaobranco"
-            android:text="?"
-            android:textColor="@color/laranja"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/donation_progressBar"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ProgressBar
-            android:id="@+id/donation_progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="45dp"
-            android:layout_marginEnd="45dp"
-            android:progressDrawable="@drawable/custom_progressbar_layout"
-            app:layout_constraintBottom_toBottomOf="@+id/donation_helpBtn"
-            app:layout_constraintEnd_toEndOf="@+id/constraintLayout31"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/donation_helpBtn" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout7"

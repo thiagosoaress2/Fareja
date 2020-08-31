@@ -7387,54 +7387,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         temLembreteHoje() //verifica se precisa exibir aviso de 10 dias de compra da ração
 
-        adjustDonationbar()
+        //adjustDonationbar()
     }
 
-    //pega os dados do bd e ajusta a barra. Seta o click
-    fun adjustDonationbar(){
-        val btnHelp: Button = findViewById(R.id.donation_helpBtn)
-        val progressBar: ProgressBar = findViewById(R.id.donation_progressBar)
-        //progressBar.setProgress(95)
-        btnHelp.setOnClickListener {
-            openpopup_donation("O que é esta barra?", "Nós assumimos um compromisso com nossos parceiros. A cada 500 transações dentro do aplicativo nós doamos um saco de ração para a Suipa (Sociedade União Internacional Protetora dos Animais). Você pode acompanhar todo o processo nas nossas redes sociais")
-            //openPopUp("O que é esta barra?", "Nós assumimos um compromisso com nossos parceiros. A cada 500 transações dentro do aplicativo nós doamos um saco de ração para a Suipa (Sociedade União Internacional Protetora dos Animais). Você pode acompanhar todo o processo nas nossas redes sociais", false, "n", "n", "n")
-        }
-
-        databaseReference = FirebaseDatabase.getInstance().reference
-
-        val rootRef = databaseReference.child("donation")
-        rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onCancelled(p0: DatabaseError) {
-                //TODO("Not yet implemented")
-                EncerraDialog()
-            }
-
-            override fun onDataChange(p0: DataSnapshot) {
-                //TODO("Not yet implemented")
-                var vendas= p0.child("vendas").getValue().toString()
-
-                //calcular quantos % de 500 (o valor que definimos) é o que temos?
-                val percent : Double = ((vendas.toDouble()/500)*100).toDouble()
-
-                progressBar.setProgress(percent.toInt())
-
-                //atingiu a meta, zera tudo e armazena no bd
-                if (percent==100.0){
-                    databaseReference.child("donation").child("vendas").setValue(0)
-                    val totalDoado = p0.child("totalDoado").getValue().toString()
-                    databaseReference.child("donation").child("totalDoado").setValue(totalDoado.toInt()+1)
-                    progressBar.setProgress(0)
-                }
-
-                //agora vamso fazer mensagem de incentivo
-                if (percent>=90.0){
-                    openpopup_donation("Estamos quase lá!", "Nossa comunidade já atingiu 90% da meta para doação de mais ração para a Suipa (Sociedade União Internacional Protetora dos Animais). Falta bem pouco! Você pode ajudar fazendo qualquer compra no aplicativo ou chamando seus amigos para nossa comunidade!")
-                }
-
-            }
-        })
-
-    }
 
 
     fun openpopup_donation (titulo: String, texto:String){
