@@ -148,6 +148,11 @@ class arealojista : AppCompatActivity() {
         //val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
 
 
+        /*
+        reforma
+        setupPermissions()
+         */
+
         setupPermissions()
 
         //layIndex.visibility = View.VISIBLE
@@ -171,12 +176,12 @@ class arealojista : AppCompatActivity() {
 
         }
 
+        /* reforma, antes de tirar a necessidade do alvará
         val btnCadastrarEmpreendimento : Button = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
         btnCadastrarEmpreendimento.setOnClickListener {
 
             val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
             val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
-
 
             if (tipo.equals("usuario")) {
                 layIndex.visibility = View.GONE
@@ -196,6 +201,30 @@ class arealojista : AppCompatActivity() {
                     layCadEmp.visibility = View.VISIBLE
                     clicksCadastroEmpresa(false) //true significa que é um usuário cadastrando a empresa pela primeira vez.
                 }
+            }
+
+
+        }
+
+         */
+
+        val btnCadastrarEmpreendimento : Button = findViewById(R.id.arealojistaIndexBtnCadastrarEmpreendimento)
+        btnCadastrarEmpreendimento.setOnClickListener {
+
+            val layIndex :ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+            val layCadEmp : ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+
+            if (tipo.equals("usuario")) {
+                layIndex.visibility = View.GONE
+                layCadEmp.visibility = View.VISIBLE
+                clicksCadastroEmpresa(true) //true significa que é um usuário cadastrando a empresa pela primeira vez.
+
+            } else {
+
+                    layIndex.visibility = View.GONE
+                    layCadEmp.visibility = View.VISIBLE
+                    clicksCadastroEmpresa(false) //true significa que é um usuário cadastrando a empresa pela primeira vez.
+
             }
 
 
@@ -261,6 +290,15 @@ class arealojista : AppCompatActivity() {
             clickImpulsionamentos()
         }
 
+        //ajusta o texto do botão
+        if (petBD.equals("nao")){
+            btnCadastrarEmpreendimento.setText("Cadastrar empresa")
+        } else {
+            //significa que é a primeira vez que o usuário entra ou ainda nem começou seu cadastro
+            btnCadastrarEmpreendimento.setText("Editar informações")
+        }
+
+        /*
         if (alvara.equals("nao") && tipo.equals("empresario")){
             //btnAbreEditLayout.isEnabled = false reforma 2
             //significa que ele já começou o cadastro mas nao enviou o alvará
@@ -274,6 +312,8 @@ class arealojista : AppCompatActivity() {
             btnCadastrarEmpreendimento.setText("Cadastrar empresa")
         }
 
+         */
+
 
         btnCancelamento.setOnClickListener {
             ClicksCancelamento()
@@ -281,7 +321,6 @@ class arealojista : AppCompatActivity() {
 
         val btnGerarRelatorios: Button = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
         btnGerarRelatorios.setOnClickListener {
-            ChamaDialog()
             ChamaDialog()
             val rootRef = databaseReference.child("petshops").child(petBD)
             rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -535,9 +574,12 @@ class arealojista : AppCompatActivity() {
 
         }
 
+        val btnProximo:Button = findViewById(R.id.cadEmpProximo)
+
 
         if (!eNovo){ //se nao for um usuário novo, carrega os dados já preenchidos nos campos
 
+            btnProximo.setText("Salvar")
             ChamaDialog()
 
             var eT: EditText
@@ -679,7 +721,7 @@ class arealojista : AppCompatActivity() {
 
         }
 
-        val btnProximo:Button = findViewById(R.id.cadEmpProximo)
+        //val btnProximo:Button = findViewById(R.id.cadEmpProximo)
         btnProximo.setOnClickListener {
             ChamaDialog()
 
@@ -741,81 +783,126 @@ class arealojista : AppCompatActivity() {
                 EncerraDialog()
             } else {
 
-                if (eNovo) { //se for novo, vai criar todos os campos no BD
-                    //registrar criando o path do usuario. Vai ficar faltando o alvará que será feito na próxima página.
-                    val newCad: DatabaseReference = databaseReference.child("petshops").push()
-                    petBD = newCad.key.toString()
-                    newCad.child("nome").setValue(mEtNome.text.toString())
-                    newCad.child("telefone").setValue(mEtTel.text.toString())
-                    newCad.child("logradouro").setValue(mEtLogradouro.text.toString())
-                    newCad.child("numero").setValue(mEtNumero.text.toString())
-                    newCad.child("bairro").setValue(mEtBairro.text.toString())
-                    newCad.child("cidade").setValue(mEtCidade.text.toString())
-                    newCad.child("estado").setValue(estadoSelecionado)
-                    newCad.child("emailCriador").setValue(userMail.toString())
+                if (eNovo){
 
-                    endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
-                    // neste formato address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
-
-                    //só salvou até aqui não sei porque
-                    newCad.child("dddTel").setValue(mEtTelDdd.text.toString())
-                    newCad.child("dddCel").setValue(mEtCelDdd.text.toString())
-                    newCad.child("cel").setValue(mEtCel.text.toString())
-
-                    newCad.child("visitas").setValue(0)
-
-                    //especiais
-                    newCad.child("plano").setValue("basico")
-                    newCad.child("impulsionamentos").setValue("nao") //vai ser sim quando tiver um impulsionamento ativo e nao quando nao estiver.Vai controlar apenas um por vez
-
-                    newCad.child("bd").setValue(petBD)
-                    newCad.child("alvara").setValue("nao")
-                    newCad.child("lat").setValue("nao")
-                    newCad.child("long").setValue("nao")
-                    newCad.child("latlong").setValue("nao")
-                    newCad.child("BDdoDono").setValue(userBD)
-                    newCad.child("entrega").setValue("nao")
-                    newCad.child("raio_entrega").setValue("nao")
-
-                    newCad.child("aceita_credito").setValue("nao")
-                    newCad.child("aceita_debito").setValue("nao")
-                    newCad.child("cartoes").child("master").setValue("nao")
-                    newCad.child("cartoes").child("visa").setValue("nao")
-                    newCad.child("cartoes").child("elo").setValue("nao")
-                    newCad.child("cartoes").child("outros").setValue("nao")
-
-                    //parte delayout
-                    newCad.child("banner").setValue("nao")
-                    newCad.child("logo").setValue("nao")
-
-                    newCad.child("servicos").child("24hrs").setValue("nao")
-                    newCad.child("servicos").child("banhoTosa").setValue("nao")
-                    newCad.child("servicos").child("entrega").setValue("nao")
-                    newCad.child("servicos").child("farmacia").setValue("nao")
-                    newCad.child("servicos").child("hospedagem").setValue("nao")
-                    newCad.child("servicos").child("vetAtendDom").setValue("nao")
-                    newCad.child("servicos").child("veterinario").setValue("nao")
-
-
-                    newCad.child("itens_venda").setValue(0) //quantidade de produtos para vender.
-                    newCad.child("tamanho_inventario").setValue(15) //Limite de usuário padrão
-
-                    databaseReference.child("usuarios").child(userBD).child("tipo").setValue("empresario")
-                    databaseReference.child("usuarios").child(userBD).child("petBD").setValue(petBD)
-                    val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
-                    val editor = sharedPref.edit()
-                    editor.putString("tipoInicial", "empresario")
-                    editor.putString("petBdSeForEmpresarioInicial", petBD)
-                    editor.apply()
-
-                    val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
-                    val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
-
-                    layCad1.visibility = View.GONE
-                    layCad2.visibility = View.VISIBLE
-
+                    //reforma  - agora aqui exibe os termos e condições antes de registrar
                     EncerraDialog()
+                    val layTermos: ConstraintLayout = findViewById(R.id.layTermosCondições)
+                    val btnTermosReg : Button = findViewById(R.id.layTermos_btnReg)
+                    val btnTermosCancel : Button = findViewById(R.id.layTermos_btnCancel)
+
+                    layTermos.visibility = View.VISIBLE
+                    btnTermosReg.setOnClickListener {
+
+                        ChamaDialog()
+                         //se for novo, vai criar todos os campos no BD
+                            //registrar criando o path do usuario. Vai ficar faltando o alvará que será feito na próxima página.
+                            val newCad: DatabaseReference = databaseReference.child("petshops").push()
+                            petBD = newCad.key.toString()
+                            newCad.child("nome").setValue(mEtNome.text.toString())
+                            newCad.child("telefone").setValue(mEtTel.text.toString())
+                            newCad.child("logradouro").setValue(mEtLogradouro.text.toString())
+                            newCad.child("numero").setValue(mEtNumero.text.toString())
+                            newCad.child("bairro").setValue(mEtBairro.text.toString())
+                            newCad.child("cidade").setValue(mEtCidade.text.toString())
+                            newCad.child("estado").setValue(estadoSelecionado)
+                            newCad.child("emailCriador").setValue(userMail.toString())
+
+                            endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
+                            // neste formato address = logradouro+" "+numero+", "+bairro+", "+cidade+" - "+estado
+
+                            //só salvou até aqui não sei porque
+                            newCad.child("dddTel").setValue(mEtTelDdd.text.toString())
+                            newCad.child("dddCel").setValue(mEtCelDdd.text.toString())
+                            newCad.child("cel").setValue(mEtCel.text.toString())
+
+                            newCad.child("visitas").setValue(0)
+
+                            //especiais
+                            newCad.child("plano").setValue("basico")
+                            newCad.child("impulsionamentos").setValue("nao") //vai ser sim quando tiver um impulsionamento ativo e nao quando nao estiver.Vai controlar apenas um por vez
+
+                            newCad.child("bd").setValue(petBD)
+                            newCad.child("alvara").setValue("nao")
+                            newCad.child("lat").setValue("nao")
+                            newCad.child("long").setValue("nao")
+                            newCad.child("latlong").setValue("nao")
+                            newCad.child("BDdoDono").setValue(userBD)
+                            newCad.child("entrega").setValue("nao")
+                            newCad.child("raio_entrega").setValue("nao")
+
+                            newCad.child("aceita_credito").setValue("nao")
+                            newCad.child("aceita_debito").setValue("nao")
+                            newCad.child("cartoes").child("master").setValue("nao")
+                            newCad.child("cartoes").child("visa").setValue("nao")
+                            newCad.child("cartoes").child("elo").setValue("nao")
+                            newCad.child("cartoes").child("outros").setValue("nao")
+
+                            //parte delayout
+                            newCad.child("banner").setValue("nao")
+                            newCad.child("logo").setValue("nao")
+
+                            newCad.child("servicos").child("24hrs").setValue("nao")
+                            newCad.child("servicos").child("banhoTosa").setValue("nao")
+                            newCad.child("servicos").child("entrega").setValue("nao")
+                            newCad.child("servicos").child("farmacia").setValue("nao")
+                            newCad.child("servicos").child("hospedagem").setValue("nao")
+                            newCad.child("servicos").child("vetAtendDom").setValue("nao")
+                            newCad.child("servicos").child("veterinario").setValue("nao")
+
+
+                            newCad.child("itens_venda").setValue(0) //quantidade de produtos para vender.
+                            newCad.child("tamanho_inventario").setValue(15) //Limite de usuário padrão
+
+                            databaseReference.child("usuarios").child(userBD).child("tipo").setValue("empresario")
+                            databaseReference.child("usuarios").child(userBD).child("petBD").setValue(petBD)
+                            val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
+                            val editor = sharedPref.edit()
+                            editor.putString("tipoInicial", "empresario")
+                            editor.putString("petBdSeForEmpresarioInicial", petBD)
+                            editor.apply()
+
+                            val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+                            layCad1.visibility = View.GONE
+
+                            val layIndexAreaLoja: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+                            layIndexAreaLoja.visibility = View.VISIBLE
+
+                            //vai encerrar este cadastro pra registrar a empresa na latitude e longitude correta
+                            val intent = Intent(this, MapsActivity::class.java)
+                            //intent.putExtra("userBD", userBD)
+                            intent.putExtra("email", userMail)
+                            //intent.putExtra("alvara", alvara)
+                            //intent.putExtra("tipo", tipo)
+                            if (!petBD.equals("nao")){
+                                intent.putExtra("petBD", petBD)
+                            }
+                            intent.putExtra("endereco", endereco)
+                            intent.putExtra("chamaLatLong", "sim")
+                            startActivity(intent)
+                            finish()
+
+
+                            /*
+                            val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
+                            val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
+
+                            layCad1.visibility = View.GONE
+                            layCad2.visibility = View.VISIBLE
+
+                            EncerraDialog()
+
+                             */
+
+
+                    }
+
+                    btnTermosCancel.setOnClickListener {
+                        layTermos.visibility = View.GONE
+                    }
+
                 } else {
+
                     //se for usuário existente, vai apenas atualizar alguns datos. Primeiro pega os dados, preenche os etdText
 
                     var apagaLatLong = 0  //se o user tiver mudado alguma informação do endereço, vamos apagar seus dados de latitude, longitude e latlong pois sua localização do mapa mudou.
@@ -878,16 +965,20 @@ class arealojista : AppCompatActivity() {
                     endereco = mEtLogradouro.text.toString()+" "+mEtNumero.text.toString()+", "+mEtBairro.text.toString()+", "+mEtCidade.text.toString()+" - "+estadoSelecionado
 
                     val layCad1: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento)
-                    val layCad2: ConstraintLayout = findViewById(R.id.lay_cadastrarEmpreendimento2)
                     layCad1.visibility = View.GONE
-                    layCad2.visibility = View.VISIBLE
+                    val layIndex: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+                    layIndex.visibility = View.VISIBLE
 
                     EncerraDialog()
 
+
                 }
+
+
             }
         }
 
+        /* reforma
         val btnFinalizaCad: Button = findViewById(R.id.cadEmpBtnFinalizaCad)
         btnFinalizaCad.setOnClickListener {
 
@@ -940,6 +1031,8 @@ class arealojista : AppCompatActivity() {
                 layIndexAreaLoja.visibility = View.VISIBLE
             }
         }
+
+         */
 
         val btnWhatAppHelp: Button = findViewById(R.id.cadEmpEtCel_help)
         btnWhatAppHelp.setOnClickListener {
@@ -1104,6 +1197,11 @@ class arealojista : AppCompatActivity() {
         btnChangeLogo.setOnClickListener {
             processo="logo"
             takePictureFromGallery()
+        }
+
+        val imgLogo : ImageView = findViewById(R.id.lay_edit_layout_loja_logoImageView)
+        imgLogo.setOnClickListener {
+            btnChangeLogo.performClick()
         }
 
 
@@ -3618,11 +3716,12 @@ class arealojista : AppCompatActivity() {
 
     private fun setupPermissions() {
 
+        /*
         cameraPermissions.checkPermission(this, CAMERA_PERMISSION_CODE)
         readFilesPermissions.checkPermission(this, READ_PERMISSION_CODE)
         writeFilesPermissions.checkPermission(this, WRITE_PERMISSION_CODE)
+         */
 
-        /*
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_GRANTED){
             //permissão concedida
         } else {
@@ -3639,7 +3738,7 @@ class arealojista : AppCompatActivity() {
         } else {
             RequestCameraPermission()
         }
-         */
+
     }
 
     //obsoleto pois foi agora pra casses.

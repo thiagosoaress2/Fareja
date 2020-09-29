@@ -780,6 +780,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
          */
 
+
+        if (!userMail.equals("semLogin")){
+            checkLocalData()
+        }
+
+
+
+
     }
 
     fun menuClicks (){
@@ -853,22 +861,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         val btnProprietario:Button = findViewById(R.id.menu_btn1)
         btnProprietario.setOnClickListener {
-            if (userBD!="nao" || userBD==null){
-                btnMenu.performClick()
-                val intent = Intent(this, arealojista::class.java)
-                intent.putExtra("userBD", userBD)
-                intent.putExtra("alvara", alvara)
-                intent.putExtra("tipo", tipo)
-                intent.putExtra("email", userMail)
-                if (!petBDseForEmpresario.equals("nao")){
-                    intent.putExtra("petBD", petBDseForEmpresario)
-                }
-                startActivity(intent)
-                finish()
 
-            } else {
-                Toast.makeText(this, "Aguarde, suas informações ainda não foram carregadas. Isto depende de sua conexão com a internet.", Toast.LENGTH_SHORT).show()
-            }
+            openEditStore()
+
         }
 
         val btnMinhasVendas:Button = findViewById(R.id.menu_btnMinhasVendas)
@@ -892,6 +887,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
         }
 
+        /* Desabilitado na simplificação
         val btnAutonomos: Button = findViewById(R.id.menu_btnAutonomo)
         btnAutonomos.setOnClickListener {
             val intent = Intent(this, autonomosActivity::class.java)
@@ -901,7 +897,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             startActivity(intent)
 
         }
+         */
 
+        /* Desabilitado na simplificação
         val btnAdocao: Button = findViewById(R.id.menu_btnAdocao)
         btnAdocao.setOnClickListener {
             val intent = Intent(this, adocaoActivity::class.java)
@@ -922,11 +920,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             startActivity(intent)
         }
 
+         */
 
         val btnPerfil: Button = findViewById(R.id.menu_btnPerfil)
         btnPerfil.setOnClickListener {
 
-            if (this@MapsActivity::lastLocation.isInitialized && !userBD.equals("nao")) {
+            if (userMail.equals("semLogin")){
+                openPopUpLogin("Você não está logado", "Para acessar esta função você precisa se registrar.", "Fazer login", "Cancelar")
+                btnMenu.performClick()
+
+            } else if (this@MapsActivity::lastLocation.isInitialized && !userBD.equals("nao")) {
 
                 val intent = Intent(this, userPerfilActivity::class.java)
                 intent.putExtra("userBD", userBD)
@@ -945,6 +948,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
 
         }
+    }
+
+    fun openEditStore(){
+
+        if (userMail.equals("semLogin")){
+            Toast.makeText(this, "Você precisa se registrar primeiro para acessar esta funcionalidade.", Toast.LENGTH_SHORT).show()
+        } else {
+            if (userBD!="nao" || userBD==null){
+                val btnMenu: ImageView = findViewById(R.id.lay_Maps_MenuBtn)
+                btnMenu.performClick()
+                val intent = Intent(this, arealojista::class.java)
+                intent.putExtra("userBD", userBD)
+                intent.putExtra("alvara", alvara)
+                intent.putExtra("tipo", tipo)
+                intent.putExtra("email", userMail)
+                if (!petBDseForEmpresario.equals("nao")){
+                    intent.putExtra("petBD", petBDseForEmpresario)
+                }
+                startActivity(intent)
+                finish()
+
+            } else {
+                Toast.makeText(this, "Aguarde, suas informações ainda não foram carregadas. Isto depende de sua conexão com a internet.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     }
 
     //busca informações iniciais do usuario
@@ -1033,9 +1062,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                 }
 
+                                /*
+                                 reforma
                                 findUsersNerby(lastLocation.latitude, lastLocation.longitude)
                                 findAutonomosNerby(lastLocation.latitude, lastLocation.longitude)
-
+                                 */
 
                                 //values = querySnapshot.child("tipo").value.toString()
                                 //tipo = values  //reforma1
@@ -1050,6 +1081,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                     btn.visibility = View.VISIBLE
                                     btn = findViewById(R.id.menu_btnMinhasVendas)
                                     btn.visibility = View.VISIBLE
+
+                                    btnEditStore()
 
                                     //pega os dados do petshop
                                     queryPetDoEmpresario()
@@ -1121,6 +1154,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             val logo = querySnapshot.child("logo").value.toString()
                             val raioEntrega = querySnapshot.child("raio_entrega").value.toString()
 
+                            /*  reforma
                             var percent = 0  //20% são as infos básicas como endereço e tal. Então ele sempre parte de 20%.
                             percent = percent+20 //estes 20 são os descritos acima
                             if (!alvara.equals("nao")){
@@ -1150,6 +1184,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             } else {
                                 //do nothing
                             }
+                             */
+
+
+                            var percent = 0  //20% são as infos básicas como endereço e tal. Então ele sempre parte de 20%.
+                            percent = percent+25 //estes 20 são os descritos acima
+                            if (itens.toInt()!=0){
+                                percent = percent+25
+                            }
+                            if (!logo.equals("nao")){
+                                percent = percent+25
+                            }
+                            if (!raioEntrega.equals("nao")){
+                                percent=percent+25
+                            }
+
+                            val key = querySnapshot.key.toString()
+
+                            if (logo.equals("nao")){
+                                openPopUpNotifyPetShopInfoFaltando("Vamos melhorar sua presença?", "Percebemos que você ainda não colocou o logo da sua empresa na loja virtual. Vamos fazer isso agora?", true, "Sim, vamos!", "Deixar assim", "logo", percent, key)
+                            } else if (itens.toInt()==0){
+                                openPopUpNotifyPetShopInfoFaltando("Vamos melhorar suas vendas?", "Percebemos que você ainda não cadastrou nenhum produto. Você pode estar perdendo vendas. Vamos corrigir isto agora?", true, "Sim, vamos!", "Faço depois", "itens", percent, key)
+                            } else if (raioEntrega.equals("nao")){
+                                openPopUpNotifyPetShopInfoFaltando("Vamos melhorar seu serviço?", "Você ainda não definiu o seu raio de entrega. Você pode estar perdendo vendas. Vamos fazer isso agora?", true, "Sim, vamos!", "Faço depois", "raio", percent, key)
+                            } else {
+                                //do nothing
+                            }
+
+
                             //libera botões do user
                             liberaBotoesProp()
 
@@ -2694,8 +2756,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                                     lastLocation = location
 
+                                    /*  reforma
                                     findUsersNerby(lastLocation.latitude, lastLocation.longitude)
                                     findAutonomosNerby(lastLocation.latitude, lastLocation.longitude)
+
+                                     */
                                     getUserLocation(raioUser, 0)
 
                                 }
@@ -2717,6 +2782,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         btn.visibility = View.VISIBLE
                         btn = findViewById(R.id.menu_btnMinhasVendas)
                         btn.visibility = View.VISIBLE
+
+                        btnEditStore()
 
                         queryPetDoEmpresario()
                         QueryPedidosParaFinalizarDoEmpresario()
@@ -6644,6 +6711,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         fimDeTudo() //metodo indicando qeu tudo que era importante ja foi feito. Qualquer metodo que nao seja fundamental deve ser chamado aqui
 
+        /* reforma
         if (this@MapsActivity::lastLocation.isInitialized) {
 
 
@@ -6693,6 +6761,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         } else{
             centralBtnApenasLocaliza()
         }
+
+         */
 
     }
 
@@ -6833,7 +6903,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                                 val longFriend = querySnapshot.child("long").value.toString()
 
                                 //coloca o petFriend no mapa
+                                /* reforma
                                 placePetFriendsInMap(img, values, latFriend.toDouble(), longFriend.toDouble())
+
+                                 */
 
                             }
 
@@ -7854,18 +7927,53 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
 
+    //métodos de suporte
+    fun checkLocalData(){
 
+        val sharedPref: SharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences), 0) //0 é private mode
+        userBD = sharedPref.getString("userBdInicial", "nao").toString();
+        if (userBD.equals("nao")){
+            Log.d("reforma", "foi pra query")
+            queryUserInitial()
+        } else {
+            //pega o resto das infos
+            tipo = sharedPref.getString("tipoInicial", "nao").toString()
+            if (tipo.equals("empresario")){
+                Log.d("reforma", "é empresario, vai pegar o resto dos dados")
+                petBDseForEmpresario = sharedPref.getString("petBdSeForEmpresarioInicial", "nao").toString()
 
+                var btn: Button
+                btn = findViewById(R.id.menu_btn1)
+                btn.visibility = View.VISIBLE
+                btn = findViewById(R.id.menu_btnMinhasVendas)
+                btn.visibility = View.VISIBLE
 
+                btnEditStore()
 
-    //procurar pelo código
-    fun searchByCode(){
+                //pega os dados do petshop
+                queryPetDoEmpresario()
+                QueryPedidosParaFinalizarDoEmpresario()
+
+            } else {
+                val btn: Button = findViewById(R.id.menu_btn1)
+                btn.setText("    É proprietário?")
+                btn.visibility = View.VISIBLE
+                QueryPedidosParaFinalizar()
+            }
+        }
 
     }
 
+    fun btnEditStore(){
 
+        val btnEditStorePopup = findViewById<ConstraintLayout>(R.id.layBtnDonoDaLojaPopup)
+        btnEditStorePopup.visibility = View.VISIBLE
+        btnEditStorePopup.setOnClickListener {
+            val btn: Button = findViewById(R.id.menu_btn1)
+            btn.performClick()
+        }
 
-    //métodos de suporte
+    }
 
     //este transforma numero comum em dinheiro
     fun currencyTranslation(valorOriginal: String): String{

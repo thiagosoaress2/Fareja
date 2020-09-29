@@ -19,8 +19,6 @@
         android:roundIcon="@mipmap/logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
-        <activity android:name=".newMapsActivity" >
-        </activity>
         <activity android:name=".adocaoActivity" />
         <activity android:name=".autonomoPublicPerfil" />
         <activity android:name=".userPerfilActivity" />

@@ -1,6 +1,9 @@
 package com.petcare.petcare.Utils
 
+import android.content.SharedPreferences
+import android.provider.Settings.Global.getString
 import com.facebook.internal.Mutable
+import com.petcare.petcare.R
 
 class userClass {
 
