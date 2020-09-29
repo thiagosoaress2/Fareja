@@ -17,7 +17,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
+        tools:visibility="gone">
 
         <ScrollView
             android:id="@+id/scrollView5"
@@ -68,13 +68,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:fontFamily="@font/bahnschrift"
-                    android:text="Gerenciamento do seu negócio"
-                    android:textAlignment="textStart"
+                    android:text="Gerenciamento"
+                    android:textAlignment="center"
                     android:textColor="#ffffff"
                     android:textSize="16sp"
                     app:layout_constraintBottom_toTopOf="@+id/constraintLayout9"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/btnFechaActivity"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <Button
@@ -228,8 +228,9 @@
 
                 <Button
                     android:id="@+id/btnFechaActivity"
-                    android:layout_width="75dp"
-                    android:layout_height="65dp"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginStart="8dp"
                     android:background="@drawable/ic_arrow_back_white"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -1843,11 +1844,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="gone">
+        tools:visibility="visible">
 
         <ScrollView
             android:id="@+id/scrollPlanos"
             android:layout_width="match_parent"
+            android:fillViewport="true"
             android:layout_height="match_parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -1860,17 +1862,19 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="32dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="30dp"
                     android:layout_marginEnd="32dp"
+                    android:layout_marginBottom="30dp"
                     android:background="@drawable/ic_btnazul"
                     android:fontFamily="@font/impact"
                     android:text="Salvar e prosseguir"
                     android:textColor="#ffffff"
                     android:textSize="20sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/layPlanos_layPlanoCompleto"
-                    tools:visibility="gone" />
+                    tools:visibility="visible" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layPlanos_pag2bas"
@@ -1961,6 +1965,7 @@
                     android:layout_width="0dp"
                     android:layout_height="60dp"
                     android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:background="@drawable/top_backgroun_bar"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -1997,11 +2002,11 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="16dp"
                     android:layout_marginEnd="16dp"
-                    android:background="@drawable/ic_btnbranco"
+                    android:background="@drawable/rounded_bg_orangeborder"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/constraintLayout16"
-                    tools:visibility="gone">
+                    tools:visibility="visible">
 
 
                     <TextView
@@ -2040,7 +2045,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="24dp"
-                        android:text="Acesso completo a plataforma\nCadastrar 10 produtos na loja"
+                        android:text="- Acesso completo a plataforma\n- Cadastrar 15 produtos na loja"
                         android:textAlignment="textStart"
                         app:layout_constraintEnd_toStartOf="@+id/guideline30"
                         app:layout_constraintStart_toStartOf="parent"
@@ -2053,7 +2058,7 @@
                         android:layout_marginTop="16dp"
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="8dp"
-                        android:background="@color/azulEscuro"
+                        android:background="@drawable/ic_btnbranco"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/guideline30"
                         app:layout_constraintStart_toStartOf="parent"
@@ -2065,7 +2070,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/bahnschrift"
                             android:text="Grátis"
-                            android:textColor="#ffffff"
+                            android:textColor="@color/laranja"
                             android:textSize="18sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -2081,11 +2086,11 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="32dp"
                     android:layout_marginEnd="16dp"
-                    android:background="@drawable/ic_btnbranco"
+                    android:background="@drawable/rounded_bg_orangeborder"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/layPlanos_layPlanoBasico"
-                    tools:visibility="gone">
+                    tools:visibility="visible">
 
 
                     <TextView
@@ -2124,7 +2129,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="16dp"
-                        android:text="Acesso completo a plataforma\nCadastrar 30 produtos na loja\nImpulsionar produtos em promoção\nLoja em destaque no mapa"
+                        android:text="- Acesso completo a plataforma\n- Cadastrar 30 produtos na loja\n- Impulsionar produtos em promoção\n- Loja em destaque no mapa"
                         android:textAlignment="textStart"
                         app:layout_constraintEnd_toStartOf="@+id/guideline31"
                         app:layout_constraintStart_toStartOf="parent"
@@ -2137,7 +2142,7 @@
                         android:layout_marginTop="16dp"
                         android:layout_marginEnd="16dp"
                         android:layout_marginBottom="8dp"
-                        android:background="@color/azulEscuro"
+                        android:background="@drawable/ic_btnbranco"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/guideline31"
                         app:layout_constraintStart_toStartOf="parent"
@@ -2149,7 +2154,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/bahnschrift"
                             android:text="R$20,00 /mês"
-                            android:textColor="#ffffff"
+                            android:textColor="@color/laranja"
                             android:textSize="18sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"

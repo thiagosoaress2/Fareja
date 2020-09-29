@@ -70,6 +70,8 @@ class arealojista : AppCompatActivity() {
     private var inventario_size = 15  //quantidade de itens que esta loja pode vender. 15 é o padrão
     private var endereco = "nao"
 
+    private var plano = "nao"
+
     var arrayNomes: MutableList<String> = ArrayList()
     var arrayImg: MutableList<String> = ArrayList()
     var arrayDesc: MutableList<String> = ArrayList()
@@ -97,6 +99,8 @@ class arealojista : AppCompatActivity() {
         alvara = intent.getStringExtra("alvara")
         tipo = intent.getStringExtra("tipo")
         userMail = intent.getStringExtra("email")
+        plano = intent.getStringExtra("plano")
+
         if (tipo.equals("empresario")){
             petBD = intent.getStringExtra("petBD")
         } else {
@@ -287,7 +291,12 @@ class arealojista : AppCompatActivity() {
 
         val btnImpulso: Button = findViewById(R.id.btnMinhasPromos)
         btnImpulso.setOnClickListener {
-            clickImpulsionamentos()
+            if (plano.equals("basico")){
+                openPopUp("Que pena", "Você não tem acesso a este recurso. Para acessar esta e outras funcionalidades você precisa fazer upgrade para o plano pago. Gostaria de conhecer nosso plano premium?", true, "Sim,conhecer plano", "Não", "vaiPraPlano")
+            } else {
+                clickImpulsionamentos()
+            }
+
         }
 
         //ajusta o texto do botão
@@ -321,6 +330,22 @@ class arealojista : AppCompatActivity() {
 
         val btnGerarRelatorios: Button = findViewById(R.id.arealojistaIndexBtnGerarRelatorio)
         btnGerarRelatorios.setOnClickListener {
+
+            if (plano.equals("basico")) {
+                //se o plano do usuário for o básico, ele vai ser direcionado para a página de mudar de planos
+                openPopUp("Que pena", "Você não tem acesso a estes recursos. Para acessar este e outros recursos você precisa fazer upgrade para o plano pago. Gostaria de passar para o plano premium?", true, "Sim, mudar de plano", "Não", "vaiPraPlano")
+
+            } else {
+
+                //abrir nova activity se for plano premium
+                val intent = Intent(this@arealojista, relatorio::class.java)
+                intent.putExtra("userBD", userBD)
+                intent.putExtra("petBD", petBD)
+                startActivity(intent)
+
+            }
+
+            /*
             ChamaDialog()
             val rootRef = databaseReference.child("petshops").child(petBD)
             rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -351,6 +376,8 @@ class arealojista : AppCompatActivity() {
 
                 }
             })
+
+             */
         }
 
 
@@ -432,19 +459,25 @@ class arealojista : AppCompatActivity() {
 
         }
 
+        layBasico.setOnClickListener { btnRadioBas.performClick() }
+        layPremium.setOnClickListener { btnRadioCom.performClick() }
+
         btnRadioBas.setOnClickListener {
             btnRadioCom.isChecked = false
+            btnRadioCom.setText("Escolher")
+            btnRadioBas.setText(" ")
             layBasico.setBackgroundResource(R.drawable.ic_btnazulclaro)
-            layPremium.setBackgroundResource(R.drawable.ic_btnbranco)
-            scroll.scrollY=0
-
+            layPremium.setBackgroundResource(R.drawable.rounded_bg_orangeborder)
+            scroll.scrollTo(0, 0)
 
         }
         btnRadioCom.setOnClickListener {
             btnRadioBas.isChecked = false
+            btnRadioCom.setText(" ")
+            btnRadioBas.setText("Escolher")
             layPremium.setBackgroundResource(R.drawable.ic_btnazulclaro)
-            layBasico.setBackgroundResource(R.drawable.ic_btnbranco)
-            scroll.scrollY=0
+            layBasico.setBackgroundResource(R.drawable.rounded_bg_orangeborder)
+            scroll.fullScroll(ScrollView.FOCUS_DOWN)
         }
 
         var planoAntigo = "nao"
@@ -517,6 +550,7 @@ class arealojista : AppCompatActivity() {
 
         }
 
+        /* reforma
         ChamaDialog()
         val rootRef = databaseReference.child("petshops").child(petBD)
         rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -546,7 +580,15 @@ class arealojista : AppCompatActivity() {
 
             }
         })
+         */
 
+
+        //ajusta o plano atual
+        if (plano.equals("basico")){
+            radioBasico.performClick()
+        } else {
+            radioCompleto.performClick()
+        }
     }
 
     //cliques do Cadastro da empresa
@@ -1505,7 +1547,7 @@ class arealojista : AppCompatActivity() {
                 }
 
                 btnHelp.setOnClickListener {
-                    openPopUp("Configuração da entrega", "Informe ao lado o valor que sua empresa cobra para entregas. Para o caso de entregas gratuitas ou de não oferecer serviçod e entrega marque nos botões abaixo.", false, "n", "n", "n")
+                    openPopUp("Configuração da entrega", "Informe ao lado o valor que sua empresa cobra para entregas. Para o caso de entregas gratuitas ou de não oferecer serviço de entrega marque nos botões abaixo.", false, "n", "n", "n")
                 }
 
                 EncerraDialog()
@@ -3063,21 +3105,41 @@ class arealojista : AppCompatActivity() {
             //Fecha a janela ao clicar fora também
         }
 
-        //lay_root é o layout parent que vou colocar a popup
-        val lay_root: ConstraintLayout = findViewById(R.id.layPaizao)
 
-        // Finally, show the popup window on app
-        TransitionManager.beginDelayedTransition(lay_root)
+        if (call.equals("vaiPraPlano")){
+            //lay_root é o layout parent que vou colocar a popup
+            val lay_root: ConstraintLayout = findViewById(R.id.lay_arealojista_index)
+            // Finally, show the popup window on app
+            TransitionManager.beginDelayedTransition(lay_root)
 
-        /*
-        popupWindow.showAtLocation(
-            lay_root, // Location to display popup window
-            Gravity.CENTER, // Exact position of layout to display popup
-            0, // X offset
-            0 // Y offset
-        )
+            popupWindow.showAtLocation(
+                lay_root, // Location to display popup window
+                Gravity.CENTER, // Exact position of layout to display popup
+                0, // X offset
+                0 // Y offset
+            )
 
-         */
+        } else {
+            //lay_root é o layout parent que vou colocar a popup
+            val lay_root: ConstraintLayout = findViewById(R.id.layPaizao)
+            // Finally, show the popup window on app
+            TransitionManager.beginDelayedTransition(lay_root)
+
+            popupWindow.showAtLocation(
+                lay_root, // Location to display popup window
+                Gravity.CENTER, // Exact position of layout to display popup
+                0, // X offset
+                0 // Y offset
+            )
+
+        }
+
+
+
+
+
+
+
 
 
     }
@@ -3351,6 +3413,9 @@ class arealojista : AppCompatActivity() {
 
     fun queryimpulsionamentosAtivos() {
 
+        ChamaDialog()
+        val tvImpulsos : TextView = findViewById(R.id.tvImpulsos)
+        tvImpulsos.setText("Aguarde, verificando seus impulsionamentos")
 
         FirebaseDatabase.getInstance().reference.child("impulsionamentos").orderByChild("pet").equalTo(petBD)
             .addListenerForSingleValueEvent(object : ValueEventListener {

@@ -81,12 +81,11 @@ import kotlin.collections.ArrayList
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
-    //to do
-    //criar listagem de tudo que está na tela
-    //busca do autonomo por código (BD)
-    //3 - criar clusters (pega a distancia entre marks - basta usar o arrayPetFriendMarkers e medir as distancias....se forem pequenas esconder em cluster   ref: https://github.com/googlemaps/android-maps-utils/blob/master/demo/src/main/java/com/google/maps/android/utils/demo/CustomMarkerClusteringDemoActivity.java
-    //SERVICO: TINDER
-    //ADICIONAR AS PERMISSOES EM TODAS ACTIVITIES NVOAS QUE USAM CAMERA E FOOT
+    /*
+    TODO DO LIST
+    carregar informações do empresario logo na query aqui, para n ter que fazer novamente.
+    Exemplo: Plano. E deixar de carregar quando apertar no botão gerar relatório
+     */
 
     private val FINE_LOCATION_CODE = 721
 
@@ -955,14 +954,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         if (userMail.equals("semLogin")){
             Toast.makeText(this, "Você precisa se registrar primeiro para acessar esta funcionalidade.", Toast.LENGTH_SHORT).show()
         } else {
-            if (userBD!="nao" || userBD==null){
-                val btnMenu: ImageView = findViewById(R.id.lay_Maps_MenuBtn)
-                btnMenu.performClick()
+
+            if (tipo.equals("empresario") && plano.equals("nao")){
+
+                //se for empresario ele faz uma query antes. Aqui verificamos se a query ja terminou
+                Toast.makeText(this, "Aguarde, suas informações ainda não foram carregadas. Isto depende de sua conexão com a internet.", Toast.LENGTH_SHORT).show()
+
+            } else if (userBD!="nao" || userBD==null){
+                //val btnMenu: ImageView = findViewById(R.id.lay_Maps_MenuBtn)
+                //btnMenu.performClick()
                 val intent = Intent(this, arealojista::class.java)
                 intent.putExtra("userBD", userBD)
                 intent.putExtra("alvara", alvara)
                 intent.putExtra("tipo", tipo)
                 intent.putExtra("email", userMail)
+                intent.putExtra("plano", plano)
                 if (!petBDseForEmpresario.equals("nao")){
                     intent.putExtra("petBD", petBDseForEmpresario)
                 }
@@ -7969,8 +7975,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val btnEditStorePopup = findViewById<ConstraintLayout>(R.id.layBtnDonoDaLojaPopup)
         btnEditStorePopup.visibility = View.VISIBLE
         btnEditStorePopup.setOnClickListener {
-            val btn: Button = findViewById(R.id.menu_btn1)
-            btn.performClick()
+            openEditStore()
         }
 
     }
