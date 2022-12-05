@@ -19,14 +19,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
-        <Button
-            android:id="@+id/resumoCompras_btnVoltar"
-            android:layout_width="70dp"
-            android:layout_height="60dp"
-            android:background="@drawable/ic_arrow_back_white"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <TextView
             android:id="@+id/textView67"
             android:layout_width="wrap_content"
@@ -78,22 +70,31 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout12"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:background="@color/azulClaro"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_percent="0.08"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
+            <Button
+                android:id="@+id/resumoCompras_btnVoltar"
+                android:layout_width="70dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/ic_arrow_back_white"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
                 android:id="@+id/textView18"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textColor="#ffffff"
-                android:textAlignment="center"
-                android:textSize="18sp"
                 android:fontFamily="@font/bahnschrift"
                 android:text="Resumo de compras"
+                android:textAlignment="center"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

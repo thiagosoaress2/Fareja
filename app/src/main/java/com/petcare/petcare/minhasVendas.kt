@@ -104,6 +104,10 @@ class minhasVendas : AppCompatActivity() {
 
                         if (dataSnapshot == null) {
                             //não existem Vendas
+                            EncerraDialog()
+                            val tvMsg : TextView = findViewById(R.id.tvExibeServ)
+                            tvMsg.setText("Não existem vendas para exibir")
+
                         } else {
 
                             /*
@@ -179,6 +183,7 @@ class minhasVendas : AppCompatActivity() {
                     // ...
                 }
             })
+        EncerraDialog()
 
 
         val cbServicos: CheckBox = findViewById(R.id.cBServicos)
@@ -1700,9 +1705,9 @@ class minhasVendas : AppCompatActivity() {
         //passar o valor para string para poder ver o tamanho
         var valorString = valorOriginal.toString()
         valorString = valorString.trim()
-        valorString.replace("R$", "")
-        valorString.replace(".", "")
-        valorString.replace(",", "")
+        valorString = valorString.replace("R$", "")
+        valorString = valorString.replace(".", "")
+        valorString = valorString.replace(",", "")
 
         //na casa de menos de 100 mil
         //90.000 - 5 casas
