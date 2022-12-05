@@ -1,4 +1,4 @@
-# Fareja
+# Farejador
 
 Repositório do antigo projeto Farejador<br>
 
